@@ -56,48 +56,60 @@ GPAbstractCodeGeneratorConfiguration >> createNewIndividual [
 	c:= 2.
 	(c=1) ifTrue: [  rootNode := self assigmentNode].
 	(c=2) ifTrue: [ rootNode := self newMethod ].
-	self createNewIndividualRoot: rootNode depth:2.
+	self createNewIndividualRoot: rootNode depth: 2.
 	^ rootNode
 ]
 
 { #category : #'private-operation' }
 GPAbstractCodeGeneratorConfiguration >> createNewIndividualRoot: rootNode depth: depth [
-"
-create a simple assigment node:  var := expr 
 
-assigment 	:= var : expr
-expr 			:= unary | binary | var
-unary 			:= expr : unaryMethod
-binary 		:= expr : binaryMethod : expr
-
+"create a simple assigment node:  expr
+expr 			:= var | var expr-method
+expr-method := method [ : var  ]*			
 var 			:= x | y | ...
+
 unaryMethod 	:= sqrt | squared | ...
 binaryMethod:= + | - | ...
 "
-	| f c n| 
-	(rootNode sameType: (self assigmentNode )) ifTrue: [rootNode addChild: self newTerminalVariable].
-	
-	depth = 1 ifTrue: [ 
-		(rootNode sameType: (self unaryMethodNode)) ifTrue:
-		  [ rootNode addChild: (self respondsMethod: rootNode).
+	| n c f|
+	n := rootNode type.
+	rootNode addChild: (self respondsMethod: rootNode).
+	depth = 1
+		ifTrue: [ 1 to: n do: [ :i | rootNode addChild: self newTerminalVariable ].
 			^ self].
-		(rootNode sameType: (self binaryMethodNode)) ifTrue:
-		 [ 1 to: 2 do: [:i |  rootNode addChild: (self respondsMethod: rootNode)].  ^ self ]].
-	n := 1.
-	(rootNode sameType: (self binaryMethodNode)) ifTrue: [ n :=2 ].
+		
 	1 to: n do:[ :i |
-	c := (self randomElementOf: (1 to: 3)).
+	c := (self randomElementOf: (1 to: 2)).
 	c = 1 ifTrue: [ rootNode addChild: self newTerminalVariable].
 	c = 2 ifTrue: [ 
-		f:= self unaryMethodNode.
+		f:= self methodNode.
 		rootNode addChild: f.
-		self createNewIndividualRoot: f depth: depth - 1. ].
-	c= 3 ifTrue: [
-		f := self binaryMethodNode.
-		rootNode addChild: f.
-		self createNewIndividualRoot: f depth: depth - 1  ]].
+		self createNewIndividualRoot: f depth: depth - 1. ]].
+	
+]
 
-
+{ #category : #'instance creation' }
+GPAbstractCodeGeneratorConfiguration >> methodNode [
+	| res mt msplit t|
+	mt := (self pickRandomMethod2: (self methods) with: (self randomElementOf: (0 to: (self sumWeightsAll)) )).
+	t := mt at:1.
+	res := GPNode new.
+	
+	msplit := (t asString) splitOn: ':'.
+	(msplit size = 1)
+	ifTrue:[res printBlock: [ :children :context | '(' , (children first printUsing: context), ' ', t asString , ')'].]
+	ifFalse:[
+		res printBlock: [:children :context | 
+			|ans|
+			ans:= (children first printUsing: context), ' '.
+		msplit doWithIndex: [:key :i | (i < msplit size) ifTrue: [ans:= ans , key , ': ' , ((children at: (i+1)) printUsing: context) , ' ']].
+		'(' , ans , ')']].
+	
+	"res printBlock: [ :children :context | '(' , (children first printUsing: context), ' ', t asString , ' ' , (children second printUsing: context) , ')']."
+	"rs evaluationBlock: [ :children :context | (children first evaluateUsing: context) perform: t with: (children second evaluateUsing: context)]."
+	res type: (mt at: 2).
+	res name: t.
+	^ res 
 ]
 
 { #category : #accessing }
@@ -121,11 +133,14 @@ GPAbstractCodeGeneratorConfiguration >> mutate: individual [
 
 { #category : #'instance creation' }
 GPAbstractCodeGeneratorConfiguration >> newMethod [
-	| c |
+	"| c |
 	c := (self randomElementOf: (0 to: (self sumWeightsUnary+ self sumWeightsBinary ))).
 	(c <= (self sumWeightsUnary )) 
 		ifTrue: [ ^ self unaryMethodNode ]
-		ifFalse: [ ^ self binaryMethodNode  ].
+		ifFalse: [ ^ self binaryMethodNode  ]."
+		
+	^ self methodNode
+	
 ]
 
 { #category : #'instance creation' }
@@ -163,6 +178,15 @@ GPAbstractCodeGeneratorConfiguration >> newTerminalVariable [
 ]
 
 { #category : #'as yet unclassified' }
+GPAbstractCodeGeneratorConfiguration >> pickRandomMethod2: methods with: ran [ 
+	|acc|
+	acc:= 0.
+	methods do: [ :mw | acc := acc + (mw at: 3).
+		(acc >= ran) ifTrue: [ ^ {mw at: 1 . mw at:2}]. ].
+	
+]
+
+{ #category : #'as yet unclassified' }
 GPAbstractCodeGeneratorConfiguration >> pickRandomMethod: methods with: ran [ 
 	|acc|
 	acc:= 0.
@@ -190,6 +214,11 @@ GPAbstractCodeGeneratorConfiguration >> respondsVariables [
 { #category : #'as yet unclassified' }
 GPAbstractCodeGeneratorConfiguration >> restartRespondsVariables [
 	self subclassResponsibility
+]
+
+{ #category : #accessing }
+GPAbstractCodeGeneratorConfiguration >> sumWeightsAll [
+	self subclassResponsibility 
 ]
 
 { #category : #accessing }

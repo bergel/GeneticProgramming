@@ -12,7 +12,9 @@ Class {
 		'respondsVariables',
 		'weightGen',
 		'sumWeightsUnary',
-		'sumWeightBinary'
+		'sumWeightBinary',
+		'methods',
+		'sumWeightsAll'
 	],
 	#category : #'GeneticProgramming-CodeGenerator'
 }
@@ -25,9 +27,20 @@ GPCodeGenerator >> acumulator: methods [
 	^ sum
 ]
 
+{ #category : #'as yet unclassified' }
+GPCodeGenerator >> acumulator: aMethods with: n [
+	|sum|
+	sum := 0.
+	aMethods do: [ :arr | sum := sum + (arr at: n )].
+	^ sum
+]
+
 { #category : #adding }
 GPCodeGenerator >> addWeights: aWeightGenerator [
 	weightGen := aWeightGenerator.
+	
+	self assignWeights2: methods.
+	sumWeightsAll:= (self acumulator: methods with: 3).
 	self assignWeights: (self unaryMethods).
 	self sumWeightsUnary: (self acumulator: unaryMethods).
 	self assignWeights: (self binaryMethods).
@@ -35,10 +48,29 @@ GPCodeGenerator >> addWeights: aWeightGenerator [
 ]
 
 { #category : #'as yet unclassified' }
+GPCodeGenerator >> assignWeightTo2: aMethod [
+	| w |
+	w:= (self weightGen) searchWeight: aMethod.
+	^w
+]
+
+{ #category : #'as yet unclassified' }
 GPCodeGenerator >> assignWeightTo: aMethod [
 	| w |
 	w:= (self weightGen) searchWeight: aMethod.
 	^{aMethod . w}
+]
+
+{ #category : #'as yet unclassified' }
+GPCodeGenerator >> assignWeights2: arrayMethods [
+	
+	arrayMethods doWithIndex: [ :ma :i|
+		|m args|
+		m := ma at: 1.
+		args := ma at: 2.
+		arrayMethods at: i put: {m . args . (self assignWeightTo2: m)}
+		 ]
+
 ]
 
 { #category : #'as yet unclassified' }
@@ -92,15 +124,23 @@ GPCodeGenerator >> codeBefore: aCode [
 
 { #category : #initialization }
 GPCodeGenerator >> codeBefore: aCode codeAfter: anOtherCode [
-	|names|
+	|visitor|
 	self codeBefore: aCode.
 	self codeAfter: anOtherCode.
-	names := self extractVariableNames: aCode.
-	names addAll: (self extractVariableNames: anOtherCode).
-	self variables: (self getVariables: names).
-	self classes: (self getClasses: names).
+	visitor := self createAVisitor: aCode , ' ' , anOtherCode .
+	self variables: (visitor variableNames).
+	self classes: (visitor classNames).
 	
 	self getMethods: classes.
+]
+
+{ #category : #'as yet unclassified' }
+GPCodeGenerator >> createAVisitor: aCode [
+	|ast v|
+	ast := RBParser parseExpression: aCode.
+	v := ExtractVariableNameVisitor new.
+	ast acceptVisitor: v.
+	^ v
 ]
 
 { #category : #operations }
@@ -118,8 +158,10 @@ GPCodeGenerator >> distanceFromSolutionOf: individual [
 		'. "<== adding line"', String cr,
 		codeAfter.
 	
-	SystemAnnouncer uniqueInstance 
-		suspendAllWhileStoring: [ CodeGeneratorTest compile: codeToCompile ].	
+	[SystemAnnouncer uniqueInstance 
+		suspendAllWhileStoring: [ CodeGeneratorTest compile: codeToCompile ]]
+	on: Exception
+	do: [ ^100 ].	
 	
 	eval := CodeGeneratorTest buildSuite run passed size.	
 	"penalty:=0."
@@ -180,29 +222,22 @@ GPCodeGenerator >> getClass: aSymbolClass [
 ]
 
 { #category : #'as yet unclassified' }
-GPCodeGenerator >> getClasses: aCollection [
-	|answer|
-	answer := OrderedCollection new.
-	aCollection 
-			do: [ :aClass| 
-			(self isClass: aClass) ifTrue: [ answer add: aClass ] ].
-	^ answer removeDuplicates
-]
-
-{ #category : #'as yet unclassified' }
 GPCodeGenerator >> getMethods: aClasses [
-	|unaries binaries|
+	|unaries binaries ms|
 	unaries:= OrderedCollection new.
 	binaries:= OrderedCollection new.
+	ms := OrderedCollection new.
 	aClasses do: [ :c |
 		|aClass|
 		aClass := self getClass: c.
 		(aClass selectors) do: [ :method |
 			(self isKeywordMethod: method Class: aClass) ifTrue: [binaries add: method].
 			(self isUnaryMethod: method Class: aClass) ifTrue: [unaries add: method].
+			ms add: { method . (aClass >> method) argumentNames size }
 		 ].].
 	
 	self unaryMethods: unaries.
+	methods := ms.
 	self binaryMethods: binaries. 
 ]
 
@@ -244,6 +279,11 @@ GPCodeGenerator >> isKeywordMethod: aMethod Class: aClass [
 GPCodeGenerator >> isUnaryMethod: aMethod Class: aClass [
 	^(aClass >> aMethod) argumentNames size = 0
 
+]
+
+{ #category : #accessing }
+GPCodeGenerator >> methods [ 
+	^methods
 ]
 
 { #category : #hooks }
@@ -292,6 +332,12 @@ GPCodeGenerator >> setTest: aKey value: n [
 Set the test for fitness. Like: 'assert aKey equals: n'
 "
 	self test: { aKey . n }.
+]
+
+{ #category : #adding }
+GPCodeGenerator >> sumWeightsAll [
+	^ sumWeightsAll
+	
 ]
 
 { #category : #accessing }

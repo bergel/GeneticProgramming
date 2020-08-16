@@ -38,14 +38,12 @@ GPEngine >> createNewGeneration [
 	newPopulation := OrderedCollection new. 
 	newPopulation add: self pickBestIndividual.
 	population size - 1 timesRepeat: [
-		((configuration randomInt: 100) < 80) 
-			ifTrue: [  
-				i1 := self rouletteSelection.
-				i2 := self rouletteSelection.
-				newInd := i1 crossOverWith: i2 using: configuration random ]
-			ifFalse: [ 
-				newInd := self mutation ].
-		newPopulation add: newInd
+		i1 := self rouletteSelection.
+		i2 := self rouletteSelection.
+		newInd := i1 crossOverWith: i2 using: configuration random.			
+		((configuration randomInt: 100) > 80)
+		ifTrue: [ newInd := self mutation: newInd ].
+		newPopulation add: newInd.
 	].
 	population := newPopulation.
 	fitnessOfPopulation := self totalFitnessOfGeneration 
@@ -158,6 +156,13 @@ GPEngine >> mutation [
 	"Return an element, picked randomly from the population, that has been mutated"
 	| ind |
 	ind := (self randomElementOf: population) deepCopy.
+	configuration mutate: ind.
+	^ ind
+]
+
+{ #category : #evolution }
+GPEngine >> mutation: ind [
+	"Return an element, picked randomly from the population, that has been mutated"
 	configuration mutate: ind.
 	^ ind
 ]
