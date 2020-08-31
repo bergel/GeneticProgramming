@@ -47,3 +47,33 @@ GPNodeTest >> testCrossOver02 [
 	self assert: offspring print ~= i1 print.
 	self assert: offspring print ~= i2 print.
 ]
+
+{ #category : #tests }
+GPNodeTest >> testMutate [
+	| c i p |
+	c := GPArithConfiguration new.
+	i := c subNode children: { c number: 5 . c number: 3 }.
+	p := i print.
+	self assert: p equals: '(5 - 3)'.
+	1 to: 5 do: [:n | 
+		c mutate: i.
+		self deny: i print equals: p.
+		p := i print.
+	].
+	
+]
+
+{ #category : #tests }
+GPNodeTest >> testMutate2 [
+	| c i p |
+	c := GPCELConfiguration new.
+	i := c sumNode children: {c multNode children: { c number: 8. (c multNode children: {c number: 7. c number:10 })}. c number: 34 }.
+	self assert: i print equals: '((8 * (7 * 10)) + 34)'.
+	self assert: i evaluate equals: 594.
+	p := (1 to: 20) collect: [ :n | 
+		c mutate: i.
+		i print
+		 ].
+	self assert: p asSet size > 1
+	 
+]

@@ -26,7 +26,7 @@ GPCELConfiguration >> example [
 	"
 	| e |
 	e := GPEngine new.
-	e configuration: GPCELConfiguration new.
+	e configuration: self class new.
 	e execute.
 	^ e pickBestIndividual
 
