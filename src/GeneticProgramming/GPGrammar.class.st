@@ -47,20 +47,35 @@ GPGrammar >> createRule: ruleName [
 
 { #category : #'public access' }
 GPGrammar >> evaluate: anObject [
-	| indexes |
-	indexes := Stack  new.
-	^ rules values flattened
-		detect: [ :rule | rule isValid: anObject having: indexes and: self ] 
-		ifFound: [ :rule | | newStack queue |
-			newStack := Stack new.
-			queue := WaitfreeQueue new.
-			1 to: indexes size do: [:n | newStack push: indexes pop ].
-			newStack flattened do: [ :v | queue nextPut: v ].
-			rule evaluate: anObject having: queue and: self ]  
-		ifNone: [ nil ] 
+	^ [(self nodeOf: anObject) evaluateUsing: self] on: Error do: [ nil ]
 ]
 
 { #category : #initialization }
 GPGrammar >> initialize [ 
 	rules := Dictionary new
+]
+
+{ #category : #transitions }
+GPGrammar >> nodeOf: anObject [
+	| stack |
+	stack := Stack new.
+	^ rules values flattened
+		detect: [ :rule | rule isValid: anObject having: stack and: self ]
+		ifFound: [ :rule | | newStack queue |
+			newStack := Stack new.
+			queue := WaitfreeQueue new.
+			1 to: stack size do: [:n | newStack push: stack pop ].
+			newStack flattened do: [ :v | queue nextPut: v ].
+			rule nodeOf: anObject having: queue and: self ]
+		ifNone: [ nil ]
+]
+
+{ #category : #transitions }
+GPGrammar >> ruleNameOf: anObject [
+	| stack |
+	stack := Stack new.
+	^ rules values flattened
+		detect: [ :rule | rule isValid: anObject having: stack and: self ]
+		ifFound: [ :rule | rule ruleName ]
+		ifNone: [ nil ]
 ]

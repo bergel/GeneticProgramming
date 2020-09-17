@@ -39,13 +39,20 @@ GPGrammarTest >> setUp [
 
 { #category : #tests }
 GPGrammarTest >> test1 [
+	| digit |
 	self addDigits: #(1 3 5 6).
-	self assert: (grammar evaluate: (GPDigit value: 1)) equals: 1.
-	"self assert: (grammar rule: (GPDigit value: 1)) equals: #digit."
-	self assert: (grammar evaluate: (GPDigit value: 8)) isNil.
-	"self assert: (grammar rule: (GPDigit value: 8)) equals: #digit."
-	self assert: (grammar evaluate: (GPDigit value: 5)) equals: 5.
-	"self assert: (grammar rule: (GPDigit value: 5)) equals: #digit."
+	digit := GPDigit value: 1.
+	self assert: (grammar evaluate: digit) equals: 1.
+	self assert: (grammar ruleNameOf: digit) equals: #digit.
+	self assert: (grammar nodeOf: digit) print equals: '1'.
+	digit := GPDigit value: 8.
+	self assert: (grammar evaluate: digit) isNil.
+	self assert: (grammar ruleNameOf: digit) isNil.
+	self assert: (grammar nodeOf: digit) isNil.
+	digit := GPDigit value: 5.
+	self assert: (grammar evaluate: digit) equals: 5.
+	self assert: (grammar ruleNameOf: digit) equals: #digit.
+	self assert: (grammar nodeOf: digit) print equals: '5'.
 ]
 
 { #category : #tests }
@@ -67,27 +74,29 @@ GPGrammarTest >> test10 [
 
 { #category : #tests }
 GPGrammarTest >> test2 [
+	| array |
 	self addDigits: #(1 2 3 4 5 60).
 	grammar
 		at: #digits putListOf: #digit
 		evaluationBlock: [:node :context | (node children collect: [:child | child evaluateUsing: context ]) sum ]
 		and: [:node :context | (node children collect: [ :child | child printUsing: context ]) asString ].
-	self assert: (grammar evaluate: (GPDigit value: 1)) equals: 1.
-	"self assert: (grammar rule: (GPDigit value: 1)) equals: #digit."
-	self assert: (grammar evaluate: (GPDigit value: 8)) isNil.
-	"self assert: (grammar rule: (GPDigit value: 8)) isNil."
-	self assert: (grammar evaluate: (GPDigit value: 60)) equals: 60.
-	"self assert: (grammar rule: (GPDigit value: 7)) equals: #digit."
-	self assert: (grammar evaluate: (Array with: (GPDigit value: 1) with: (GPDigit value: 5))) equals: 6.
-	"self assert: (grammar rule: (Array with: (GPDigit value: 1) with: (GPDigit value: 6))) equals: #digits."
-	self assert: (grammar evaluate: (Array with: (GPDigit value: 1) with: (GPDigit value: 5) with: (GPDigit value: 60))) equals: 66.
-	"self assert: (grammar rule: (Array with: (GPDigit value: 1) with: (GPDigit value: 5) with: (GPDigit value: 7))) equals: #digits."
-	self assert: (grammar evaluate: (Array with: (GPDigit value: 1) with: (GPDigit value: 5) with: (GPDigit value: 7))) isNil.
+	array := Array with: (GPDigit value: 1) with: (GPDigit value: 5).
+	self assert: (grammar evaluate: array) equals: 6.
+	self assert: (grammar ruleNameOf: array) equals: #digits.
+	self assert: (grammar nodeOf: array) print equals: (OrderedCollection newFrom: #('1' '5')) asString.
+	array := Array with: (GPDigit value: 1) with: (GPDigit value: 5) with: (GPDigit value: 60).
+	self assert: (grammar evaluate: array) equals: 66.
+	self assert: (grammar ruleNameOf: array) equals: #digits.
+	self assert: (grammar nodeOf: array) print equals: (OrderedCollection newFrom: #('1' '5' '60')) asString.
+	array := Array with: (GPDigit value: 1) with: (GPDigit value: 5) with: (GPDigit value: 7).
+	self assert: (grammar evaluate: array) isNil.
+	self assert: (grammar ruleNameOf: array) isNil.
 
 ]
 
 { #category : #tests }
 GPGrammarTest >> test3 [
+	| array |
 	self addDigits: #(1 3 6 8).
 	self addOperators: #(#+ #- #* #/).
 	self addRule: #operation
@@ -97,33 +106,38 @@ GPGrammarTest >> test3 [
 				perform: (node children second evaluateUsing: context) 
 				with: (node children third evaluateUsing: context) ] 
 		and: [ :node :context | 
-			(node children first printUsing: context),
-			(node children second printUsing: context),
-			(node children third printUsing: context)].
-	self assert: (grammar evaluate: (GPDigit value: 1)) equals: 1.
-	self assert: (grammar evaluate: 
-		(Array with: (GPDigit value: 1) 
+			String streamContents: [:str | str
+				nextPut: $(;
+				nextPutAll: (node children first printUsing: context);
+				nextPutAll: (node children second printUsing: context);
+				nextPutAll: (node children third printUsing: context);
+				nextPut: $) ] ].
+	array := Array with: (GPDigit value: 1) 
 				with: (GPOperator operator: #+) 
-				with: (GPDigit value: 3))) equals: 4.
-		"self assert: (grammar rule: 
-		(Array with: (GPDigit value: 1) 
-				with: (GPOperator operator: #+) 
-				with: (GPDigit value: 3))) equals: #expression."
+				with: (GPDigit value: 3).
+	self assert: (grammar evaluate: array) equals: 4.
+	self assert: (grammar ruleNameOf: array) equals: #operation.
+	self assert: (grammar nodeOf: array) print equals: '(1+3)'.
 ]
 
 { #category : #tests }
 GPGrammarTest >> test4 [
+	| array printBlock |
 	self addDigits: #(1 2 3 6 8 10).
 	self addOperators: #(#+ #- #* #/).
+	printBlock := [ :node :context | 
+			String streamContents: [:str | str
+				nextPut: $(;
+				nextPutAll: (node children first printUsing: context);
+				nextPutAll: (node children second printUsing: context);
+				nextPutAll: (node children third printUsing: context);
+				nextPut: $) ] ].
 	self addRule: #operation withSequence: #(#digit #operator #digit) 
 		evaluationBlock: [:node :context | 
 			(node children first evaluateUsing: context) 
 				perform: (node children second evaluateUsing: context) 
 				with: (node children third evaluateUsing: context) ] 
-		and: [ :node :context | 
-			(node children first printUsing: context),
-			(node children second printUsing: context),
-			(node children third printUsing: context)].
+		and: printBlock.
 	grammar 
 		at: #expression put: #(#digit) 
 			evaluationBlock: [:node :context | node children first evaluateUsing: context ] 
@@ -136,38 +150,38 @@ GPGrammarTest >> test4 [
 				(node children first evaluateUsing: context)
 				perform: (node children second evaluateUsing: context)
 				with: (node children third evaluateUsing: context) ]
-			and: [:node :context | 
-				String streamContents: [:str | str 
-					nextPut: $(;
-					nextPutAll: (node children first printUsing: context);
-					nextPutAll: (node children second printUsing: context);
-					nextPutAll: (node children third printUsing: context);
-					nextPut: $) ] ].
-	self assert: (grammar evaluate: (GPDigit value: 1)) equals: 1.
-	self assert: (grammar evaluate: 
-		(Array 
+			and: printBlock.
+	array := Array 
 			with: (Array with: (GPDigit value: 6) 
 							with: (GPOperator operator: #+) 
 							with: (GPDigit value: 3))
 			with: (GPOperator operator: #*)
 			with: (Array with: (GPDigit value: 8) 
 							with: (GPOperator operator: #/) 
-							with: (GPDigit value: 2)))) equals: 36.
+							with: (GPDigit value: 2)).
+	self assert: (grammar evaluate: array) equals: 36.
+	self assert: (grammar ruleNameOf: array) equals: #expression.
+	self assert: (grammar nodeOf: array) print equals: '((6+3)*(8/2))'
 ]
 
 { #category : #tests }
 GPGrammarTest >> test5 [
+	| array printBlock |
 	self addDigits: #(1 2 -3 6 8 10).
 	self addOperators: #(#+ #- #* #/).
+	printBlock := [ :node :context | 
+			String streamContents: [:str | str
+				nextPut: $(;
+				nextPutAll: (node children first printUsing: context);
+				nextPutAll: (node children second printUsing: context);
+				nextPutAll: (node children third printUsing: context);
+				nextPut: $) ] ].
 	self addRule: #operation withSequence: #(#digit #operator #digit) 
 		evaluationBlock: [:node :context | 
 			(node children first evaluateUsing: context) 
 				perform: (node children second evaluateUsing: context) 
 				with: (node children third evaluateUsing: context) ] 
-		and: [ :node :context | 
-			(node children first printUsing: context),
-			(node children second printUsing: context),
-			(node children third printUsing: context)].
+		and: printBlock.
 	grammar 
 		at: #expression put: #(#digit) 
 			evaluationBlock: [:node :context | node children first evaluateUsing: context ] 
@@ -180,16 +194,8 @@ GPGrammarTest >> test5 [
 				(node children first evaluateUsing: context)
 				perform: (node children second evaluateUsing: context)
 				with: (node children third evaluateUsing: context) ]
-			and: [:node :context | 
-				String streamContents: [:str | str 
-					nextPut: $(;
-					nextPutAll: (node children first printUsing: context);
-					nextPutAll: (node children second printUsing: context);
-					nextPutAll: (node children third printUsing: context);
-					nextPut: $) ] ].
-	self assert: (grammar evaluate: (GPDigit value: 1)) equals: 1.
-	self assert: (grammar evaluate: 
-		(Array 
+			and: printBlock.
+	array := Array 
 			with: (Array with: (GPDigit value: 10) 
 							with: (GPOperator operator: #-) 
 							with: (GPDigit value: 6))
@@ -200,5 +206,8 @@ GPGrammarTest >> test5 [
 							with: (GPOperator operator: #/) 
 							with: (Array with: (GPDigit value: 1) 
 									with: (GPOperator operator: #+) 
-									with: (GPDigit value: 2))))) equals: -32.
+									with: (GPDigit value: 2))).
+	self assert: (grammar evaluate: array) equals: -32.
+	self assert: (grammar ruleNameOf: array) equals: #expression.
+	self assert: (grammar nodeOf: array) print equals: '((10-6)*((8*-3)/(1+2)))'
 ]

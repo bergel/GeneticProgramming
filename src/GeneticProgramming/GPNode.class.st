@@ -170,7 +170,7 @@ GPNode >> printBlock: anObject [
 
 { #category : #initialization }
 GPNode >> printUsing: context [
-	^ printBlock value: children value: context
+	^ printBlock value: self value: context "children value: context"
 ]
 
 { #category : #accessing }

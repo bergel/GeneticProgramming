@@ -49,16 +49,11 @@ GPRule >> collectNodesOf: objects atIndex: index having: ruleIndexes and: gramma
 		yourself.
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'collecting leaves' }
 GPRule >> collectReferencedRules: rules on: grammar [
 	^ (rules collect: [ :rule | rule sequence size == 1 
 										ifTrue: [ grammar at: rule sequence first ]
 										ifFalse: [ rule ] ]) flattened
-]
-
-{ #category : #evaluating }
-GPRule >> evaluate: anObject having: ruleIndexes and: grammar [
-	^ (self nodeOf: anObject having: ruleIndexes and: grammar) evaluateUsing: grammar
 ]
 
 { #category : #accessing }
@@ -80,31 +75,23 @@ GPRule >> isList: boolean [
 
 { #category : #testing }
 GPRule >> isValid: collection atIndex: index having: stack and: grammar [
-	| isValid rules indexRule referenceName |
+	| indexRule referenceName |
 	isList ifFalse: [ collection size == sequence size ifFalse: [ ^ false ] ].
 	index > collection size ifTrue: [ ^ true ].
 	indexRule := 0.
 	referenceName := sequence at: (isList ifTrue: [ 1 ] ifFalse: [ index ] ).
-	rules := self collectReferencedRules: (grammar at: referenceName "(sequence at: index)") on: grammar.
-	isValid := rules detect: [ :rule | indexRule := indexRule + 1.
+	^ (self collectReferencedRules: (grammar at: referenceName) on: grammar)
+		detect: [ :rule | indexRule := indexRule + 1.
 			rule isValid: (collection at: index) having: stack and: grammar ] 
 		ifFound: [ :rule | 
-			rule sequence "size > 1 "
+			rule sequence
 				ifEmpty: [ stack push: indexRule ]
 				ifNotEmpty: [ | newStack |
 					newStack := Stack new.
 					1 to: sequence size do: [:n | newStack push: stack pop ].
 					stack push: (newStack push: indexRule; yourself) ].
 			(self isValid: collection atIndex: index + 1 having: stack and: grammar) ] 
-		ifNone: [ false ].
-	^ isValid
-]
-
-{ #category : #testing }
-GPRule >> isValid: collection atIndex: index having: stack onRule: rule and: grammar [
-	index > collection size ifTrue: [ ^ true ].
-	^ (rule isValid: (collection at: index) having: stack and: grammar) 
-		and: [ rule isValid: collection atIndex: index + 1 having: stack onRule: rule and: grammar ]
+		ifNone: [ false ]
 ]
 
 { #category : #testing }
@@ -112,16 +99,14 @@ GPRule >> isValid: anObject having: stacks and: grammar [
 	^ sequence 
 		ifEmpty: [ values includes: anObject ]
 		ifNotEmpty: [ anObject isCollection 
-			ifTrue: [ "isList 
-					ifTrue: [ self isValid: anObject atIndex: 1 having: stacks onRule: (grammar at: sequence first) first and: grammar ] 
-					ifFalse: [ "self isValid: anObject atIndex: 1 having: stacks and: grammar "]" ]
+			ifTrue: [ self isValid: anObject atIndex: 1 having: stacks and: grammar ]
 			ifFalse: [ false ] ]
 	
 ]
 
 { #category : #evaluating }
 GPRule >> nodeOf: anObject having: ruleIndexes and: grammar [
-	^ (sequence isEmpty "or: [ isList ]") 
+	^ (sequence isEmpty) 
 			ifTrue: [ self terminalNodeOf: anObject having: ruleIndexes and: grammar ]
 			ifFalse: [ self nonTerminalNodeOf: anObject having: ruleIndexes and: grammar ]
 ]
@@ -138,6 +123,11 @@ GPRule >> nonTerminalNodeOf: collection having: ruleIndexes and: grammar [
 { #category : #accessing }
 GPRule >> printBlock: aBlock [
 	printBlock := aBlock 
+]
+
+{ #category : #accessing }
+GPRule >> ruleName [
+	^ ruleName
 ]
 
 { #category : #accessing }
