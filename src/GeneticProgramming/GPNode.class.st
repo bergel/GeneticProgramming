@@ -106,7 +106,7 @@ GPNode >> evaluate [
 
 { #category : #initialization }
 GPNode >> evaluateUsing: context [
-	^ evaluationBlock value: children value: context
+	^ evaluationBlock value: self value: context "evaluationBlock value: children value: context"
 ]
 
 { #category : #accessing }

@@ -25,7 +25,7 @@ GPLiteral >> evaluate [
 
 { #category : #operations }
 GPLiteral >> mutate [
-	^ self deepCopy value: (value evaluate + 10)
+	^ self deepCopy value: (value evaluate isNumber ifTrue: [ value evaluate + 10 ] ifFalse: [ value evaluate not ])
 ]
 
 { #category : #printing }

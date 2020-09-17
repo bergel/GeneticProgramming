@@ -12,6 +12,12 @@ GPBlock >> addExpr: expression [
 	exprs add: expression 
 ]
 
+{ #category : #copying }
+GPBlock >> deepCopy [
+	^ self class new 
+		exprs: (self exprs collect: #deepCopy) 
+]
+
 { #category : #'public access' }
 GPBlock >> evaluate [ 
 	^ (exprs collect: #evaluate) last
@@ -39,4 +45,11 @@ GPBlock >> mutate [
 	random := Random seed: 42.
 	index := random nextInt: exprs size. 
 	^ self deepCopy exprs at: index put: (exprs at: index) mutate
+]
+
+{ #category : #printing }
+GPBlock >> printOn: stream [
+	stream nextPut: $[.
+	exprs do: [ :expr | expr printOn: stream ].
+	stream nextPut: $]
 ]

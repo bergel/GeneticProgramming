@@ -59,7 +59,7 @@ GPExpressionTest >> test5 [
 GPExpressionTest >> test6 [
 	| block block2 |
 	block := GPBlock new addExpr: (GPLiteral value: true).
-	self assert: block print equals: '[true]'.
+	self assert: block printString equals: '[true]'.
 	self assert: block evaluate equals: true.
 	block2 := block mutate.
 	self deny: block2 evaluate equals: block evaluate
