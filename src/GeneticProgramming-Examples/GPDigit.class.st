@@ -1,6 +1,6 @@
 Class {
 	#name : #GPDigit,
-	#superclass : #Object,
+	#superclass : #GPAbstractExpression,
 	#instVars : [
 		'value'
 	],
