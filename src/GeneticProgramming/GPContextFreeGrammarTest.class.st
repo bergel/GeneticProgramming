@@ -50,7 +50,9 @@ GPContextFreeGrammarTest >> test1 [
 		 assertCollection:
 		 (result children first children first children collect: #id)
 		 hasSameElements: #( #F ).
-	 self assertCollection: (result evaluate: grammar) includesAny: #(49)
+	 self
+		 assert: (result evaluate: grammar)
+		 equals: 49
 ]
 
 { #category : #tests }
@@ -61,8 +63,8 @@ GPContextFreeGrammarTest >> test2 [
 	 grammar
 		 addRule: #E with: GPLogic and: #( #E #& #T );
 		 addRule: #E with: GPLogic and: #( #E #| #T );
-		 addRule: #E with: #T.
-		 "addRule: #T withLeaf: GPBoolean."
+		 addRule: #E with: #T;
+		 addRule: #T withLeaf: GPBool.
 	 result := grammar expandFrom: #E.
 	 "result -> 			E
 						E	&	T
@@ -73,6 +75,6 @@ GPContextFreeGrammarTest >> test2 [
 		 assertCollection: (result withAllChildren collect: #id)
 		 hasSameElements: #( #E #E #E #T #& #T #& #T ).
 	 self
-		 assertCollection: (result evaluate: grammar)
-		 includesAny: (Array with: false)
+		 assert: (result evaluate: grammar)
+		 equals: false
 ]

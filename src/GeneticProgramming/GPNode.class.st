@@ -118,7 +118,7 @@ GPNode >> evaluate: grammar [
 			   self isLeaf
 				   ifTrue: [ id ]
 				   ifFalse: [ 
-				   (children collect: [ :c | c evaluate: grammar ]) flattened  ] ]
+				   (children first evaluate: grammar) ] ]
 ]
 
 { #category : #initialization }
