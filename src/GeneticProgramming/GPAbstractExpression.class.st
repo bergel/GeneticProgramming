@@ -1,10 +1,11 @@
 Class {
 	#name : #GPAbstractExpression,
 	#superclass : #Object,
-	#category : #'GeneticProgramming-Interpreter'
+	#category : #'GeneticProgramming-Grammar'
 }
 
 { #category : #'public access' }
-GPAbstractExpression >> evaluate: context [
-	^ self subclassResponsibility 
+GPAbstractExpression >> evaluate: collection with: context [
+
+	 ^ self subclassResponsibility
 ]

@@ -84,7 +84,7 @@ GPEngine >> createNewIndividual [
 
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #operations }
 GPEngine >> distanceFromSolutionOf: individual [
 	^ configuration distanceFromSolutionOf: individual
 ]

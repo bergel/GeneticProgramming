@@ -2,6 +2,7 @@ Class {
 	#name : #GPNode,
 	#superclass : #Object,
 	#instVars : [
+		'id',
 		'children',
 		'type',
 		'evaluationBlock',
@@ -92,11 +93,15 @@ GPNode >> crossOverWith: anotherNode using: random [
 
 { #category : #operations }
 GPNode >> deepCopy [
-	| c |
-	c := self class new type: type; evaluationBlock: evaluationBlock; printBlock: printBlock.
-	self children do: [ :child |
-		c addChild: child deepCopy ].
-	^ c
+
+	 | c |
+	 c := self class new
+		      id: id;
+				type: self type;
+		      evaluationBlock: evaluationBlock;
+		      printBlock: printBlock.
+	 self children do: [ :child | c addChild: child deepCopy ].
+	 ^ c
 ]
 
 { #category : #initialization }
@@ -104,9 +109,22 @@ GPNode >> evaluate [
 	^ self evaluateUsing: nil
 ]
 
+{ #category : #'public access' }
+GPNode >> evaluate: grammar [
+
+	 ^ type
+		   ifNotNil: [ type new evaluate: children with: grammar ]
+		   ifNil: [ 
+			   self isLeaf
+				   ifTrue: [ id ]
+				   ifFalse: [ 
+				   (children collect: [ :c | c evaluate: grammar ]) flattened  ] ]
+]
+
 { #category : #initialization }
 GPNode >> evaluateUsing: context [
-	^ evaluationBlock value: self value: context "evaluationBlock value: children value: context"
+
+	 ^ evaluationBlock value: children value: context "evaluationBlock value: children value: context"
 ]
 
 { #category : #accessing }
@@ -131,6 +149,16 @@ GPNode >> gtInspectorTableIn: composite [
 	composite text
 		title: 'Print';
 		display: [ self print ]
+]
+
+{ #category : #accessing }
+GPNode >> id [
+	^ id
+]
+
+{ #category : #accessing }
+GPNode >> id: anObject [
+	id := anObject
 ]
 
 { #category : #initialization }
@@ -166,6 +194,13 @@ GPNode >> printBlock [
 { #category : #accessing }
 GPNode >> printBlock: anObject [
 	printBlock := anObject
+]
+
+{ #category : #printing }
+GPNode >> printOn: aStream [
+
+	 "super printOn: aStream."
+	 aStream nextPutAll: self id
 ]
 
 { #category : #initialization }
