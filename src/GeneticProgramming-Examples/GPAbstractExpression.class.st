@@ -1,7 +1,7 @@
 Class {
 	#name : #GPAbstractExpression,
 	#superclass : #Object,
-	#category : #'GeneticProgramming-Grammar'
+	#category : #'GeneticProgramming-Examples'
 }
 
 { #category : #'public access' }
