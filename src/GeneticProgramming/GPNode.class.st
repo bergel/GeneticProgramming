@@ -1,13 +1,6 @@
 Class {
 	#name : #GPNode,
-	#superclass : #Object,
-	#instVars : [
-		'id',
-		'children',
-		'type',
-		'evaluationBlock',
-		'printBlock'
-	],
+	#superclass : #GPAbstractNode,
 	#category : #'GeneticProgramming-Core'
 }
 
@@ -16,226 +9,67 @@ GPNode class >> children: someNodes [
 	^ self new children: someNodes
 ]
 
-{ #category : #accessing }
-GPNode >> addChild: aNode [
-	children add: aNode
-]
-
-{ #category : #accessing }
-GPNode >> allLeaves [
-	| c |
-	c := OrderedCollection new.
-	self allLeaves: c.
-	^ c
-]
-
-{ #category : #accessing }
-GPNode >> allLeaves: collection [
-	"Private usage"
-	children do: [ :c |
-		c isLeaf 
-			ifTrue: [ collection add: c ]
-			ifFalse: [ c allLeaves: collection ] ]
-]
-
-{ #category : #accessing }
-GPNode >> atIndex: anIndex [
-	^ self withAllChildren at: anIndex
-]
-
-{ #category : #operations }
-GPNode >> atIndex: index put: anotherNode [
-	| i |
-	index < 1 ifTrue: [ ^ self ].
-	i := index.
-	i := i - 1.
-	self children doWithIndex: [ :child :ii |
-		i = 1 ifTrue: [  self children at: ii put: anotherNode. ^ self ].
-		child atIndex: i put: anotherNode.
-		i := i - 1. ].
-	
-]
-
-{ #category : #accessing }
-GPNode >> children [
-	^ children
-]
-
-{ #category : #accessing }
-GPNode >> children: someNodes [
-	children := someNodes
-]
-
-{ #category : #operations }
-GPNode >> crossOverWith: anotherNode [
-	"This method should be called with two root nodes"
-	^ self crossOverWith: anotherNode at: (self numberOfNodes - 1) atRandom + 1 at: (anotherNode numberOfNodes - 1) atRandom + 1
-]
-
-{ #category : #operations }
-GPNode >> crossOverWith: anotherNode at: index1 at: index2 [
-	"Return an offspring"
-	| copy |
-	copy := self deepCopy.
-	copy atIndex: index1 put: (anotherNode atIndex: index2) deepCopy.
-	^ copy
-]
-
-{ #category : #operations }
-GPNode >> crossOverWith: anotherNode using: random [
-	"This method should be called with two root nodes"
-
-	^ self
-		crossOverWith: anotherNode
-		at: (random nextInt: self numberOfNodes - 1) + 1
-		at: (random nextInt: anotherNode numberOfNodes - 1) + 1
-]
-
 { #category : #operations }
 GPNode >> deepCopy [
 
 	 | c |
-	 c := self class new
-		      id: id;
-				type: self type;
+	 c := super deepCopy
+		      type: self type;
 		      evaluationBlock: evaluationBlock;
 		      printBlock: printBlock.
 	 self children do: [ :child | c addChild: child deepCopy ].
 	 ^ c
 ]
 
-{ #category : #initialization }
-GPNode >> evaluate [
-	^ self evaluateUsing: nil
-]
-
 { #category : #'public access' }
 GPNode >> evaluate: grammar [
 
-	 ^ type
-		   ifNotNil: [ type new evaluate: children with: grammar ]
-		   ifNil: [ 
-			   self isLeaf
-				   ifTrue: [ id ]
-				   ifFalse: [ 
-				   (children first evaluate: grammar) ] ]
+	 ^ children size == 1
+		   ifTrue: [ children first evaluate: grammar ]
+		   ifFalse: [ 
+			   (children first evaluate: grammar)
+				   perform: (children second evaluate: grammar)
+				   withEnoughArguments:
+				   ((children copyFrom: 3 to: children size) collect: [ :child | 
+					    child evaluate: grammar ]) ]
 ]
 
-{ #category : #initialization }
-GPNode >> evaluateUsing: context [
+{ #category : #'public access' }
+GPNode >> evaluate: grammar given: configuration [
 
-	 ^ evaluationBlock value: children value: context "evaluationBlock value: children value: context"
+	 ^ children size == 1
+		   ifTrue: [ children first evaluate: grammar given: configuration ]
+		   ifFalse: [ 
+			   (children first evaluate: grammar given: configuration)
+				   perform: (children second evaluate: grammar given: configuration)
+				   withEnoughArguments:
+					   ((children copyFrom: 3 to: children size) collect: [ :child | 
+						    child evaluate: grammar given: configuration ]) ]
 ]
 
-{ #category : #accessing }
-GPNode >> evaluationBlock [
-	^ evaluationBlock
+{ #category : #'collecting leaves' }
+GPNode >> expandGiven: grammar [
+
+	 | result |
+	 result := (GPRandom instance selectRandomly: (grammar optionsOf: id))
+		           deepCopy.
+	 result children doWithIndex: [ :child :index | 
+		 result children at: index put: (grammar expandFrom: child id) ].
+	 ^ result
 ]
 
-{ #category : #accessing }
-GPNode >> evaluationBlock: aOneArgBlock [
-	"Take the children as argument"
-	evaluationBlock := aOneArgBlock
-]
+{ #category : #'collecting leaves' }
+GPNode >> expandGiven: grammar and: configuration [
 
-{ #category : #accessing }
-GPNode >> first [
-	^ children first
-]
-
-{ #category : #'gt-inspector-extension' }
-GPNode >> gtInspectorTableIn: composite [
-	<gtInspectorPresentationOrder: -15>
-	composite text
-		title: 'Print';
-		display: [ self print ]
-]
-
-{ #category : #accessing }
-GPNode >> id [
-	^ id
-]
-
-{ #category : #accessing }
-GPNode >> id: anObject [
-	id := anObject
-]
-
-{ #category : #initialization }
-GPNode >> initialize [
-	super initialize.
-	children := OrderedCollection new.
-	printBlock := [ :c | 
-		| t |
-		t := c inject: '(' into: [ :sum :el | sum, el print ].
-		t, ')' ]
-]
-
-{ #category : #testing }
-GPNode >> isLeaf [
-	^ children isEmpty
-]
-
-{ #category : #metrics }
-GPNode >> numberOfNodes [
-	^ self withAllChildren size
-]
-
-{ #category : #initialization }
-GPNode >> print [
-	^ self printUsing: nil
-]
-
-{ #category : #accessing }
-GPNode >> printBlock [
-	^ printBlock
-]
-
-{ #category : #accessing }
-GPNode >> printBlock: anObject [
-	printBlock := anObject
-]
-
-{ #category : #printing }
-GPNode >> printOn: aStream [
-
-	 "super printOn: aStream."
-	 aStream nextPutAll: self id
-]
-
-{ #category : #initialization }
-GPNode >> printUsing: context [
-	^ printBlock value: self value: context "children value: context"
-]
-
-{ #category : #accessing }
-GPNode >> second [
-	^ children second
-]
-
-{ #category : #accessing }
-GPNode >> type [
-	^ type
-]
-
-{ #category : #accessing }
-GPNode >> type: aSymbol [
-	type := aSymbol
-]
-
-{ #category : #accessing }
-GPNode >> withAllChildren [
-	| c |
-	c := OrderedCollection new.
-	c add: self.
-	self withAllChildren: c.
-	^ c
-]
-
-{ #category : #accessing }
-GPNode >> withAllChildren: collection [
-	"Private usage"
-	children do: [ :c |
-		collection add: c.
-		c withAllChildren: collection ]
+	 | result options |
+	options := grammar optionsOf: id.
+	 result := (options at: (GPRandom instance selectRandomlyGivenProbabilities:
+		            (self
+			             collectOptions: (1 to: options size)
+			             with: (configuration optionWeightsOf: id)))) deepCopy.
+	 result children doWithIndex: [ :child :index | 
+		 result children
+			 at: index
+			 put: (grammar expandFrom: child id given: configuration) ].
+	 ^ result
 ]

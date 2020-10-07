@@ -6,11 +6,13 @@ Class {
 
 { #category : #baselines }
 BaselineOfGeneticProgramming >> baseline: spec [
-	<baseline>
-	spec
-		for: #common
-		do: [ spec
-				package: 'GeneticProgramming-Examples';
-				package: 'GeneticProgramming'
-					with: [ spec requires: #('GeneticProgramming-Examples') ] ].
+
+	 <baseline>
+	 spec for: #common do: [ 
+		 spec
+			 package: 'GeneticProgramming';
+			 package: 'GeneticProgramming-Examples';
+			 package: 'GeneticProgramming-Tests' with: [ 
+				 spec requires:
+						 #( 'GeneticProgramming' 'GeneticProgramming-Examples' ) ] ]
 ]

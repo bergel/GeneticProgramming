@@ -23,10 +23,28 @@ GPDigit >> = other [
 		and: [ value = other value ]
 ]
 
-{ #category : #'public access' }
-GPDigit >> evaluate: collection with: context [
+{ #category : #accessing }
+GPDigit >> div: digit [
 
-	 ^ (context selectRandomly: self class values) value
+	 ^ self class new value: (self value / digit value)
+]
+
+{ #category : #accessing }
+GPDigit >> mul: digit [
+
+	 ^ self class new value: self value * digit value
+]
+
+{ #category : #accessing }
+GPDigit >> sub: digit [
+
+	 ^ self class new value: self value - digit value
+]
+
+{ #category : #'math functions' }
+GPDigit >> sum: digit [
+
+	 ^ self class new value: self value + digit value
 ]
 
 { #category : #evaluating }

@@ -3,86 +3,143 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'rules',
-		'random'
+		'options'
 	],
 	#category : #'GeneticProgramming-Grammar'
 }
 
 { #category : #adding }
-GPContextFreeGrammar >> addNode: node [
+GPContextFreeGrammar >> addLeafRule: symbol withValues: collection [
 
 	 rules
-		 at: node id
-		 ifPresent: [ :col | col add: node ]
+		 at: symbol
+		 ifAbsentPut: [ 
+		 self createNode: symbol ofClass: GPLiteralNode withSequence: #(  ) ].
+	 self addOptions: collection of: symbol
+]
+
+{ #category : #adding }
+GPContextFreeGrammar >> addMessageRule: symbol withValues: collection [
+
+	 rules
+		 at: symbol
+		 ifAbsentPut: [ 
+		 self createNode: symbol ofClass: GPMessageNode withSequence: #(  ) ].
+	 self addOptions: collection of: symbol
+]
+
+{ #category : #adding }
+GPContextFreeGrammar >> addOptions: collection of: symbol [
+
+	 options
+		 at: symbol
+		 ifPresent: [ :col | col addAll: collection ]
 		 ifAbsentPut: [ 
 			 OrderedCollection new
-				 add: node;
+				 addAll: collection;
 				 yourself ]
 ]
 
 { #category : #adding }
-GPContextFreeGrammar >> addRule: symbol with: anotherSymbol [
-	self addRule: symbol with: nil and: (Array with: anotherSymbol) 
+GPContextFreeGrammar >> addRule: symbol redirectingTo: anotherSymbol [
+
+	 self
+		 addRule: symbol
+		 withSequence: (Array with: anotherSymbol)
 ]
 
 { #category : #adding }
-GPContextFreeGrammar >> addRule: key with: aClass and: sequence [
+GPContextFreeGrammar >> addRule: key withSequence: sequence [
 
-	 self addNode: (self createNode: key with: sequence and: aClass)
+	 rules
+		 at: key
+		 ifAbsentPut: [ 
+		 self createNode: key ofClass: GPNode withSequence: #(  ) ].
+	 self addOptions:
+		 (Array with: (self createNode: key ofClass: GPNode withSequence: sequence)) of: key
+]
+
+{ #category : #accessing }
+GPContextFreeGrammar >> allButMessageRuleKeys [
+
+	 ^ rules associations
+		   reject: [ :assoc | 
+			   assoc value isMemberOf: GPMessageNode ]
+		   thenCollect: [ :assoc | assoc key ]
 ]
 
 { #category : #adding }
-GPContextFreeGrammar >> addRule: key withLeaf: aClass [
-
-	 self addNode: (self createNode: key with: #(  ) and: aClass).
-	 "values at: key put: nodeValues asOrderedCollection"
+GPContextFreeGrammar >> createNode: symbol ofClass: aClass withSequence: sequence [
+	^ aClass new 
+		id: symbol;
+		children: (sequence collect: [:c | GPNode new id: c])
 ]
 
-{ #category : #adding }
-GPContextFreeGrammar >> createNode: key with: sequence and: aClass [
+{ #category : #controlling }
+GPContextFreeGrammar >> expand [
 
-	 ^ GPNode new
-		   id: key;
-		   type: aClass;
-		   children: (sequence collect: [ :val | GPNode new id: val ])
+	 ^ self expandFrom: self selectKeyRule
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'collecting leaves' }
 GPContextFreeGrammar >> expandFrom: axiom [
-	^ rules at: axiom ifPresent: [ :nodes | self expandNodesFrom: nodes ] ifAbsent: [ nil ]
+
+	 ^ rules
+		   at: axiom
+		   ifPresent: [ :node | node expandGiven: self ]
+		   ifAbsent: [ nil ]
 ]
 
-{ #category : #'as yet unclassified' }
-GPContextFreeGrammar >> expandNodesFrom: nodes [
+{ #category : #'collecting leaves' }
+GPContextFreeGrammar >> expandFrom: axiom given: configuration [
 
-	 | selectedNode resultNode |
-	 selectedNode := self selectRandomly: nodes.
-	 resultNode := selectedNode deepCopy.
-	 selectedNode isLeaf ifFalse: [ 
-		 selectedNode children doWithIndex: [ :child :index | 
-			 rules
-				 at: child id
-				 ifPresent: [ :n | 
-				 resultNode children at: index put: (self expandNodesFrom: n) ]
-				 ifAbsent: [ resultNode children at: index put: child deepCopy ] ] ].
-	 ^ resultNode
+	 ^ rules
+		   at: axiom
+		   ifPresent: [ :node | 
+			   node expandGiven: self and: configuration]
+		   ifAbsent: [ nil ]
+]
+
+{ #category : #'collecting leaves' }
+GPContextFreeGrammar >> expandUsing: configuration [
+
+	 ^ self
+		   expandFrom:
+		   (self
+			    selectKeyRuleGiven: configuration)
+		   given: configuration
+]
+
+{ #category : #testing }
+GPContextFreeGrammar >> hasRule: symbol [
+	^ rules at: symbol ifPresent: [ true ] ifAbsent: [ false ]
 ]
 
 { #category : #initialization }
 GPContextFreeGrammar >> initialize [
 
 	 rules := Dictionary new.
-	 random := Random seed: 18
+	 options := Dictionary new
 ]
 
-{ #category : #'instance creation' }
-GPContextFreeGrammar >> seed: number [
-	random := Random seed: number
+{ #category : #accessing }
+GPContextFreeGrammar >> optionsOf: symbol [
+
+	 ^ options at: symbol
 ]
 
-{ #category : #'as yet unclassified' }
-GPContextFreeGrammar >> selectRandomly: collection [
+{ #category : #selecting }
+GPContextFreeGrammar >> selectKeyRule [
 
-	 
-	 ^ collection at: (random nextInt: collection size)
+	 ^ GPRandom instance selectRandomly: self allButMessageRuleKeys
+]
+
+{ #category : #selecting }
+GPContextFreeGrammar >> selectKeyRuleGiven: configuration [
+
+	 (configuration keysOfRuleWeights includesAll:
+		  self allButMessageRuleKeys ) ifFalse: [ 
+		 self error: 'all rules must have assigned a weight' ].
+	 ^ GPRandom instance selectRandomlyGivenProbabilities:
+		   configuration rulesWeights
 ]
