@@ -32,3 +32,9 @@ GPMessageNode >> expandGiven: grammas and: configuration [
 
 	 ^ self
 ]
+
+{ #category : #'collecting leaves' }
+GPMessageNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
+
+	 ^ self
+]

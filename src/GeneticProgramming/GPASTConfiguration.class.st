@@ -3,7 +3,8 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'rulesWeights',
-		'optionsWeights'
+		'optionsWeights',
+		'depth'
 	],
 	#category : #'GeneticProgramming-Grammar'
 }
@@ -18,6 +19,17 @@ GPASTConfiguration >> addOptionWeights: numbers forRule: symbol [
 GPASTConfiguration >> addWeight: number forRule: symbol [
 
 	 rulesWeights at: symbol put: number
+]
+
+{ #category : #accessing }
+GPASTConfiguration >> depth [
+
+	 ^ depth
+]
+
+{ #category : #accessing }
+GPASTConfiguration >> depth: number [
+	depth := number
 ]
 
 { #category : #initialization }
@@ -41,4 +53,10 @@ GPASTConfiguration >> optionWeightsOf: symbol [
 GPASTConfiguration >> rulesWeights [
 
 	 ^ rulesWeights
+]
+
+{ #category : #accesing }
+GPASTConfiguration >> rulesWeightsOf: keys [
+
+	 ^ rulesWeights associations select: [ :assoc | keys includes: assoc key ] thenCollect: [ :assoc | assoc value ]
 ]

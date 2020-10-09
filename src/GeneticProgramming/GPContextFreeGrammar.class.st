@@ -68,6 +68,26 @@ GPContextFreeGrammar >> allButMessageRuleKeys [
 		   thenCollect: [ :assoc | assoc key ]
 ]
 
+{ #category : #'collecting leaves' }
+GPContextFreeGrammar >> allComplexRulesKeysBut: symbols [
+
+	 ^ rules associations
+		   select: [ :assoc | 
+			   (assoc value isMemberOf: GPNode) and: [ 
+				   (symbols includes: assoc key) not ] ]
+		   thenCollect: [ :assoc | assoc key ]
+]
+
+{ #category : #'collecting leaves' }
+GPContextFreeGrammar >> allLeavesRuleKeysBut: symbols [
+
+	 ^ rules associations
+		   select: [ :assoc | 
+			   (assoc value isMemberOf: GPLiteralNode) and: [ 
+				   (symbols includes: assoc key) not ] ]
+		   thenCollect: [ :assoc | assoc key ]
+]
+
 { #category : #adding }
 GPContextFreeGrammar >> createNode: symbol ofClass: aClass withSequence: sequence [
 	^ aClass new 
@@ -101,13 +121,57 @@ GPContextFreeGrammar >> expandFrom: axiom given: configuration [
 ]
 
 { #category : #'collecting leaves' }
+GPContextFreeGrammar >> expandFrom: axiom given: configuration depth: depth [
+
+	 ^ rules
+		   at: axiom
+		   ifPresent: [ :node | 
+			   node
+				              expandGiven: configuration
+				              grammar: self
+				              depth: depth ]
+		   ifAbsent: [ nil ]
+]
+
+{ #category : #'collecting leaves' }
+GPContextFreeGrammar >> expandGiven: configuration depth: depth and: ruleKeys [
+
+	 | axiom |
+	 axiom := self
+		          selectKeyRuleGiven: configuration
+		          depth: depth
+		          and: ruleKeys.
+	 ^ rules
+		   at: axiom
+		   ifPresent: [ :node | 
+			   | resNode bools |
+			bools := OrderedCollection new.
+			   resNode := node
+				              expandGiven: configuration
+				              grammar: self
+				              depth: depth
+				              and: bools.
+			   resNode
+				   ifNil: [ 
+					   ruleKeys add: axiom.
+					   self expandGiven: configuration depth: depth and: ruleKeys ]
+				   ifNotNil: [ resNode ] ]
+		   ifAbsent: [ nil ]
+]
+
+{ #category : #'collecting leaves' }
 GPContextFreeGrammar >> expandUsing: configuration [
 
-	 ^ self
-		   expandFrom:
-		   (self
-			    selectKeyRuleGiven: configuration)
-		   given: configuration
+	 ^ configuration depth
+		   ifNil: [ 
+			   self
+				   expandFrom: (self selectKeyRuleGiven: configuration)
+				   given: configuration ]
+		   ifNotNil: [ 
+			   self
+				   expandGiven: configuration
+				   depth: configuration depth
+				   and: OrderedCollection new ]
 ]
 
 { #category : #testing }
@@ -120,6 +184,11 @@ GPContextFreeGrammar >> initialize [
 
 	 rules := Dictionary new.
 	 options := Dictionary new
+]
+
+{ #category : #accessing }
+GPContextFreeGrammar >> nodeOf: symbol [
+	^ rules at: symbol
 ]
 
 { #category : #accessing }
@@ -137,9 +206,35 @@ GPContextFreeGrammar >> selectKeyRule [
 { #category : #selecting }
 GPContextFreeGrammar >> selectKeyRuleGiven: configuration [
 
-	 (configuration keysOfRuleWeights includesAll:
-		  self allButMessageRuleKeys ) ifFalse: [ 
-		 self error: 'all rules must have assigned a weight' ].
-	 ^ GPRandom instance selectRandomlyGivenProbabilities:
-		   configuration rulesWeights
+	 ^ (configuration keysOfRuleWeights includesAll:
+		  self allButMessageRuleKeys) ifFalse: [ self selectKeyRule ] ifTrue: [ 
+	  GPRandom instance selectRandomlyGivenProbabilities:
+		   configuration rulesWeights ]
+]
+
+{ #category : #'collecting leaves' }
+GPContextFreeGrammar >> selectKeyRuleGiven: configuration depth: depth and: ruleKeys [
+
+	 | newCollection |
+	 newCollection := self
+		                  selectRulesKeysGiven: depth
+		                  andAvoiding: ruleKeys.
+	 newCollection ifEmpty: [ 
+		 self error:
+			 'AST can not be expanded with depth of: ' , depth asString ].
+	 ^ configuration rulesWeights
+		   ifEmpty: [ GPRandom instance selectRandomly: newCollection ]
+		   ifNotEmpty: [ 
+			   GPRandom instance selectRandomlyGivenProbabilities:
+				   (newCollection
+					    with: (configuration rulesWeightsOf: newCollection)
+					    collect: [ :i :w | i -> w ]) asDictionary ]
+]
+
+{ #category : #'collecting leaves' }
+GPContextFreeGrammar >> selectRulesKeysGiven: depth andAvoiding: ruleKeys [
+
+	 ^ (depth == 1
+		    ifTrue: [ self allLeavesRuleKeysBut: ruleKeys ]
+		    ifFalse: [ self allComplexRulesKeysBut: ruleKeys ])
 ]

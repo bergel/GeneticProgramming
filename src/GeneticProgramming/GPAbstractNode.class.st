@@ -139,7 +139,13 @@ GPAbstractNode >> expandGiven: context [
 ]
 
 { #category : #'collecting leaves' }
-GPAbstractNode >> expandGiven: grammas and: configuration [
+GPAbstractNode >> expandGiven: grammar and: configuration [
+
+	 ^ self subclassResponsibility
+]
+
+{ #category : #'collecting leaves' }
+GPAbstractNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
 
 	 ^ self subclassResponsibility
 ]

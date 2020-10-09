@@ -48,6 +48,24 @@ GPNode >> evaluate: grammar given: configuration [
 ]
 
 { #category : #'collecting leaves' }
+GPNode >> expandChildrenGiven: configuration grammar: grammar depth: depth and: booleans [
+
+	 | resultNode |
+	 resultNode := self deepCopy.
+	 children doWithIndex: [ :child :index | 
+		 | newChild |
+		 newChild := (grammar nodeOf: child id)
+			             expandGiven: configuration
+			             grammar: grammar
+			             depth: depth - 1
+			             and: booleans.
+		 newChild
+			 ifNil: [ ^ nil ]
+			 ifNotNil: [ resultNode children at: index put: newChild ] ].
+	 ^ resultNode
+]
+
+{ #category : #'collecting leaves' }
 GPNode >> expandGiven: grammar [
 
 	 | result |
@@ -61,15 +79,47 @@ GPNode >> expandGiven: grammar [
 { #category : #'collecting leaves' }
 GPNode >> expandGiven: grammar and: configuration [
 
-	 | result options |
-	options := grammar optionsOf: id.
-	 result := (options at: (GPRandom instance selectRandomlyGivenProbabilities:
-		            (self
-			             collectOptions: (1 to: options size)
-			             with: (configuration optionWeightsOf: id)))) deepCopy.
+	 | result |
+	 result := (self selectedOptionNode: (grammar optionsOf: id) given: configuration) deepCopy.
 	 result children doWithIndex: [ :child :index | 
 		 result children
 			 at: index
 			 put: (grammar expandFrom: child id given: configuration) ].
 	 ^ result
+]
+
+{ #category : #'collecting leaves' }
+GPNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
+
+	 | node |
+	 node := nil.
+	 depth > 1 ifTrue: [ 
+		 | yetSelected randomIndexes optionIndex options |
+		 options := grammar optionsOf: self id.
+		 randomIndexes := GPRandom instance shuffleElementsOf:
+			                  (1 to: options size) asArray.
+		 yetSelected := true.
+		 optionIndex := 1.
+		 [ yetSelected and: [ optionIndex <= randomIndexes size ] ] 
+			 whileTrue: [ 
+				 node := (options at: (randomIndexes at: optionIndex))
+					         expandChildrenGiven: configuration
+					         grammar: grammar
+					         depth: depth
+					         and: booleans.
+				 yetSelected := (node isNotNil and: [ 
+					                 booleans
+						                 inject: false
+						                 into: [ :b :e | e or: [ b ] ] ]) not.
+				 optionIndex := optionIndex + 1 ] ].
+	 ^ node
+]
+
+{ #category : #'collecting leaves' }
+GPNode >> selectedOptionNode: options given: configuration [
+
+	 ^ options at:
+		   (GPRandom instance selectRandomlyGivenProbabilities: (self
+				     collectOptions: (1 to: options size)
+				     with: (configuration optionWeightsOf: id)))
 ]

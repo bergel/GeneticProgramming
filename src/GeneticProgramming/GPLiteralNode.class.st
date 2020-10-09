@@ -34,3 +34,10 @@ GPLiteralNode >> expandGiven: grammas and: configuration [
 
 	 ^ self
 ]
+
+{ #category : #'collecting leaves' }
+GPLiteralNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
+
+	booleans add: depth == 1.
+	 ^ self
+]

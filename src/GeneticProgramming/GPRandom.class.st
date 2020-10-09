@@ -67,11 +67,7 @@ GPRandom >> seed: number [
 { #category : #'as yet unclassified' }
 GPRandom >> selectRandomly: collection [
 
-	 | val |
-	 val := random nextInt: collection size.
-	 "Transcript show:
-		 val asString , 'col: ' , collection size asString , String cr."
-	 ^ collection at: val
+	 ^ collection at: (random nextInt: collection size)
 ]
 
 { #category : #'as yet unclassified' }
@@ -80,4 +76,10 @@ GPRandom >> selectRandomlyGivenProbabilities: dictionary [
 	 ^ self selectRandomly:
 		   ((self collectionOfProbabilities: dictionary) 
 			    shuffleBy: random)
+]
+
+{ #category : #'as yet unclassified' }
+GPRandom >> shuffleElementsOf: collection [
+
+	 ^ collection shuffleBy: random
 ]
