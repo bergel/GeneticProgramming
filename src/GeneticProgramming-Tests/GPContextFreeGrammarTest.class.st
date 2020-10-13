@@ -168,6 +168,91 @@ GPContextFreeGrammarTest >> testGenerationTree12 [
 ]
 
 { #category : #tests }
+GPContextFreeGrammarTest >> testGenerationTree13 [
+
+	 | result |
+	 random seed: 1.
+	 grammar
+		 addMessageRule: #AddOp withValues: #( #+ #- );
+		 addRule: #E withSequence: #( #E #AddOp #T );
+		 addRule: #E redirectingTo: #T;
+		 addMessageRule: #MulOp withValues: #( #* #/ );
+		 addRule: #T withSequence: #( #T #MulOp #F );
+		 addRule: #T redirectingTo: #F;
+		 addLeafRule: #F
+		 withValues: (1 to: 10) asArray.
+	 result := grammar expand.
+	 "result -> 			 E
+					  E  AddOp	 T
+				     T         T M F
+				  T MulOp F  T M F  
+				  F          F "
+	 self assert: result id equals: #E.
+	 self assert: result numberOfNodes equals: 16.
+	 self
+		 assertCollection: (result withAllChildren collect: #id)
+		 hasSameElements:
+		 #( #E #E #T #T #F #MulOp #AddOp #T #T #T #F #MulOp #F #MulOp #F ).
+	 self assert: (result evaluate: grammar) value equals: 13 / 28
+]
+
+{ #category : #tests }
+GPContextFreeGrammarTest >> testGenerationTree14 [
+
+	 | result |
+	 random seed: 1.
+	 "E -> E Msg
+	  E -> F
+	  F -> Color
+	  Msg -> asColor | colorForInsets | lighter"
+	 grammar
+		 addMessageRule: #Msg
+		 withValues: #( #asColor #colorForInsets #lighter );
+		 addRule: #E withSequence: #( #E #Msg );
+		 addRule: #E redirectingTo: #F;
+		 addLeafRule: #F withValues: (Array
+				  with: Color blue
+				  with: Color black
+				  with: Color red
+				  with: Color green
+				  with: Color yellow).
+	 result := grammar expand.
+	 "result -> 			 E
+						  E  Msg
+				        F   "
+	 self assert: result id equals: #E.
+	 self assert: result numberOfNodes equals: 4.
+	 self
+		 assertCollection: (result withAllChildren collect: #id)
+		 hasSameElements: #( #E #E #F #Msg ).
+	 self assert: (result evaluate: grammar) equals: Color red
+]
+
+{ #category : #tests }
+GPContextFreeGrammarTest >> testGenerationTree15 [
+
+	 | result |
+	 random seed: 1.
+	 grammar
+		 addRule: #Assgmt withSequence: #( #Var #Val );
+		 addLeafRule: #Var withValues: (Array
+				  with: (RBVariableNode named: #a)
+				  with: (RBVariableNode named: #v)
+				  with: (RBVariableNode named: #m));
+		 addLeafRule: #Val withValues: ((1 to: 10) collect: [:n | RBLiteralValueNode value: n]).
+	 result := grammar expandFrom: #Assgmt.
+	 "result -> 			 Ass
+						  Var  Val
+				           "
+	 self assert: result id equals: #Assgmt.
+	 self assert: result numberOfNodes equals: 3.
+	 self
+		 assertCollection: (result withAllChildren collect: #id)
+		 hasSameElements: #( #Assgmt #Var #Val ).
+	 self assert: (result evaluate: grammar) equals: (RBVariableNode named: #a)
+]
+
+{ #category : #tests }
 GPContextFreeGrammarTest >> testGenerationTree2 [
 
 	 | result |
