@@ -41,11 +41,34 @@ GPContextFreeGrammar >> addOptions: collection of: symbol [
 ]
 
 { #category : #adding }
+GPContextFreeGrammar >> addRule: symbol ofClass: aClass withSequence: collection [
+
+	rules at: symbol ifAbsentPut: [ 
+		self
+			createNode: symbol
+			ofClass: GPNode
+			type: aClass
+			withSequence: #(  ) ].
+	self
+		addOptions: (Array with: (self
+					  createNode: symbol
+					  ofClass: GPNode
+					  type: aClass
+					  withSequence: collection))
+		of: symbol
+]
+
+{ #category : #adding }
 GPContextFreeGrammar >> addRule: symbol redirectingTo: anotherSymbol [
 
 	 self
 		 addRule: symbol
 		 withSequence: (Array with: anotherSymbol)
+]
+
+{ #category : #adding }
+GPContextFreeGrammar >> addRule: symbol withOptions: collection [
+	collection do: [ :e | self addRule: symbol redirectingTo: e ]
 ]
 
 { #category : #adding }
@@ -89,6 +112,15 @@ GPContextFreeGrammar >> allLeavesRuleKeysBut: symbols [
 ]
 
 { #category : #adding }
+GPContextFreeGrammar >> createNode: symbol ofClass: classNode type: aClass withSequence: sequence [
+
+	^ classNode new
+		  id: symbol;
+		   type: aClass;
+		  children: (sequence collect: [ :c | GPNode new id: c ])
+]
+
+{ #category : #adding }
 GPContextFreeGrammar >> createNode: symbol ofClass: aClass withSequence: sequence [
 	^ aClass new 
 		id: symbol;
@@ -117,19 +149,6 @@ GPContextFreeGrammar >> expandFrom: axiom given: configuration [
 		   at: axiom
 		   ifPresent: [ :node | 
 			   node expandGiven: self and: configuration]
-		   ifAbsent: [ nil ]
-]
-
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandFrom: axiom given: configuration depth: depth [
-
-	 ^ rules
-		   at: axiom
-		   ifPresent: [ :node | 
-			   node
-				              expandGiven: configuration
-				              grammar: self
-				              depth: depth ]
 		   ifAbsent: [ nil ]
 ]
 
@@ -195,6 +214,13 @@ GPContextFreeGrammar >> nodeOf: symbol [
 GPContextFreeGrammar >> optionsOf: symbol [
 
 	 ^ options at: symbol
+]
+
+{ #category : #'as yet unclassified' }
+GPContextFreeGrammar >> replaceValuesOf: node [
+	| visitor |
+	visitor := GPReplacementVisitor new grammar: self.
+	^ node replaceWithValueFrom: visitor
 ]
 
 { #category : #selecting }

@@ -115,6 +115,19 @@ GPNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans
 	 ^ node
 ]
 
+{ #category : #'as yet unclassified' }
+GPNode >> replaceWithValueFrom: visitor [
+
+	children size == 1 ifTrue: [ 
+		^ children first replaceWithValueFrom: visitor ].
+	visitor addNode: self.
+	^ self type ifNil: [ self ] ifNotNil: [ 
+		  | inst |
+		  inst := type new.
+		  inst acceptVisitor: visitor.
+		  inst ]
+]
+
 { #category : #'collecting leaves' }
 GPNode >> selectedOptionNode: options given: configuration [
 

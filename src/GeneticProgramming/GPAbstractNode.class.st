@@ -221,6 +221,11 @@ GPAbstractNode >> printUsing: context [
 	^ printBlock value: self value: context "children value: context"
 ]
 
+{ #category : #'as yet unclassified' }
+GPAbstractNode >> replaceWithValueFrom: context [
+	^ self subclassResponsibility 
+]
+
 { #category : #accessing }
 GPAbstractNode >> second [
 	^ children second

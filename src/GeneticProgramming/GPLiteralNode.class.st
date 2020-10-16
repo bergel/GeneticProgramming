@@ -41,3 +41,13 @@ GPLiteralNode >> expandGiven: configuration grammar: grammar depth: depth and: b
 	booleans add: depth == 1.
 	 ^ self
 ]
+
+{ #category : #'public access' }
+GPLiteralNode >> replaceWithValueFrom: visitor [
+
+	"grammar"
+
+	^ GPRandom instance selectRandomly:
+		  (visitor selectOption: self id)
+	"^ GPRandom instance selectRandomly: (grammar optionsOf: self id)"
+]

@@ -38,3 +38,11 @@ GPMessageNode >> expandGiven: configuration grammar: grammar depth: depth and: b
 
 	 ^ self
 ]
+
+{ #category : #'public access' }
+GPMessageNode >> replaceWithValueFrom: visitor [
+
+	^ GPRandom instance selectRandomly:
+		  (visitor selectOption: self id)
+	"GPRandom instance selectRandomly: (grammar optionsOf: self id)"
+]

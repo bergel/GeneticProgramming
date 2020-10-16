@@ -46,7 +46,7 @@ GPASTConfiguration >> keysOfRuleWeights [
 { #category : #accesing }
 GPASTConfiguration >> optionWeightsOf: symbol [
 
-	 ^ optionsWeights at: symbol 
+	^ optionsWeights at: symbol ifAbsent: [ #(1) ]
 ]
 
 { #category : #accesing }
