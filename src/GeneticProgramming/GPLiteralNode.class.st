@@ -30,9 +30,9 @@ GPLiteralNode >> expandGiven: context [
 ]
 
 { #category : #'collecting leaves' }
-GPLiteralNode >> expandGiven: grammas and: configuration [
+GPLiteralNode >> expandGiven: grammar and: configuration [
 
-	 ^ self
+	^ self newNode: grammar
 ]
 
 { #category : #'collecting leaves' }
