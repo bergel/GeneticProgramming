@@ -26,7 +26,7 @@ GPLiteralNode >> evaluate: grammar given: configuration [
 { #category : #'collecting leaves' }
 GPLiteralNode >> expandGiven: context [
 
-	 ^ self
+	^ self newNode: context 
 ]
 
 { #category : #'collecting leaves' }
@@ -39,7 +39,7 @@ GPLiteralNode >> expandGiven: grammas and: configuration [
 GPLiteralNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
 
 	booleans add: depth == 1.
-	 ^ self
+	^ self newNode: grammar
 ]
 
 { #category : #'public access' }

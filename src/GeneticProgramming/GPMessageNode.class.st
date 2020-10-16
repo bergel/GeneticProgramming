@@ -24,19 +24,19 @@ GPMessageNode >> evaluate: grammar given: configuration [
 { #category : #'collecting leaves' }
 GPMessageNode >> expandGiven: context [
 
-	 ^ self
+	^ self newNode: context
 ]
 
 { #category : #'collecting leaves' }
-GPMessageNode >> expandGiven: grammas and: configuration [
+GPMessageNode >> expandGiven: grammar and: configuration [
 
-	 ^ self
+	^ self newNode: grammar
 ]
 
 { #category : #'collecting leaves' }
 GPMessageNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
 
-	 ^ self
+	^ self newNode: grammar
 ]
 
 { #category : #'public access' }

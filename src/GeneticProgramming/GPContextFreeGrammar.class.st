@@ -3,7 +3,8 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'rules',
-		'options'
+		'options',
+		'nodeNumber'
 	],
 	#category : #'GeneticProgramming-Grammar'
 }
@@ -201,8 +202,15 @@ GPContextFreeGrammar >> hasRule: symbol [
 { #category : #initialization }
 GPContextFreeGrammar >> initialize [
 
-	 rules := Dictionary new.
-	 options := Dictionary new
+	rules := Dictionary new.
+	options := Dictionary new.
+	nodeNumber := 0
+]
+
+{ #category : #accessing }
+GPContextFreeGrammar >> nodeNumber [
+	nodeNumber := nodeNumber + 1.
+	^ nodeNumber
 ]
 
 { #category : #accessing }

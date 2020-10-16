@@ -27,29 +27,30 @@ GPContextFreeGrammarTest >> tearDown [
 { #category : #tests }
 GPContextFreeGrammarTest >> testExpand [
 
-	 | result |
-	 random seed: 1.
-	 grammar
-		 addMessageRule: #AddOp withValues: #( #sum: #sub: );
-		 addRule: #E withSequence: #( #E #AddOp #T );
-		 addRule: #E redirectingTo: #T;
-		 addMessageRule: #MulOp withValues: #( #mul: #div: );
-		 addRule: #T withSequence: #( #T #MulOp #F );
-		 addRule: #T redirectingTo: #F;
-		 addLeafRule: #F
-		 withValues: ((1 to: 10) collect: [ :n | GPDigit value: n ]).
-	 result := grammar expand.
-	 "result -> 			 E
+	| result |
+	random seed: 1.
+	grammar
+		addMessageRule: #AddOp withValues: #( #sum: #sub: );
+		addRule: #E withSequence: #( #E #AddOp #T );
+		addRule: #E redirectingTo: #T;
+		addMessageRule: #MulOp withValues: #( #mul: #div: );
+		addRule: #T withSequence: #( #T #MulOp #F );
+		addRule: #T redirectingTo: #F;
+		addLeafRule: #F
+		withValues: ((1 to: 10) collect: [ :n | GPDigit value: n ]).
+	result := grammar expand.
+	"result -> 			 E
 					  E  AddOp	 T
 				     T         T M F
 				  T MulOp F  T M F  
-				  F          F "     
-	 self assert: result id equals: #E.
-	 self assert: result numberOfNodes equals: 16.
-	 self
-		 assertCollection: (result withAllChildren collect: #id)
-		 hasSameElements: #( #E #E #T #T #F #MulOp #AddOp #T #T #T #F #MulOp #F #MulOp #F ).
-	 self assert: (result evaluate: grammar) value equals: 13 / 28
+				  F          F "
+	self assert: result id equals: #E.
+	self assert: result numberOfNodes equals: 16.
+	self
+		assertCollection: (result withAllChildren collect: #id)
+		hasSameElements:
+		#( #E #E #T #T #F #MulOp #AddOp #T #T #T #F #MulOp #F #MulOp #F ).
+	self assert: (result evaluate: grammar) value equals: 13 / 28
 ]
 
 { #category : #tests }

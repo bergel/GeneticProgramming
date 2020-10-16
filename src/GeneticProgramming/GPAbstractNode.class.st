@@ -6,7 +6,8 @@ Class {
 		'children',
 		'type',
 		'evaluationBlock',
-		'printBlock'
+		'printBlock',
+		'number'
 	],
 	#category : #'GeneticProgramming-Core'
 }
@@ -135,19 +136,20 @@ GPAbstractNode >> evaluationBlock: aOneArgBlock [
 
 { #category : #'collecting leaves' }
 GPAbstractNode >> expandGiven: context [
-	^ self subclassResponsibility 
+
+	^ self subclassResponsibility
 ]
 
 { #category : #'collecting leaves' }
 GPAbstractNode >> expandGiven: grammar and: configuration [
 
-	 ^ self subclassResponsibility
+	^ self subclassResponsibility
 ]
 
 { #category : #'collecting leaves' }
 GPAbstractNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
 
-	 ^ self subclassResponsibility
+	^ self subclassResponsibility
 ]
 
 { #category : #accessing }
@@ -155,13 +157,22 @@ GPAbstractNode >> first [
 	^ children first
 ]
 
-{ #category : #'gt-inspector-extension' }
-GPAbstractNode >> gtInspectorTableIn: composite [
+{ #category : #visualization }
+GPAbstractNode >> gtInspectorViewIn: composite [
 
-	 "<gtInspectorPresentationOrder: -15>
-	 composite text
-		 title: 'Print';
-		 display: [ self print ]"
+	<gtInspectorPresentationOrder: -1>
+	| m |
+	m := RSMondrian new.
+	"m shape circle."
+	m nodes: self withAllChildren forEach: [ :n | 
+		m shape label color: Color white.
+		m nodes: (Array with: n id) ].
+	m line
+		color: (Color r: 59 / 255 g: 131 / 255 b: 189 / 255);
+		width: 0.5;
+		connectToAll: #children.
+	m layout tree.
+	^ m gtInspectorViewIn: composite
 ]
 
 { #category : #accessing }
@@ -176,17 +187,33 @@ GPAbstractNode >> id: anObject [
 
 { #category : #initialization }
 GPAbstractNode >> initialize [
+
 	super initialize.
 	children := OrderedCollection new.
+	number := 0.
 	printBlock := [ :c | 
-		| t |
-		t := c inject: '(' into: [ :sum :el | sum, el print ].
-		t, ')' ]
+	              | t |
+	              t := c inject: '(' into: [ :sum :el | sum , el print ].
+	              t , ')' ]
 ]
 
 { #category : #testing }
 GPAbstractNode >> isLeaf [
 	^ children isEmpty
+]
+
+{ #category : #'instance creation' }
+GPAbstractNode >> newNode: grammar [
+	| node |
+	node := self deepCopy.
+node number: grammar nodeNumber.
+^ node
+]
+
+{ #category : #accessing }
+GPAbstractNode >> number: aNumber [
+
+	number := aNumber
 ]
 
 { #category : #metrics }
@@ -221,7 +248,7 @@ GPAbstractNode >> printUsing: context [
 	^ printBlock value: self value: context "children value: context"
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #operations }
 GPAbstractNode >> replaceWithValueFrom: context [
 	^ self subclassResponsibility 
 ]

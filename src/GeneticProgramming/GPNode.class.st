@@ -50,42 +50,47 @@ GPNode >> evaluate: grammar given: configuration [
 { #category : #'collecting leaves' }
 GPNode >> expandChildrenGiven: configuration grammar: grammar depth: depth and: booleans [
 
-	 | resultNode |
-	 resultNode := self deepCopy.
-	 children doWithIndex: [ :child :index | 
-		 | newChild |
-		 newChild := (grammar nodeOf: child id)
-			             expandGiven: configuration
-			             grammar: grammar
-			             depth: depth - 1
-			             and: booleans.
-		 newChild
-			 ifNil: [ ^ nil ]
-			 ifNotNil: [ resultNode children at: index put: newChild ] ].
-	 ^ resultNode
+	| resultNode |
+	resultNode := self newNode: grammar.
+	resultNode number: grammar nodeNumber.
+	children doWithIndex: [ :child :index | 
+		| newChild |
+		newChild := (grammar nodeOf: child id)
+			            expandGiven: configuration
+			            grammar: grammar
+			            depth: depth - 1
+			            and: booleans.
+		newChild
+			ifNil: [ ^ nil ]
+			ifNotNil: [ resultNode children at: index put: newChild ] ].
+	^ resultNode
 ]
 
 { #category : #'collecting leaves' }
 GPNode >> expandGiven: grammar [
 
-	 | result |
-	 result := (GPRandom instance selectRandomly: (grammar optionsOf: id))
-		           deepCopy.
-	 result children doWithIndex: [ :child :index | 
-		 result children at: index put: (grammar expandFrom: child id) ].
-	 ^ result
+	| result |
+	result := (GPRandom instance selectRandomly: (grammar optionsOf: id))
+		         newNode: grammar.
+	result number: grammar nodeNumber.
+	result children doWithIndex: [ :child :index | 
+		result children at: index put: (grammar expandFrom: child id) ].
+	^ result
 ]
 
 { #category : #'collecting leaves' }
 GPNode >> expandGiven: grammar and: configuration [
 
-	 | result |
-	 result := (self selectedOptionNode: (grammar optionsOf: id) given: configuration) deepCopy.
-	 result children doWithIndex: [ :child :index | 
-		 result children
-			 at: index
-			 put: (grammar expandFrom: child id given: configuration) ].
-	 ^ result
+	| result |
+	result := (self
+		           selectedOptionNode: (grammar optionsOf: id)
+		           given: configuration) newNode: grammar.
+	result number: grammar nodeNumber.
+	result children doWithIndex: [ :child :index | 
+		result children
+			at: index
+			put: (grammar expandFrom: child id given: configuration) ].
+	^ result
 ]
 
 { #category : #'collecting leaves' }
@@ -115,7 +120,7 @@ GPNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans
 	 ^ node
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #operations }
 GPNode >> replaceWithValueFrom: visitor [
 
 	children size == 1 ifTrue: [ 
