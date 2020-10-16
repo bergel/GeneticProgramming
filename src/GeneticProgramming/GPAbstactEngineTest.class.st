@@ -5,7 +5,7 @@ Class {
 		'engine',
 		'configuration'
 	],
-	#category : #'GeneticProgramming-Tests'
+	#category : #'GeneticProgramming-Core'
 }
 
 { #category : #testing }
