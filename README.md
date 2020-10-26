@@ -2,6 +2,21 @@
 
 [![Build Status](https://travis-ci.com/bergel/GeneticProgramming.svg?branch=master)](https://travis-ci.com/bergel/GeneticProgramming)
 
+## How to load
+
+
+
+```Smalltalk
+[Metacello new
+    baseline: 'Roassal3';
+    repository: 'github://ObjectProfile/Roassal3';
+    load: 'Full' ] on: MCMergeOrLoadWarning do: [:warning | warning load ]
+
+Metacello new
+ baseline:'GeneticProgramming';
+repository: 'github://bergel/GeneticProgramming:grammar/src';
+ load.
+```
 
 ## Example 
 
