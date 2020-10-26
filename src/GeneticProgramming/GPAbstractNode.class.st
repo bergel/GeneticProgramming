@@ -7,7 +7,8 @@ Class {
 		'type',
 		'evaluationBlock',
 		'printBlock',
-		'number'
+		'number',
+		'value'
 	],
 	#category : #'GeneticProgramming-Core'
 }
@@ -63,10 +64,14 @@ GPAbstractNode >> children: someNodes [
 ]
 
 { #category : #'groups collecting' }
-GPAbstractNode >> collectOptions: options with: weights [
+GPAbstractNode >> collectOptions: options with: numbers [
 
-	 ^ (options with: weights collect: [ :opt :w | opt -> w ])
-		   asDictionary
+	| weights |
+	weights := numbers.
+	weights size < options size ifTrue: [ 
+		weights := (1 to: options size) collect: [ :n | 1 ] ].
+	^ (options with: weights collect: [ :opt :w | opt -> w ])
+		  asDictionary
 ]
 
 { #category : #operations }
@@ -148,6 +153,24 @@ GPAbstractNode >> expandGiven: grammar and: configuration [
 
 { #category : #'collecting leaves' }
 GPAbstractNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
+
+	^ self subclassResponsibility
+]
+
+{ #category : #'collecting leaves' }
+GPAbstractNode >> expandGiven: context ofSize: aNumber [
+
+	^ nil
+]
+
+{ #category : #'collecting leaves' }
+GPAbstractNode >> expandReplacingGiven: visitor and: context [
+
+	^ self subclassResponsibility
+]
+
+{ #category : #'collecting leaves' }
+GPAbstractNode >> expandReplacingGiven: visitor grammar: grammar depth: depth and: booleans [
 
 	^ self subclassResponsibility
 ]
@@ -258,6 +281,15 @@ GPAbstractNode >> second [
 	^ children second
 ]
 
+{ #category : #'collecting leaves' }
+GPAbstractNode >> selectedOptionNode: options given: configuration [
+
+	^ options at:
+		  (GPRandom instance selectRandomlyGivenProbabilities: (self
+				    collectOptions: (1 to: options size)
+				    with: (configuration optionWeightsOf: id)))
+]
+
 { #category : #accessing }
 GPAbstractNode >> type [
 	^ type
@@ -266,6 +298,17 @@ GPAbstractNode >> type [
 { #category : #accessing }
 GPAbstractNode >> type: aSymbol [
 	type := aSymbol
+]
+
+{ #category : #accessing }
+GPAbstractNode >> value [
+
+	^ value
+]
+
+{ #category : #accessing }
+GPAbstractNode >> value: anObject [
+	value := anObject
 ]
 
 { #category : #accessing }

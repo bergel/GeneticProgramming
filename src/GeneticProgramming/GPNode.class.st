@@ -55,7 +55,7 @@ GPNode >> expandChildrenGiven: configuration grammar: grammar depth: depth and: 
 	resultNode number: grammar nodeNumber.
 	children doWithIndex: [ :child :index | 
 		| newChild |
-		newChild := (grammar nodeOf: child id)
+		newChild := (grammar nodeOf: child)
 			            expandGiven: configuration
 			            grammar: grammar
 			            depth: depth - 1
@@ -74,7 +74,7 @@ GPNode >> expandGiven: grammar [
 		         newNode: grammar.
 	result number: grammar nodeNumber.
 	result children doWithIndex: [ :child :index | 
-		result children at: index put: (grammar expandFrom: child id) ].
+		result children at: index put: (grammar expandFrom: child) ].
 	^ result
 ]
 
@@ -89,7 +89,7 @@ GPNode >> expandGiven: grammar and: configuration [
 	result children doWithIndex: [ :child :index | 
 		result children
 			at: index
-			put: (grammar expandFrom: child id given: configuration) ].
+			put: (grammar expandFrom: child given: configuration) ].
 	^ result
 ]
 
@@ -120,6 +120,61 @@ GPNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans
 	 ^ node
 ]
 
+{ #category : #'collecting leaves' }
+GPNode >> expandReplacingChildrenGiven: visitor grammar: grammar depth: depth and: booleans [
+
+	| resultNode |
+	resultNode := self newNode: grammar.
+	children doWithIndex: [ :child :index | 
+		| newChild |
+		newChild := (grammar nodeOf: child)
+			            expandReplacingGiven: visitor
+			            grammar: grammar
+			            depth: depth - 1
+			            and: booleans.
+		newChild
+			ifNil: [ ^ nil ]
+			ifNotNil: [ resultNode children at: index put: newChild ] ].
+	^ resultNode
+]
+
+{ #category : #'collecting leaves' }
+GPNode >> expandReplacingGiven: visitor and: grammar [
+
+	| result |
+	result := (grammar randomlySelectOption: id) newNode: grammar.
+	result children size == 1 ifTrue: [ 
+		^ (grammar nodeOf: result children first)
+			  expandReplacingGiven: visitor
+			  and: grammar ].
+	visitor addNode: result.
+	type ifNotNil: [ 
+		| inst |
+		inst := type new.
+		inst acceptVisitor: visitor.
+		result value: visitor lastValue ].
+	^ result
+]
+
+{ #category : #'collecting leaves' }
+GPNode >> expandReplacingGiven: visitor grammar: grammar depth: depth and: booleans [
+
+	| node |
+	node := nil.
+	depth > 1 ifTrue: [ 
+		(grammar optionsOf: id given: visitor configuration) detect: [ :option | 
+			node := option 		        expandReplacingChildrenGiven: visitor
+					        grammar: grammar
+					        depth: depth
+					        and: booleans.
+			 (node isNotNil and: [ 
+					                booleans
+						                inject: false
+						                into: [ :b :e | e or: [ b ] ] ]) not. ]
+				ifNone: [  ] ].
+	^ node
+]
+
 { #category : #operations }
 GPNode >> replaceWithValueFrom: visitor [
 
@@ -131,13 +186,4 @@ GPNode >> replaceWithValueFrom: visitor [
 		  inst := type new.
 		  inst acceptVisitor: visitor.
 		  inst ]
-]
-
-{ #category : #'collecting leaves' }
-GPNode >> selectedOptionNode: options given: configuration [
-
-	 ^ options at:
-		   (GPRandom instance selectRandomlyGivenProbabilities: (self
-				     collectOptions: (1 to: options size)
-				     with: (configuration optionWeightsOf: id)))
 ]

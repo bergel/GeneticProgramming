@@ -10,23 +10,37 @@ Class {
 }
 
 { #category : #adding }
+GPContextFreeGrammar >> addLeafRule: symbol ofClass: aClass withValues: collection [
+
+	self
+		addNodeIfNecessary: symbol
+		ofClass: GPLeafNode
+		andType: aClass.
+	self addOptions: collection of: symbol
+]
+
+{ #category : #adding }
 GPContextFreeGrammar >> addLeafRule: symbol withValues: collection [
 
-	 rules
-		 at: symbol
-		 ifAbsentPut: [ 
-		 self createNode: symbol ofClass: GPLiteralNode withSequence: #(  ) ].
-	 self addOptions: collection of: symbol
+	self addNodeIfNecessary: symbol ofClass: GPLeafNode andType: RBLiteralNode.
+	self addOptions: collection of: symbol
 ]
 
 { #category : #adding }
 GPContextFreeGrammar >> addMessageRule: symbol withValues: collection [
 
-	 rules
-		 at: symbol
-		 ifAbsentPut: [ 
-		 self createNode: symbol ofClass: GPMessageNode withSequence: #(  ) ].
-	 self addOptions: collection of: symbol
+	self addNodeIfNecessary: symbol ofClass: GPMessageNode  andType: nil.
+	self addOptions: collection of: symbol
+]
+
+{ #category : #adding }
+GPContextFreeGrammar >> addNodeIfNecessary: symbol ofClass: aClass andType: anotherClass [
+rules at: symbol ifAbsentPut: [ 
+		self
+			createNode: symbol
+			ofClass: aClass
+			type: anotherClass
+			withSequence: #(  ) ].
 ]
 
 { #category : #adding }
@@ -44,12 +58,7 @@ GPContextFreeGrammar >> addOptions: collection of: symbol [
 { #category : #adding }
 GPContextFreeGrammar >> addRule: symbol ofClass: aClass withSequence: collection [
 
-	rules at: symbol ifAbsentPut: [ 
-		self
-			createNode: symbol
-			ofClass: GPNode
-			type: aClass
-			withSequence: #(  ) ].
+	self addNodeIfNecessary: symbol ofClass: GPNode andType: aClass.
 	self
 		addOptions: (Array with: (self
 					  createNode: symbol
@@ -68,19 +77,32 @@ GPContextFreeGrammar >> addRule: symbol redirectingTo: anotherSymbol [
 ]
 
 { #category : #adding }
+GPContextFreeGrammar >> addRule: symbol withCollectionOptions: collection [
+
+	self
+		addNodeIfNecessary: symbol
+		ofClass: GPCollectionNode
+		andType: nil.
+	self
+		addOptions: (collection collect: [ :s | 
+				 self
+					 createNode: symbol
+					 ofClass: GPCollectionNode
+					 type: nil
+					 withSequence: (Array with: s) ])
+		of: symbol
+	"self addRule: symbol redirectingTo: s ]"
+]
+
+{ #category : #adding }
 GPContextFreeGrammar >> addRule: symbol withOptions: collection [
 	collection do: [ :e | self addRule: symbol redirectingTo: e ]
 ]
 
 { #category : #adding }
-GPContextFreeGrammar >> addRule: key withSequence: sequence [
+GPContextFreeGrammar >> addRule: symbol withSequence: sequence [
 
-	 rules
-		 at: key
-		 ifAbsentPut: [ 
-		 self createNode: key ofClass: GPNode withSequence: #(  ) ].
-	 self addOptions:
-		 (Array with: (self createNode: key ofClass: GPNode withSequence: sequence)) of: key
+	self addRule: symbol ofClass: nil withSequence: sequence
 ]
 
 { #category : #accessing }
@@ -107,7 +129,7 @@ GPContextFreeGrammar >> allLeavesRuleKeysBut: symbols [
 
 	 ^ rules associations
 		   select: [ :assoc | 
-			   (assoc value isMemberOf: GPLiteralNode) and: [ 
+			   (assoc value isMemberOf: GPLeafNode) and: [ 
 				   (symbols includes: assoc key) not ] ]
 		   thenCollect: [ :assoc | assoc key ]
 ]
@@ -117,15 +139,8 @@ GPContextFreeGrammar >> createNode: symbol ofClass: classNode type: aClass withS
 
 	^ classNode new
 		  id: symbol;
-		   type: aClass;
-		  children: (sequence collect: [ :c | GPNode new id: c ])
-]
-
-{ #category : #adding }
-GPContextFreeGrammar >> createNode: symbol ofClass: aClass withSequence: sequence [
-	^ aClass new 
-		id: symbol;
-		children: (sequence collect: [:c | GPNode new id: c])
+		  type: aClass;
+		  children: sequence "(sequence collect: [ :c | classNode new id: c ])"
 ]
 
 { #category : #controlling }
@@ -146,11 +161,28 @@ GPContextFreeGrammar >> expandFrom: axiom [
 { #category : #'collecting leaves' }
 GPContextFreeGrammar >> expandFrom: axiom given: configuration [
 
-	 ^ rules
-		   at: axiom
-		   ifPresent: [ :node | 
-			   node expandGiven: self and: configuration]
-		   ifAbsent: [ nil ]
+	^ rules
+		  at: axiom
+		  ifPresent: [ :node | 
+			  configuration depth
+				  ifNil: [ node expandGiven: self and: configuration ]
+				  ifNotNil: [ |bools|
+					bools := OrderedCollection new.
+					  node
+						  expandGiven: configuration
+						  grammar: self
+						  depth: configuration depth
+						  and: bools ] ]
+		  ifAbsent: [ nil ]
+]
+
+{ #category : #'collecting leaves' }
+GPContextFreeGrammar >> expandFrom: axiom ofSize: aNumber [
+
+	^ rules
+		  at: axiom
+		  ifPresent: [ :node | node expandGiven: self ofSize: aNumber ]
+		  ifAbsent: [ nil ]
 ]
 
 { #category : #'collecting leaves' }
@@ -177,6 +209,74 @@ GPContextFreeGrammar >> expandGiven: configuration depth: depth and: ruleKeys [
 					   self expandGiven: configuration depth: depth and: ruleKeys ]
 				   ifNotNil: [ resNode ] ]
 		   ifAbsent: [ nil ]
+]
+
+{ #category : #'collecting leaves' }
+GPContextFreeGrammar >> expandReplacingFrom: axiom [
+
+	| visitor |
+	visitor := GPReplacementVisitor new grammar: self.
+	^ rules
+		  at: axiom
+		  ifPresent: [ :node | node expandReplacingGiven: visitor and: self ]
+		  ifAbsent: [ nil ]
+]
+
+{ #category : #'collecting leaves' }
+GPContextFreeGrammar >> expandReplacingFrom: axiom given: configuration [
+
+	| visitor |
+	visitor := GPReplacementVisitor new grammar: self.
+	^ rules
+		  at: axiom
+		  ifPresent: [ :node | 
+			  configuration depth
+				  ifNil: [ node expandReplacingGiven: visitor and: self ]
+				  ifNotNil: [ 
+					  | bools |
+					  bools := OrderedCollection new.
+					  node
+						  expandReplacingGiven: visitor
+						  grammar: self
+						  depth: configuration depth
+						  and: bools ] ]
+		  ifAbsent: [ nil ]
+]
+
+{ #category : #'collecting leaves' }
+GPContextFreeGrammar >> expandReplacingGiven: configuration depth: depth and: ruleKeys [
+
+	| axiom |
+	axiom := self
+		         selectKeyRuleGiven: configuration
+		         depth: depth
+		         and: ruleKeys.
+	^ rules
+		  at: axiom
+		  ifPresent: [ :node | 
+			  | resNode  |
+			  resNode := self expandReplacingFrom: axiom given: configuration.
+			  resNode
+				  ifNil: [ 
+					  ruleKeys add: axiom.
+					  self expandGiven: configuration depth: depth and: ruleKeys ]
+				  ifNotNil: [ resNode ] ]
+		  ifAbsent: [ nil ]
+]
+
+{ #category : #'collecting leaves' }
+GPContextFreeGrammar >> expandReplacingUsing: configuration [
+
+	^ configuration depth
+		  ifNil: [ 
+			  self
+				  expandReplacingFrom: (self selectKeyRuleGiven: configuration)
+				  given: configuration ]
+		  ifNotNil: [ 
+		  self
+			  expandReplacingGiven: configuration
+			depth: configuration depth
+			  and: OrderedCollection new ]
 ]
 
 { #category : #'collecting leaves' }
@@ -222,6 +322,20 @@ GPContextFreeGrammar >> nodeOf: symbol [
 GPContextFreeGrammar >> optionsOf: symbol [
 
 	 ^ options at: symbol
+]
+
+{ #category : #'as yet unclassified' }
+GPContextFreeGrammar >> randomlySelectOption: symbol [
+	^ GPRandom instance selectRandomly: (self optionsOf: symbol)
+]
+
+{ #category : #'as yet unclassified' }
+GPContextFreeGrammar >> randomlySelectOption: symbol given: configuration [
+
+	| opts weights |
+	opts := self optionsOf: symbol.
+	weights := configuration optionWeightsOf: symbol.
+	
 ]
 
 { #category : #'as yet unclassified' }

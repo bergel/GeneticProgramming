@@ -13,12 +13,7 @@ GPMessageNode >> evaluate: grammar [
 { #category : #'public access' }
 GPMessageNode >> evaluate: grammar given: configuration [
 
-	 | options |
-	 options := grammar optionsOf: id.
-	 ^ (options at:
-		    (GPRandom instance selectRandomlyGivenProbabilities: (self
-				      collectOptions: (1 to: options size)
-				      with: (configuration optionWeightsOf: id)))) deepCopy
+	^ (self selectedOptionNode: (grammar optionsOf: id) given: configuration) deepCopy
 ]
 
 { #category : #'collecting leaves' }
@@ -37,6 +32,24 @@ GPMessageNode >> expandGiven: grammar and: configuration [
 GPMessageNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
 
 	^ self newNode: grammar
+]
+
+{ #category : #'collecting leaves' }
+GPMessageNode >> expandReplacingGiven: visitor and: grammar [
+
+	| result |
+	result := self newNode: grammar.
+	result value: (grammar randomlySelectOption: id).
+	^ result
+]
+
+{ #category : #'collecting leaves' }
+GPMessageNode >> expandReplacingGiven: visitor grammar: grammar depth: depth and: booleans [
+
+	| result |
+	result := self newNode: grammar.
+	result value: (grammar randomlySelectOption: id given: visitor configuration).
+	^ result
 ]
 
 { #category : #'public access' }
