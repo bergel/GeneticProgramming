@@ -29,7 +29,7 @@ GPCollectionNode >> expandGiven: grammar [
 
 	| result childId |
 	size == 0 ifTrue: [ ^ self newNode: grammar ].
-	result := (GPRandom instance selectRandomly: (grammar optionsOf: id)) 
+	result := (GPRandom instance randomlySelect: (grammar optionsOf: id)) 
 		          newNode: grammar.
 	result number: grammar nodeNumber.
 	childId := result children first id.

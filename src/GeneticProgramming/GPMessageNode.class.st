@@ -7,7 +7,7 @@ Class {
 { #category : #'public access' }
 GPMessageNode >> evaluate: grammar [
 
-	 ^ GPRandom instance selectRandomly: (grammar optionsOf: self id)
+	 ^ GPRandom instance randomlySelect: (grammar optionsOf: self id)
 ]
 
 { #category : #'public access' }
@@ -54,7 +54,7 @@ GPMessageNode >> print [
 { #category : #'public access' }
 GPMessageNode >> replaceWithValueFrom: visitor [
 
-	^ GPRandom instance selectRandomly:
+	^ GPRandom instance randomlySelect:
 		  (visitor selectOption: self id)
 	"GPRandom instance selectRandomly: (grammar optionsOf: self id)"
 ]

@@ -280,7 +280,7 @@ GPAbstractNode >> second [
 GPAbstractNode >> selectedOptionNode: options given: configuration [
 
 	^ options at:
-		  (GPRandom instance selectRandomlyGivenProbabilities: (self
+		  (GPRandom instance randomlySelectGivenProbabilities: (self
 				    collectOptions: (1 to: options size)
 				    with: (configuration optionWeightsOf: id)))
 ]

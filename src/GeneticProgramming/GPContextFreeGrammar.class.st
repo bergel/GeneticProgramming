@@ -318,7 +318,7 @@ GPContextFreeGrammar >> randomOptions: symbol [
 
 { #category : #'as yet unclassified' }
 GPContextFreeGrammar >> randomlySelectOption: symbol [
-	^ GPRandom instance selectRandomly: (self optionsOf: symbol)
+	^ GPRandom instance randomlySelect: (self optionsOf: symbol)
 ]
 
 { #category : #'as yet unclassified' }
@@ -340,7 +340,7 @@ GPContextFreeGrammar >> replaceValuesOf: node [
 { #category : #selecting }
 GPContextFreeGrammar >> selectKeyRule [
 
-	 ^ GPRandom instance selectRandomly: self allButMessageRuleKeys
+	 ^ GPRandom instance randomlySelect: self allButMessageRuleKeys
 ]
 
 { #category : #selecting }
@@ -348,7 +348,7 @@ GPContextFreeGrammar >> selectKeyRuleGiven: configuration [
 
 	 ^ (configuration keysOfRuleWeights includesAll:
 		  self allButMessageRuleKeys) ifFalse: [ self selectKeyRule ] ifTrue: [ 
-	  GPRandom instance selectRandomlyGivenProbabilities:
+	  GPRandom instance randomlySelectGivenProbabilities:
 		   configuration rulesWeights ]
 ]
 
@@ -363,9 +363,9 @@ GPContextFreeGrammar >> selectKeyRuleGiven: configuration depth: depth and: rule
 		 self error:
 			 'AST can not be expanded with depth of: ' , depth asString ].
 	 ^ configuration rulesWeights
-		   ifEmpty: [ GPRandom instance selectRandomly: newCollection ]
+		   ifEmpty: [ GPRandom instance randomlySelect: newCollection ]
 		   ifNotEmpty: [ 
-			   GPRandom instance selectRandomlyGivenProbabilities:
+			   GPRandom instance randomlySelectGivenProbabilities:
 				   (newCollection
 					    with: (configuration rulesWeightsOf: newCollection)
 					    collect: [ :i :w | i -> w ]) asDictionary ]
