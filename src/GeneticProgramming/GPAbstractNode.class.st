@@ -146,12 +146,6 @@ GPAbstractNode >> expandGiven: context [
 ]
 
 { #category : #'collecting leaves' }
-GPAbstractNode >> expandGiven: grammar and: configuration [
-
-	^ self subclassResponsibility
-]
-
-{ #category : #'collecting leaves' }
 GPAbstractNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
 
 	^ self subclassResponsibility
@@ -246,7 +240,8 @@ GPAbstractNode >> numberOfNodes [
 
 { #category : #initialization }
 GPAbstractNode >> print [
-	^ self printUsing: nil
+	^ self subclassResponsibility 
+	"^ self printUsing: nil"
 ]
 
 { #category : #accessing }

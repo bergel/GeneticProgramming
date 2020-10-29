@@ -28,7 +28,7 @@ GPCollectionNode >> evaluate: grammar [
 GPCollectionNode >> expandGiven: grammar [
 
 	| result childId |
-	size == 0 ifTrue: [ ^ self newGiven: grammar ].
+	size == 0 ifTrue: [ ^ self newNode: grammar ].
 	result := (GPRandom instance selectRandomly: (grammar optionsOf: id)) 
 		          newNode: grammar.
 	result number: grammar nodeNumber.
@@ -42,7 +42,7 @@ GPCollectionNode >> expandGiven: grammar [
 GPCollectionNode >> expandGiven: grammar and: configuration [
 
 	| result childId |
-	size == 0 ifTrue: [ ^ self newGiven: grammar ].
+	size == 0 ifTrue: [ ^ self newNode: grammar ].
 	result := (self
 		           selectedOptionNode: (grammar optionsOf: id)
 		           given: configuration) newNode: grammar.
@@ -57,7 +57,7 @@ GPCollectionNode >> expandGiven: grammar and: configuration [
 GPCollectionNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
 
 	| node |
-	depth == 1 ifTrue: [ ^ self newGiven: grammar ].
+	depth == 1 ifTrue: [ ^ self newNode: grammar ].
 	node := nil.
 
 	depth > 1 ifTrue: [ 
@@ -83,7 +83,7 @@ GPCollectionNode >> expandGiven: configuration grammar: grammar depth: depth and
 				                 node ]
 			                 thenReject: [ :n | n isNil ].
 		newCollection ifNotEmpty: [ 
-			node := (self newGiven: grammar) children: newCollection ] ].
+			node := (self newNode: grammar) children: newCollection ] ].
 	"selected ifTrue: [
 			node := (self newGiven: grammar) children:
 				        (newCollection reject: [ :i | i isNil ]) ] ]."
@@ -102,7 +102,7 @@ GPCollectionNode >> expandReplacingGiven: visitor and: grammar [
 
 	| result childId cn |
 	(id == #Statements and: [ size == 0 ]) ifTrue: [ size := 1 ].
-	size == 0 ifTrue: [ ^ self newGiven: grammar ].
+	size == 0 ifTrue: [ ^ self newNode: grammar ].
 	result := (grammar randomlySelectOption: id) newNode: grammar.
 	childId := result children first.
 	cn := (1 to: size) collect: [ :n | 
@@ -118,7 +118,7 @@ GPCollectionNode >> expandReplacingGiven: visitor and: grammar [
 GPCollectionNode >> expandReplacingGiven: visitor grammar: grammar depth: depth and: booleans [
 
 	| result options cn |
-	size == 0 ifTrue: [ ^ self newGiven: grammar ].
+	size == 0 ifTrue: [ ^ self newNode: grammar ].
 	result := self newNode: grammar.
 	cn := OrderedCollection new.
 	options := self
@@ -140,7 +140,7 @@ GPCollectionNode >> expandReplacingGiven: visitor grammar: grammar depth: depth 
 		ifFalse: [ "fill an array with values of options "
 			| indexes |
 			indexes := grammar shuffle:
-				           (self fillArrayOfSize:   options size to: size).
+				           (self fillArrayOfSize: options size to: size).
 			cn := (1 to: size) collect: [ :i | 
 				      (options at: (indexes at: i)) newNode: grammar ] ].
 	result children: cn.
@@ -164,9 +164,17 @@ GPCollectionNode >> initialize [
 	value := OrderedCollection new
 ]
 
-{ #category : #'instance creation' }
-GPCollectionNode >> newGiven: grammar [
-	^ self deepCopy number: grammar nodeNumber
+{ #category : #initialization }
+GPCollectionNode >> print [
+		^ String streamContents: [ :str | 
+		  str nextPut: $(.
+		  children do: [ :child | 
+			  str
+				  nextPutAll: child print;
+				  nextPut: $, ].
+		  str nextPut: $) ]
+	"str := '( '.
+	str := str , children collect: [ :child | child print ] , ')'."
 ]
 
 { #category : #operations }

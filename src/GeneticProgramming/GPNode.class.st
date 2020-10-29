@@ -47,6 +47,23 @@ GPNode >> evaluate: grammar given: configuration [
 						    child evaluate: grammar given: configuration ]) ]
 ]
 
+{ #category : #'as yet unclassified' }
+GPNode >> expandChildrenGiven: grammar [
+
+	| resultNode |
+	self children size == 1 ifTrue: [ 
+		^ (grammar nodeOf: self children first) expandGiven: grammar ].
+	
+	resultNode := self newNode: grammar.
+	children doWithIndex: [ :child :index | 
+		| newChild |
+		newChild := (grammar nodeOf: child) expandGiven: grammar.
+		newChild
+			ifNil: [ ^ nil ]
+			ifNotNil: [ resultNode children at: index put: newChild ] ].
+	^ resultNode
+]
+
 { #category : #'collecting leaves' }
 GPNode >> expandChildrenGiven: configuration grammar: grammar depth: depth and: booleans [
 
@@ -69,28 +86,17 @@ GPNode >> expandChildrenGiven: configuration grammar: grammar depth: depth and: 
 { #category : #'collecting leaves' }
 GPNode >> expandGiven: grammar [
 
-	| result |
-	result := (GPRandom instance selectRandomly: (grammar optionsOf: id))
-		         newNode: grammar.
+
+	^ (grammar randomlySelectOption: id) expandChildrenGiven:
+		        grammar.
+
+	"| result |
+	result := (GPRandom instance selectRandomly: (grammar optionsOf: id)) 
+		          newNode: grammar.
 	result number: grammar nodeNumber.
 	result children doWithIndex: [ :child :index | 
 		result children at: index put: (grammar expandFrom: child) ].
-	^ result
-]
-
-{ #category : #'collecting leaves' }
-GPNode >> expandGiven: grammar and: configuration [
-
-	| result |
-	result := (self
-		           selectedOptionNode: (grammar optionsOf: id)
-		           given: configuration) newNode: grammar.
-	result number: grammar nodeNumber.
-	result children doWithIndex: [ :child :index | 
-		result children
-			at: index
-			put: (grammar expandFrom: child given: configuration) ].
-	^ result
+	^ result"
 ]
 
 { #category : #'collecting leaves' }
@@ -173,6 +179,19 @@ GPNode >> expandReplacingGiven: visitor grammar: grammar depth: depth and: boole
 						                into: [ :b :e | e or: [ b ] ] ]) not. ]
 				ifNone: [  ] ].
 	^ node
+]
+
+{ #category : #initialization }
+GPNode >> print [
+		^ String streamContents: [ :str | 
+		  str nextPut: $(.
+		  children do: [ :child | 
+			  str
+				  nextPutAll: child print;
+				  nextPut: Character space ].
+		  str nextPut: $) ]
+	"str := '( '.
+	str := str , children collect: [ :child | child print ] , ')'."
 ]
 
 { #category : #operations }

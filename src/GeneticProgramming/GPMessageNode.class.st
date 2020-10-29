@@ -23,12 +23,6 @@ GPMessageNode >> expandGiven: context [
 ]
 
 { #category : #'collecting leaves' }
-GPMessageNode >> expandGiven: grammar and: configuration [
-
-	^ self newNode: grammar
-]
-
-{ #category : #'collecting leaves' }
 GPMessageNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
 
 	^ self newNode: grammar
@@ -50,6 +44,11 @@ GPMessageNode >> expandReplacingGiven: visitor grammar: grammar depth: depth and
 	result := self newNode: grammar.
 	result value: (grammar randomlySelectOption: id given: visitor configuration).
 	^ result
+]
+
+{ #category : #initialization }
+GPMessageNode >> print [
+	^ id
 ]
 
 { #category : #'public access' }

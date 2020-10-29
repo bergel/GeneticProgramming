@@ -23,12 +23,6 @@ GPLeafNode >> expandGiven: context [
 ]
 
 { #category : #'collecting leaves' }
-GPLeafNode >> expandGiven: grammar and: configuration [
-
-	^ self newNode: grammar
-]
-
-{ #category : #'collecting leaves' }
 GPLeafNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
 
 	booleans add: depth == 1.
@@ -62,6 +56,11 @@ GPLeafNode >> expandReplacingGiven: visitor grammar: grammar depth: depth and: b
 		inst acceptVisitor: visitor.
 		result value: visitor lastValue ].
 	^ result
+]
+
+{ #category : #initialization }
+GPLeafNode >> print [
+	^ id
 ]
 
 { #category : #'public access' }

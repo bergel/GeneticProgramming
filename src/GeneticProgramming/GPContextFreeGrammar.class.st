@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'rules',
 		'options',
-		'nodeNumber'
+		'nodeNumber',
+		'configuration'
 	],
 	#category : #'GeneticProgramming-Grammar'
 }
@@ -134,6 +135,11 @@ GPContextFreeGrammar >> allLeavesRuleKeysBut: symbols [
 		   thenCollect: [ :assoc | assoc key ]
 ]
 
+{ #category : #accessing }
+GPContextFreeGrammar >> configuration: aConfiguration [
+	configuration := aConfiguration 
+]
+
 { #category : #adding }
 GPContextFreeGrammar >> createNode: symbol ofClass: classNode type: aClass withSequence: sequence [
 
@@ -159,30 +165,10 @@ GPContextFreeGrammar >> expandFrom: axiom [
 ]
 
 { #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandFrom: axiom given: configuration [
+GPContextFreeGrammar >> expandFrom: axiom given: aConfiguration [
 
-	^ rules
-		  at: axiom
-		  ifPresent: [ :node | 
-			  configuration depth
-				  ifNil: [ node expandGiven: self and: configuration ]
-				  ifNotNil: [ |bools|
-					bools := OrderedCollection new.
-					  node
-						  expandGiven: configuration
-						  grammar: self
-						  depth: configuration depth
-						  and: bools ] ]
-		  ifAbsent: [ nil ]
-]
-
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandFrom: axiom ofSize: aNumber [
-
-	^ rules
-		  at: axiom
-		  ifPresent: [ :node | node expandGiven: self ofSize: aNumber ]
-		  ifAbsent: [ nil ]
+	self configuration: aConfiguration.
+	^ self expandFrom: axiom
 ]
 
 { #category : #'collecting leaves' }
@@ -322,6 +308,12 @@ GPContextFreeGrammar >> nodeOf: symbol [
 GPContextFreeGrammar >> optionsOf: symbol [
 
 	 ^ options at: symbol
+]
+
+{ #category : #'as yet unclassified' }
+GPContextFreeGrammar >> randomOptions: symbol [
+
+	^ GPRandom instance shuffleElementsOf: (self optionsOf: symbol)
 ]
 
 { #category : #'as yet unclassified' }
