@@ -1,6 +1,6 @@
 # GeneticProgramming
 
-[![Build Status](https://travis-ci.com/bergel/GeneticProgramming.svg?branch=master)](https://travis-ci.com/bergel/GeneticProgramming)
+[![Build Status](https://travis-ci.com/bergel/GeneticProgramming.svg?branch=grammar)](https://travis-ci.com/bergel/GeneticProgramming)
 
 ## How to load
 
