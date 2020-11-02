@@ -7,8 +7,9 @@ Class {
 		'type',
 		'evaluationBlock',
 		'printBlock',
-		'number',
-		'value'
+		'value',
+		'depth',
+		'idNumber'
 	],
 	#category : #'GeneticProgramming-Core'
 }
@@ -102,7 +103,13 @@ GPAbstractNode >> crossOverWith: anotherNode using: random [
 { #category : #copying }
 GPAbstractNode >> deepCopy [
 
-	 ^ self class new id: id
+	^ self class new id: id;
+	type: type
+]
+
+{ #category : #accessing }
+GPAbstractNode >> depth: aNumber [
+	depth := aNumber
 ]
 
 { #category : #initialization }
@@ -146,15 +153,9 @@ GPAbstractNode >> expandGiven: context [
 ]
 
 { #category : #'collecting leaves' }
-GPAbstractNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
+GPAbstractNode >> expandGiven: grammar depth: aNumber and: booleans [
 
 	^ self subclassResponsibility
-]
-
-{ #category : #'collecting leaves' }
-GPAbstractNode >> expandGiven: context ofSize: aNumber [
-
-	^ nil
 ]
 
 { #category : #'collecting leaves' }
@@ -164,7 +165,7 @@ GPAbstractNode >> expandReplacingGiven: visitor and: context [
 ]
 
 { #category : #'collecting leaves' }
-GPAbstractNode >> expandReplacingGiven: visitor grammar: grammar depth: depth and: booleans [
+GPAbstractNode >> expandReplacingGiven: visitor grammar: grammar depth: aNumber and: booleans [
 
 	^ self subclassResponsibility
 ]
@@ -202,16 +203,22 @@ GPAbstractNode >> id: anObject [
 	id := anObject
 ]
 
+{ #category : #accessing }
+GPAbstractNode >> idNumber: aNumber [
+
+	idNumber := aNumber
+]
+
 { #category : #initialization }
 GPAbstractNode >> initialize [
 
 	super initialize.
 	children := OrderedCollection new.
-	number := 0.
-	printBlock := [ :c | 
+	idNumber := 0.
+	"printBlock := [ :c | 
 	              | t |
 	              t := c inject: '(' into: [ :sum :el | sum , el print ].
-	              t , ')' ]
+	              t , ')' ]"
 ]
 
 { #category : #testing }
@@ -221,16 +228,22 @@ GPAbstractNode >> isLeaf [
 
 { #category : #'instance creation' }
 GPAbstractNode >> newNode: grammar [
+
 	| node |
 	node := self deepCopy.
-node number: grammar nodeNumber.
-^ node
+	node idNumber: grammar nodeNumber.
+	^ node
 ]
 
-{ #category : #accessing }
-GPAbstractNode >> number: aNumber [
+{ #category : #'instance creation' }
+GPAbstractNode >> newNode: grammar with: aNumber [
 
-	number := aNumber
+	| node |
+	node := self deepCopy.
+	node
+		idNumber: grammar nodeNumber;
+		depth: aNumber.
+	^ node
 ]
 
 { #category : #metrics }

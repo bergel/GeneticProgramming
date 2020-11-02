@@ -23,10 +23,10 @@ GPLeafNode >> expandGiven: context [
 ]
 
 { #category : #'collecting leaves' }
-GPLeafNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
+GPLeafNode >> expandGiven: grammar depth: anInteger and: booleans [
 
-	booleans add: depth == 1.
-	^ self newNode: grammar
+	booleans add: anInteger == 1.
+	^ self newNode: grammar with: anInteger
 ]
 
 { #category : #'collecting leaves' }

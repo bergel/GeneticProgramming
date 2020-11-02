@@ -23,9 +23,9 @@ GPMessageNode >> expandGiven: context [
 ]
 
 { #category : #'collecting leaves' }
-GPMessageNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
+GPMessageNode >> expandGiven: grammar depth: anInteger and: booleans [
 
-	^ self newNode: grammar
+	^ self newNode: grammar with: anInteger
 ]
 
 { #category : #'collecting leaves' }

@@ -96,31 +96,31 @@ GPReplacementVisitor >> visitLiteralNode: literal [
 { #category : #visiting }
 GPReplacementVisitor >> visitMessageNode: messageNode [
 
-	| astNode child ids collection |
-	nodes isEmpty ifTrue: [ ^ self ].
+	| astNode child ids "collection" |
+	nodes ifEmpty: [ ^ self ].
 	astNode := nodes pop.
 	ids := astNode children.
-	collection := OrderedCollection new.
+	"collection := OrderedCollection new."
 
 	child := (grammar nodeOf: ids first)
 		         expandReplacingGiven: self
 		         and: grammar.
 	messageNode receiver: child value.
-	collection add: child.
+	"collection add: child."
 
 	child := (grammar nodeOf: ids second)
 		         expandReplacingGiven: self
 		         and: grammar.
 	messageNode selector: child value.
-	collection add: child.
+	"collection add: child."
 
 	child := (grammar nodeOf: ids third)
 		         size: (self getNumberOfArguments: child value);
 		         expandReplacingGiven: self and: grammar.
 	messageNode arguments: child value.
-	collection add: child.
-	
-	astNode children: collection.
+	"collection add: child."
+
+	"astNode children: collection."
 	lastValue := messageNode
 ]
 

@@ -172,29 +172,29 @@ GPContextFreeGrammar >> expandFrom: axiom given: aConfiguration [
 ]
 
 { #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandGiven: configuration depth: depth and: ruleKeys [
+GPContextFreeGrammar >> expandGiven:  depth and: ruleKeys [
 
-	 | axiom |
-	 axiom := self
-		          selectKeyRuleGiven: configuration
-		          depth: depth
-		          and: ruleKeys.
-	 ^ rules
-		   at: axiom
-		   ifPresent: [ :node | 
-			   | resNode bools |
-			bools := OrderedCollection new.
-			   resNode := node
-				              expandGiven: configuration
-				              grammar: self
-				              depth: depth
-				              and: bools.
-			   resNode
-				   ifNil: [ 
-					   ruleKeys add: axiom.
-					   self expandGiven: configuration depth: depth and: ruleKeys ]
-				   ifNotNil: [ resNode ] ]
-		   ifAbsent: [ nil ]
+	|axiom |
+	axiom := self selectKeyRuleGiven: depth and: ruleKeys.
+	^ rules
+		  at: axiom
+		  ifPresent: [ :node | 
+			  | resNode bools |
+			  bools := OrderedCollection new.
+			  resNode := node expandGiven: self depth: depth and: bools.
+			  resNode
+				  ifNil: [ 
+					  ruleKeys add: axiom.
+					  self expandGiven: depth and: ruleKeys ]
+				  ifNotNil: [ resNode ] ]
+		  ifAbsent: [ nil ]
+]
+
+{ #category : #'collecting leaves' }
+GPContextFreeGrammar >> expandGiven: aConfiguration depth: depth and: ruleKeys [
+
+	self configuration: aConfiguration.
+	^ self expandGiven: depth and: ruleKeys
 ]
 
 { #category : #'collecting leaves' }
@@ -230,9 +230,9 @@ GPContextFreeGrammar >> expandReplacingFrom: axiom given: configuration [
 ]
 
 { #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandReplacingGiven: configuration depth: depth and: ruleKeys [
+GPContextFreeGrammar >> expandReplacingGiven: aConfiguration depth: depth and: ruleKeys [
 
-	| axiom |
+	"| axiom |
 	axiom := self
 		         selectKeyRuleGiven: configuration
 		         depth: depth
@@ -240,14 +240,14 @@ GPContextFreeGrammar >> expandReplacingGiven: configuration depth: depth and: ru
 	^ rules
 		  at: axiom
 		  ifPresent: [ :node | 
-			  | resNode  |
+			  | resNode |
 			  resNode := self expandReplacingFrom: axiom given: configuration.
 			  resNode
 				  ifNil: [ 
 					  ruleKeys add: axiom.
 					  self expandGiven: configuration depth: depth and: ruleKeys ]
 				  ifNotNil: [ resNode ] ]
-		  ifAbsent: [ nil ]
+		  ifAbsent: [ nil ]"
 ]
 
 { #category : #'collecting leaves' }
@@ -266,18 +266,18 @@ GPContextFreeGrammar >> expandReplacingUsing: configuration [
 ]
 
 { #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandUsing: configuration [
+GPContextFreeGrammar >> expandUsing: aConfiguration [
 
-	 ^ configuration depth
-		   ifNil: [ 
-			   self
-				   expandFrom: (self selectKeyRuleGiven: configuration)
-				   given: configuration ]
-		   ifNotNil: [ 
-			   self
-				   expandGiven: configuration
-				   depth: configuration depth
-				   and: OrderedCollection new ]
+	^ aConfiguration depth
+		  ifNil: [ 
+			  self
+				  expandFrom: (self selectKeyRuleGiven: aConfiguration)
+				  given: aConfiguration ]
+		  ifNotNil: [ 
+			  self
+				  expandGiven: aConfiguration
+				  depth: aConfiguration depth
+				  and: OrderedCollection new ]
 ]
 
 { #category : #testing }
@@ -353,22 +353,22 @@ GPContextFreeGrammar >> selectKeyRuleGiven: configuration [
 ]
 
 { #category : #'collecting leaves' }
-GPContextFreeGrammar >> selectKeyRuleGiven: configuration depth: depth and: ruleKeys [
+GPContextFreeGrammar >> selectKeyRuleGiven: depth and: ruleKeys [
 
-	 | newCollection |
-	 newCollection := self
-		                  selectRulesKeysGiven: depth
-		                  andAvoiding: ruleKeys.
-	 newCollection ifEmpty: [ 
-		 self error:
-			 'AST can not be expanded with depth of: ' , depth asString ].
-	 ^ configuration rulesWeights
-		   ifEmpty: [ GPRandom instance randomlySelect: newCollection ]
-		   ifNotEmpty: [ 
-			   GPRandom instance randomlySelectGivenProbabilities:
-				   (newCollection
-					    with: (configuration rulesWeightsOf: newCollection)
-					    collect: [ :i :w | i -> w ]) asDictionary ]
+	| newCollection |
+	newCollection := self
+		                 selectRulesKeysGiven: depth
+		                 andAvoiding: ruleKeys.
+	newCollection ifEmpty: [ 
+		self error:
+			'AST can not be expanded with depth of: ' , depth asString ].
+	^ configuration rulesWeights
+		  ifEmpty: [ GPRandom instance randomlySelect: newCollection ]
+		  ifNotEmpty: [ 
+			  GPRandom instance randomlySelectGivenProbabilities:
+				  (newCollection
+					   with: (configuration rulesWeightsOf: newCollection)
+					   collect: [ :i :w | i -> w ]) asDictionary ]
 ]
 
 { #category : #'collecting leaves' }
@@ -377,4 +377,14 @@ GPContextFreeGrammar >> selectRulesKeysGiven: depth andAvoiding: ruleKeys [
 	 ^ (depth == 1
 		    ifTrue: [ self allLeavesRuleKeysBut: ruleKeys ]
 		    ifFalse: [ self allComplexRulesKeysBut: ruleKeys ])
+]
+
+{ #category : #'as yet unclassified' }
+GPContextFreeGrammar >> shuffleOptions: symbol [
+
+	| opts indexes |
+	opts := self optionsOf: symbol.
+	indexes := GPRandom instance shuffleElementsOf:
+		           (1 to: opts size) asArray.
+	^ indexes collect: [ :i | opts at: i ]
 ]

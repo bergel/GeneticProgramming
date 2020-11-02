@@ -12,13 +12,12 @@ GPNode class >> children: someNodes [
 { #category : #operations }
 GPNode >> deepCopy [
 
-	 | c |
-	 c := super deepCopy
-		      type: self type;
-		      evaluationBlock: evaluationBlock;
-		      printBlock: printBlock.
-	 self children do: [ :child | c addChild: child deepCopy ].
-	 ^ c
+	| c |
+	c := super deepCopy
+		     evaluationBlock: evaluationBlock;
+		     printBlock: printBlock.
+	self children do: [ :child | c addChild: child deepCopy ].
+	^ c
 ]
 
 { #category : #'public access' }
@@ -65,21 +64,25 @@ GPNode >> expandChildrenGiven: grammar [
 ]
 
 { #category : #'collecting leaves' }
-GPNode >> expandChildrenGiven: configuration grammar: grammar depth: depth and: booleans [
+GPNode >> expandChildrenGiven: grammar depth: anInteger and: booleans [
 
 	| resultNode |
-	resultNode := self newNode: grammar.
-	resultNode number: grammar nodeNumber.
-	children doWithIndex: [ :child :index | 
-		| newChild |
-		newChild := (grammar nodeOf: child)
-			            expandGiven: configuration
-			            grammar: grammar
-			            depth: depth - 1
-			            and: booleans.
-		newChild
-			ifNil: [ ^ nil ]
-			ifNotNil: [ resultNode children at: index put: newChild ] ].
+	self children size == 1 ifTrue: [ 
+		^ (grammar nodeOf: self children first)
+			  expandGiven: grammar
+			  depth: anInteger
+			  and: booleans ].
+	anInteger > 1 ifTrue: [ 
+		resultNode := self newNode: grammar with: anInteger.
+		children doWithIndex: [ :child :index | 
+			| newChild |
+			newChild := (grammar nodeOf: child)
+				            expandGiven: grammar
+				            depth: anInteger - 1
+				            and: booleans.
+			newChild
+				ifNil: [ ^ nil ]
+				ifNotNil: [ resultNode children at: index put: newChild ] ] ].
 	^ resultNode
 ]
 
@@ -100,30 +103,21 @@ GPNode >> expandGiven: grammar [
 ]
 
 { #category : #'collecting leaves' }
-GPNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
+GPNode >> expandGiven: grammar depth: anInteger and: booleans [
 
-	 | node |
-	 node := nil.
-	 depth > 1 ifTrue: [ 
-		 | yetSelected randomIndexes optionIndex options |
-		 options := grammar optionsOf: self id.
-		 randomIndexes := GPRandom instance shuffleElementsOf:
-			                  (1 to: options size) asArray.
-		 yetSelected := true.
-		 optionIndex := 1.
-		 [ yetSelected and: [ optionIndex <= randomIndexes size ] ] 
-			 whileTrue: [ 
-				 node := (options at: (randomIndexes at: optionIndex))
-					         expandChildrenGiven: configuration
-					         grammar: grammar
-					         depth: depth
-					         and: booleans.
-				 yetSelected := (node isNotNil and: [ 
-					                 booleans
-						                 inject: false
-						                 into: [ :b :e | e or: [ b ] ] ]) not.
-				 optionIndex := optionIndex + 1 ] ].
-	 ^ node
+	| node options |
+	node := nil.
+	options := grammar randomOptions: id.
+	options
+		detect: [ :option | 
+			node := option
+				        expandChildrenGiven: grammar
+				        depth: anInteger
+				        and: booleans.
+			node isNotNil and: [ 
+				booleans inject: false into: [ :b :e | e or: [ b ] ] ] ]
+		ifNone: [  ].
+	^ node
 ]
 
 { #category : #'collecting leaves' }

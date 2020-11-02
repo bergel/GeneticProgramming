@@ -26,6 +26,7 @@ GPRandom class >> resetInstance [
 { #category : #'instance creation' }
 GPRandom class >> seed: aNumber [
 
+	self resetInstance.
 	^ self instance seed: aNumber
 ]
 

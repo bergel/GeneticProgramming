@@ -9,11 +9,11 @@ Class {
 
 { #category : #copying }
 GPCollectionNode >> deepCopy [
-| c |
-	c := super deepCopy
-		     type: self type";
+
+	| c |
+	c := super deepCopy. ";
 		     evaluationBlock: evaluationBlock;
-		     printBlock: printBlock".
+		     printBlock: printBlock"
 	self children do: [ :child | c addChild: child deepCopy ].
 	^ c
 ]
@@ -27,74 +27,45 @@ GPCollectionNode >> evaluate: grammar [
 { #category : #'collecting leaves' }
 GPCollectionNode >> expandGiven: grammar [
 
-	| result childId |
-	size == 0 ifTrue: [ ^ self newNode: grammar ].
-	result := (GPRandom instance randomlySelect: (grammar optionsOf: id)) 
-		          newNode: grammar.
-	result number: grammar nodeNumber.
-	childId := result children first id.
-	result children:
-		((1 to: size) collect: [ :n | grammar expandFrom: childId ]).
-	^ result
-]
-
-{ #category : #'collecting leaves' }
-GPCollectionNode >> expandGiven: grammar and: configuration [
-
-	| result childId |
-	size == 0 ifTrue: [ ^ self newNode: grammar ].
-	result := (self
-		           selectedOptionNode: (grammar optionsOf: id)
-		           given: configuration) newNode: grammar.
-	result number: grammar nodeNumber.
-	childId := result children first id.
-	result children: ((1 to: size) collect: [ :n | 
-			 grammar expandFrom: childId given: configuration ]).
-	^ result
-]
-
-{ #category : #'collecting leaves' }
-GPCollectionNode >> expandGiven: configuration grammar: grammar depth: depth and: booleans [
-
-	| node |
-	depth == 1 ifTrue: [ ^ self newNode: grammar ].
+	| node options newCollection |
 	node := nil.
-
-	depth > 1 ifTrue: [ 
-		| selected randomIndexes options newCollection |
-		options := grammar optionsOf: self id.
-		randomIndexes := GPRandom instance shuffleElementsOf:
-			                 (1 to: options size) asArray.
-		selected := false.
-		newCollection := (1 to: options size)
-			                 collect: [ :n | 
-				                 node := (grammar nodeOf:
-					                          (options at: (randomIndexes at: n))
-						                          children first id)
-					                         expandGiven: configuration
-					                         grammar: grammar
-					                         depth: depth - 1
-					                         and: booleans.
-				                 selected := selected or: [ 
-					                             node isNotNil and: [ 
-						                             booleans
-							                             inject: false
-							                             into: [ :b :e | e or: [ b ] ] ] ].
-				                 node ]
-			                 thenReject: [ :n | n isNil ].
-		newCollection ifNotEmpty: [ 
-			node := (self newNode: grammar) children: newCollection ] ].
-	"selected ifTrue: [
-			node := (self newGiven: grammar) children:
-				        (newCollection reject: [ :i | i isNil ]) ] ]."
+	options := grammar shuffleOptions: id.
+	newCollection := options
+		                 collect: [ :opt | 
+		                 (grammar nodeOf: opt children first) expandGiven:
+			                 grammar ]
+		                 thenReject: [ :n | n isNil ].
+	newCollection ifNotEmpty: [ 
+		node := (self newNode: grammar) children: newCollection ].
 	^ node
 ]
 
 { #category : #'collecting leaves' }
-GPCollectionNode >> expandGiven: grammar ofSize: aNumber [
+GPCollectionNode >> expandGiven: grammar depth: anInteger and: booleans [
 
-	size := aNumber.
-	^ self expandGiven: grammar
+	| node options newCollection |
+	anInteger == 1 ifTrue: [ ^ self newNode: grammar with: anInteger ].
+	node := nil.
+	options := grammar shuffleOptions: id.
+	newCollection := options
+		                 collect: [ :opt | 
+			|newNode newBooleans |
+				newBooleans := booleans deepCopy.
+			                 newNode := (grammar nodeOf: opt children first)
+				                         expandGiven: grammar
+				                         depth: anInteger - 1
+				                         and: newBooleans.
+			                 (newNode isNotNil and: [ 
+				                  newBooleans
+					                  inject: false
+					                  into: [ :b :e | e or: [ b ] ] ]) ifFalse: [ 
+				                 newNode := nil ].
+			                 newNode ]
+		                 thenReject: [ :n | n isNil ].
+	newCollection ifNotEmpty: [ 
+		node := (self newNode: grammar with: anInteger) children:
+			        newCollection ].
+	^ node
 ]
 
 { #category : #'collecting leaves' }
