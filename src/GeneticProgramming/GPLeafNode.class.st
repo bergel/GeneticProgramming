@@ -29,47 +29,8 @@ GPLeafNode >> expandGiven: grammar depth: anInteger and: booleans [
 	^ self newNode: grammar with: anInteger
 ]
 
-{ #category : #'collecting leaves' }
-GPLeafNode >> expandReplacingGiven: visitor and: grammar [
-
-	| result |
-	result := self newNode: grammar.
-	visitor addNode: self.
-	type ifNotNil: [ 
-		| inst |
-		inst := type new.
-		inst acceptVisitor: visitor.
-		result value: visitor lastValue ].
-	^ result
-]
-
-{ #category : #'collecting leaves' }
-GPLeafNode >> expandReplacingGiven: visitor grammar: grammar depth: depth and: booleans [
-
-	| result |
-	booleans add: depth == 1.
-	result := self newNode: grammar.
-	visitor addNode: self.
-	type ifNotNil: [ 
-		| inst |
-		inst := type new.
-		inst acceptVisitor: visitor.
-		result value: visitor lastValue ].
-	^ result
-]
-
 { #category : #initialization }
 GPLeafNode >> printOn: aStream [
 
 	aStream nextPutAll: id
-]
-
-{ #category : #'public access' }
-GPLeafNode >> replaceWithValueFrom: visitor [
-
-	"grammar"
-
-	^ GPRandom instance randomlySelect:
-		  (visitor selectOption: self id)
-	"^ GPRandom instance selectRandomly: (grammar optionsOf: self id)"
 ]

@@ -2,11 +2,9 @@ Class {
 	#name : #GPReplacementVisitor,
 	#superclass : #Object,
 	#instVars : [
-		'values',
 		'lastValue',
 		'grammar',
-		'nodes',
-		'configuration'
+		'nodes'
 	],
 	#category : #'GeneticProgramming-Visitor'
 }
@@ -16,16 +14,9 @@ GPReplacementVisitor >> addNode: aNode [
 	nodes push: aNode
 ]
 
-{ #category : #'as yet unclassified' }
-GPReplacementVisitor >> getNumberOfArguments: string [
-
-	| number |
-	number := string occurrencesOf: $:.
-	number > 0 ifFalse: [ 
-		(string endsWithAnyOf:
-			 (Character specialCharacters asArray collect: [ :c | c asString ])) 
-			ifTrue: [ number := 1 ] ].
-	^ number
+{ #category : #accessing }
+GPReplacementVisitor >> grammar [
+	^ grammar
 ]
 
 { #category : #accessing }
@@ -45,41 +36,31 @@ GPReplacementVisitor >> lastValue [
 ]
 
 { #category : #'as yet unclassified' }
-GPReplacementVisitor >> randomlySelectOption: symbol [
+GPReplacementVisitor >> numberOfArguments: string [
 
-	^ grammar randomlySelectOption: symbol "given: configuration"
+	| number |
+	number := string occurrencesOf: $:.
+	number > 0 ifFalse: [ 
+		(string endsWithAnyOf:
+			 (Character specialCharacters asArray collect: [ :c | c asString ])) 
+			ifTrue: [ number := 1 ] ].
+	^ number
 ]
 
 { #category : #'as yet unclassified' }
-GPReplacementVisitor >> selectOption: symbol [
-	^ grammar optionsOf: symbol
-]
+GPReplacementVisitor >> randomlySelectOption: symbol [
 
-{ #category : #accessing }
-GPReplacementVisitor >> values: collection [
-	values := collection
+	^ grammar randomlySelectOption: symbol
 ]
 
 { #category : #visiting }
 GPReplacementVisitor >> visitAssignmentNode: assignmentNode [
 
-	| astNode child ids collection |
-	nodes isEmpty ifTrue: [ ^ self ].
-	astNode := nodes pop.
-	ids := astNode children.
-	collection := OrderedCollection new.
-	child := (grammar nodeOf: ids first)
-		         expandReplacingGiven: self
-		         and: grammar.
-
-	assignmentNode variable: child value.
-	collection add: child.
-	child := (grammar nodeOf: ids second)
-		         expandReplacingGiven: self
-		         and: grammar.
-	assignmentNode value: child value.
-	collection add: child.
-	astNode children: collection.
+	| children |
+	nodes ifEmpty: [ ^ self ].
+	children := nodes pop children.
+	assignmentNode variable: (children first generateAST: self).
+	assignmentNode value: (children second generateAST: self).
 	lastValue := assignmentNode
 ]
 
@@ -96,45 +77,25 @@ GPReplacementVisitor >> visitLiteralNode: literal [
 { #category : #visiting }
 GPReplacementVisitor >> visitMessageNode: messageNode [
 
-	| astNode child ids "collection" |
+	| children symbol |
 	nodes ifEmpty: [ ^ self ].
-	astNode := nodes pop.
-	ids := astNode children.
-	"collection := OrderedCollection new."
-
-	child := (grammar nodeOf: ids first)
-		         expandReplacingGiven: self
-		         and: grammar.
-	messageNode receiver: child value.
-	"collection add: child."
-
-	child := (grammar nodeOf: ids second)
-		         expandReplacingGiven: self
-		         and: grammar.
-	messageNode selector: child value.
-	"collection add: child."
-
-	child := (grammar nodeOf: ids third)
-		         size: (self getNumberOfArguments: child value);
-		         expandReplacingGiven: self and: grammar.
-	messageNode arguments: child value.
-	"collection add: child."
-
-	"astNode children: collection."
+	children := nodes pop children.
+	messageNode receiver: (children first generateAST: self).
+	symbol := children second generateAST: self.
+	messageNode selector: symbol.
+	messageNode arguments: (children third size:  (self numberOfArguments: symbol); generateAST: self).
 	lastValue := messageNode
 ]
 
 { #category : #visiting }
 GPReplacementVisitor >> visitMethodNode: methodNode [
 
-	| children |
+	"| children |
 	nodes isEmpty ifTrue: [ ^ self ].
 	children := nodes pop children.
 	methodNode selector: (children first replaceWithValueFrom: self).
-	self visitNode: (children second replaceWithValueFrom: self).
 	methodNode body: lastValue.
-	self visitNode: (children third replaceWithValueFrom: self).
-	methodNode arguments: lastValue
+	methodNode arguments: lastValue"
 ]
 
 { #category : #visiting }
@@ -147,19 +108,16 @@ GPReplacementVisitor >> visitNode: node [
 { #category : #visiting }
 GPReplacementVisitor >> visitSequenceNode: sequenceNode [
 
-	| children |
+	"| children |
 	nodes isEmpty ifTrue: [ ^ self ].
 	children := nodes pop children.
-	"self visitNode: (children first  replaceWithValueFrom: self)."
 	children first children do: [ :child | 
 		self visitNode: (child replaceWithValueFrom: self).
 		sequenceNode addTemporaryNamed: lastValue name ].
-	"sequenceNode temporaries: lastValue."
-	sequenceNode statements: (children second children collect: [ :child | 
-		self visitNode: (child replaceWithValueFrom: self).
-		lastValue ])
-	"self visitNode: (children second replaceWithValueFrom: self).
-	sequenceNode statements: lastValue"
+	sequenceNode statements:
+		(children second children collect: [ :child | 
+			 self visitNode: (child replaceWithValueFrom: self).
+			 lastValue ])"
 ]
 
 { #category : #visiting }

@@ -158,21 +158,20 @@ GPAbstractNode >> expandGiven: grammar depth: aNumber and: booleans [
 	^ self subclassResponsibility
 ]
 
-{ #category : #'collecting leaves' }
-GPAbstractNode >> expandReplacingGiven: visitor and: context [
-
-	^ self subclassResponsibility
-]
-
-{ #category : #'collecting leaves' }
-GPAbstractNode >> expandReplacingGiven: visitor grammar: grammar depth: aNumber and: booleans [
-
-	^ self subclassResponsibility
-]
-
 { #category : #accessing }
 GPAbstractNode >> first [
 	^ children first
+]
+
+{ #category : #translating }
+GPAbstractNode >> generateAST: visitor [
+
+	| inst |
+	type ifNil: [ ^ nil ].
+	visitor addNode: self.
+	inst := type new.
+	inst acceptVisitor: visitor.
+	^ visitor lastValue
 ]
 
 { #category : #visualization }
@@ -278,11 +277,6 @@ GPAbstractNode >> printOn: aStream [
 { #category : #initialization }
 GPAbstractNode >> printUsing: context [
 	^ printBlock value: self value: context "children value: context"
-]
-
-{ #category : #operations }
-GPAbstractNode >> replaceWithValueFrom: context [
-	^ self subclassResponsibility 
 ]
 
 { #category : #accessing }

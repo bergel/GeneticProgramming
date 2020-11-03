@@ -28,22 +28,10 @@ GPMessageNode >> expandGiven: grammar depth: anInteger and: booleans [
 	^ self newNode: grammar with: anInteger
 ]
 
-{ #category : #'collecting leaves' }
-GPMessageNode >> expandReplacingGiven: visitor and: grammar [
+{ #category : #translating }
+GPMessageNode >> generateAST: visitor [
 
-	| result |
-	result := self newNode: grammar.
-	result value: (grammar randomlySelectOption: id).
-	^ result
-]
-
-{ #category : #'collecting leaves' }
-GPMessageNode >> expandReplacingGiven: visitor grammar: grammar depth: depth and: booleans [
-
-	| result |
-	result := self newNode: grammar.
-	result value: (grammar randomlySelectOption: id given: visitor configuration).
-	^ result
+	^ visitor randomlySelectOption: id
 ]
 
 { #category : #initialization }

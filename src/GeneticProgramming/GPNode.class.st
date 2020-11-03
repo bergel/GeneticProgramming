@@ -46,7 +46,7 @@ GPNode >> evaluate: grammar given: configuration [
 						    child evaluate: grammar given: configuration ]) ]
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'collecting leaves' }
 GPNode >> expandChildrenGiven: grammar [
 
 	| resultNode |
@@ -120,61 +120,6 @@ GPNode >> expandGiven: grammar depth: anInteger and: booleans [
 	^ node
 ]
 
-{ #category : #'collecting leaves' }
-GPNode >> expandReplacingChildrenGiven: visitor grammar: grammar depth: depth and: booleans [
-
-	| resultNode |
-	resultNode := self newNode: grammar.
-	children doWithIndex: [ :child :index | 
-		| newChild |
-		newChild := (grammar nodeOf: child)
-			            expandReplacingGiven: visitor
-			            grammar: grammar
-			            depth: depth - 1
-			            and: booleans.
-		newChild
-			ifNil: [ ^ nil ]
-			ifNotNil: [ resultNode children at: index put: newChild ] ].
-	^ resultNode
-]
-
-{ #category : #'collecting leaves' }
-GPNode >> expandReplacingGiven: visitor and: grammar [
-
-	| result |
-	result := (grammar randomlySelectOption: id) newNode: grammar.
-	result children size == 1 ifTrue: [ 
-		^ (grammar nodeOf: result children first)
-			  expandReplacingGiven: visitor
-			  and: grammar ].
-	visitor addNode: result.
-	type ifNotNil: [ 
-		| inst |
-		inst := type new.
-		inst acceptVisitor: visitor.
-		result value: visitor lastValue ].
-	^ result
-]
-
-{ #category : #'collecting leaves' }
-GPNode >> expandReplacingGiven: visitor grammar: grammar depth: depth and: booleans [
-
-	| node |
-	node := nil.
-	depth > 1 ifTrue: [ 
-		(grammar optionsOf: id given: visitor configuration) detect: [ :option | 
-			node := option 		        expandReplacingChildrenGiven: visitor
-					        grammar: grammar
-					        depth: depth
-					        and: booleans.
-			 (node isNotNil and: [ 
-					                booleans
-						                inject: false
-						                into: [ :b :e | e or: [ b ] ] ]) not. ]
-				ifNone: [  ] ].
-	^ node
-]
-
 { #category : #initialization }
 GPNode >> printOn: aStream [
 
@@ -183,17 +128,4 @@ GPNode >> printOn: aStream [
 		child printOn: aStream.
 		aStream	nextPut: Character space ].
 	aStream nextPut: $)
-]
-
-{ #category : #operations }
-GPNode >> replaceWithValueFrom: visitor [
-
-	children size == 1 ifTrue: [ 
-		^ children first replaceWithValueFrom: visitor ].
-	visitor addNode: self.
-	^ self type ifNil: [ self ] ifNotNil: [ 
-		  | inst |
-		  inst := type new.
-		  inst acceptVisitor: visitor.
-		  inst ]
 ]

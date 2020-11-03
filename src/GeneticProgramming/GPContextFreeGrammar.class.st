@@ -149,6 +149,19 @@ GPContextFreeGrammar >> createNode: symbol ofClass: classNode type: aClass withS
 		  children: sequence "(sequence collect: [ :c | classNode new id: c ])"
 ]
 
+{ #category : #'collecting leaves' }
+GPContextFreeGrammar >> dictionaryOfOptionsWithWeights: symbol [
+	| dict opts weights |
+	dict := Dictionary new.
+		opts := self optionsOf: symbol.
+		weights := configuration optionWeightsOf: symbol.
+		(opts size == weights size) ifTrue: [ 
+				dict :=  (opts
+					   with: weights
+					   collect: [ :i :w | i -> w ]) asDictionary ].
+				^ dict
+]
+
 { #category : #controlling }
 GPContextFreeGrammar >> expand [
 
@@ -158,10 +171,18 @@ GPContextFreeGrammar >> expand [
 { #category : #'collecting leaves' }
 GPContextFreeGrammar >> expandFrom: axiom [
 
-	 ^ rules
-		   at: axiom
-		   ifPresent: [ :node | node expandGiven: self ]
-		   ifAbsent: [ nil ]
+	rules
+		at: axiom
+		ifPresent: [ :node | 
+			(configuration isNotNil and: [ configuration depth isNotNil ])
+				ifTrue: [ 
+					^ node
+						          expandGiven: self
+						          depth: configuration depth
+						          and: OrderedCollection new ]
+				ifFalse: [ ^ node expandGiven: self ].
+			 ]
+		ifAbsent: [ ^ nil ]
 ]
 
 { #category : #'collecting leaves' }
@@ -198,74 +219,6 @@ GPContextFreeGrammar >> expandGiven: aConfiguration depth: depth and: ruleKeys [
 ]
 
 { #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandReplacingFrom: axiom [
-
-	| visitor |
-	visitor := GPReplacementVisitor new grammar: self.
-	^ rules
-		  at: axiom
-		  ifPresent: [ :node | node expandReplacingGiven: visitor and: self ]
-		  ifAbsent: [ nil ]
-]
-
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandReplacingFrom: axiom given: configuration [
-
-	| visitor |
-	visitor := GPReplacementVisitor new grammar: self.
-	^ rules
-		  at: axiom
-		  ifPresent: [ :node | 
-			  configuration depth
-				  ifNil: [ node expandReplacingGiven: visitor and: self ]
-				  ifNotNil: [ 
-					  | bools |
-					  bools := OrderedCollection new.
-					  node
-						  expandReplacingGiven: visitor
-						  grammar: self
-						  depth: configuration depth
-						  and: bools ] ]
-		  ifAbsent: [ nil ]
-]
-
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandReplacingGiven: aConfiguration depth: depth and: ruleKeys [
-
-	"| axiom |
-	axiom := self
-		         selectKeyRuleGiven: configuration
-		         depth: depth
-		         and: ruleKeys.
-	^ rules
-		  at: axiom
-		  ifPresent: [ :node | 
-			  | resNode |
-			  resNode := self expandReplacingFrom: axiom given: configuration.
-			  resNode
-				  ifNil: [ 
-					  ruleKeys add: axiom.
-					  self expandGiven: configuration depth: depth and: ruleKeys ]
-				  ifNotNil: [ resNode ] ]
-		  ifAbsent: [ nil ]"
-]
-
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandReplacingUsing: configuration [
-
-	^ configuration depth
-		  ifNil: [ 
-			  self
-				  expandReplacingFrom: (self selectKeyRuleGiven: configuration)
-				  given: configuration ]
-		  ifNotNil: [ 
-		  self
-			  expandReplacingGiven: configuration
-			depth: configuration depth
-			  and: OrderedCollection new ]
-]
-
-{ #category : #'collecting leaves' }
 GPContextFreeGrammar >> expandUsing: aConfiguration [
 
 	^ aConfiguration depth
@@ -278,6 +231,16 @@ GPContextFreeGrammar >> expandUsing: aConfiguration [
 				  expandGiven: aConfiguration
 				  depth: aConfiguration depth
 				  and: OrderedCollection new ]
+]
+
+{ #category : #'as yet unclassified' }
+GPContextFreeGrammar >> generateASTFrom: aNode [
+
+	| visitor |
+	visitor := GPReplacementVisitor
+		           new
+		           grammar: self.
+	^ aNode generateAST: visitor
 ]
 
 { #category : #testing }
@@ -318,7 +281,14 @@ GPContextFreeGrammar >> randomOptions: symbol [
 
 { #category : #'as yet unclassified' }
 GPContextFreeGrammar >> randomlySelectOption: symbol [
-	^ GPRandom instance randomlySelect: (self optionsOf: symbol)
+
+	| dict|
+	configuration ifNil: [ ^ GPRandom instance randomlySelect: (self optionsOf: symbol) ].
+	dict := self dictionaryOfOptionsWithWeights: symbol.
+	^ dict ifEmpty: [ GPRandom instance randomlySelectGivenProbabilities: dict ] ifNotEmpty: [  
+		
+				  
+	GPRandom instance randomlySelect: (self optionsOf: symbol) ]
 ]
 
 { #category : #'as yet unclassified' }
@@ -328,13 +298,6 @@ GPContextFreeGrammar >> randomlySelectOption: symbol given: configuration [
 	opts := self optionsOf: symbol.
 	weights := configuration optionWeightsOf: symbol.
 	
-]
-
-{ #category : #'as yet unclassified' }
-GPContextFreeGrammar >> replaceValuesOf: node [
-	| visitor |
-	visitor := GPReplacementVisitor new grammar: self.
-	^ node replaceWithValueFrom: visitor
 ]
 
 { #category : #selecting }
@@ -380,11 +343,6 @@ GPContextFreeGrammar >> selectRulesKeysGiven: depth andAvoiding: ruleKeys [
 ]
 
 { #category : #'as yet unclassified' }
-GPContextFreeGrammar >> shuffleOptions: symbol [
-
-	| opts indexes |
-	opts := self optionsOf: symbol.
-	indexes := GPRandom instance shuffleElementsOf:
-		           (1 to: opts size) asArray.
-	^ indexes collect: [ :i | opts at: i ]
+GPContextFreeGrammar >> shuffle: collection [
+	^ GPRandom instance shuffleElementsOf: collection 
 ]
