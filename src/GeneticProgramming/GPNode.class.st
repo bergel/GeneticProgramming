@@ -176,16 +176,13 @@ GPNode >> expandReplacingGiven: visitor grammar: grammar depth: depth and: boole
 ]
 
 { #category : #initialization }
-GPNode >> print [
-		^ String streamContents: [ :str | 
-		  str nextPut: $(.
-		  children do: [ :child | 
-			  str
-				  nextPutAll: child print;
-				  nextPut: Character space ].
-		  str nextPut: $) ]
-	"str := '( '.
-	str := str , children collect: [ :child | child print ] , ')'."
+GPNode >> printOn: aStream [
+
+	aStream nextPut: $(.
+	children do: [ :child | 
+		child printOn: aStream.
+		aStream	nextPut: Character space ].
+	aStream nextPut: $)
 ]
 
 { #category : #operations }

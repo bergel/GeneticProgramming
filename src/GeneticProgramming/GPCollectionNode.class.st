@@ -135,17 +135,14 @@ GPCollectionNode >> initialize [
 	value := OrderedCollection new
 ]
 
-{ #category : #initialization }
-GPCollectionNode >> print [
-		^ String streamContents: [ :str | 
-		  str nextPut: $(.
-		  children do: [ :child | 
-			  str
-				  nextPutAll: child print;
-				  nextPut: $, ].
-		  str nextPut: $) ]
-	"str := '( '.
-	str := str , children collect: [ :child | child print ] , ')'."
+{ #category : #printing }
+GPCollectionNode >> printOn: aStream [
+
+	aStream nextPutAll: '#('.
+	children do: [ :child | 
+		child printOn: aStream.
+		aStream nextPut: Character space ].
+	aStream nextPut: $)
 ]
 
 { #category : #operations }

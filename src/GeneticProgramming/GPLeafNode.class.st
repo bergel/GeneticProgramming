@@ -59,8 +59,9 @@ GPLeafNode >> expandReplacingGiven: visitor grammar: grammar depth: depth and: b
 ]
 
 { #category : #initialization }
-GPLeafNode >> print [
-	^ id
+GPLeafNode >> printOn: aStream [
+
+	aStream nextPutAll: id
 ]
 
 { #category : #'public access' }

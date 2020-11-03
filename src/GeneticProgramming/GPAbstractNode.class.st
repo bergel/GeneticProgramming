@@ -253,8 +253,9 @@ GPAbstractNode >> numberOfNodes [
 
 { #category : #initialization }
 GPAbstractNode >> print [
-	^ self subclassResponsibility 
-	"^ self printUsing: nil"
+
+	"^ self subclassResponsibility"
+	^ self printUsing: nil
 ]
 
 { #category : #accessing }

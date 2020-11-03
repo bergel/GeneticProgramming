@@ -47,8 +47,9 @@ GPMessageNode >> expandReplacingGiven: visitor grammar: grammar depth: depth and
 ]
 
 { #category : #initialization }
-GPMessageNode >> print [
-	^ id
+GPMessageNode >> printOn: aStream [
+
+	aStream nextPutAll: id
 ]
 
 { #category : #'public access' }
