@@ -92,7 +92,6 @@ GPContextFreeGrammar >> addRule: symbol withCollectionOptions: collection [
 					 type: nil
 					 withSequence: (Array with: s) ])
 		of: symbol
-	"self addRule: symbol redirectingTo: s ]"
 ]
 
 { #category : #adding }
@@ -146,7 +145,7 @@ GPContextFreeGrammar >> createNode: symbol ofClass: classNode type: aClass withS
 	^ classNode new
 		  id: symbol;
 		  type: aClass;
-		  children: sequence "(sequence collect: [ :c | classNode new id: c ])"
+		  children: sequence
 ]
 
 { #category : #'collecting leaves' }
@@ -276,7 +275,7 @@ GPContextFreeGrammar >> optionsOf: symbol [
 { #category : #'as yet unclassified' }
 GPContextFreeGrammar >> randomOptions: symbol [
 
-	^ GPRandom instance shuffleElementsOf: (self optionsOf: symbol)
+	^ self shuffle: (self optionsOf: symbol)
 ]
 
 { #category : #'as yet unclassified' }
@@ -291,15 +290,6 @@ GPContextFreeGrammar >> randomlySelectOption: symbol [
 	GPRandom instance randomlySelect: (self optionsOf: symbol) ]
 ]
 
-{ #category : #'as yet unclassified' }
-GPContextFreeGrammar >> randomlySelectOption: symbol given: configuration [
-
-	| opts weights |
-	opts := self optionsOf: symbol.
-	weights := configuration optionWeightsOf: symbol.
-	
-]
-
 { #category : #selecting }
 GPContextFreeGrammar >> selectKeyRule [
 
@@ -307,12 +297,14 @@ GPContextFreeGrammar >> selectKeyRule [
 ]
 
 { #category : #selecting }
-GPContextFreeGrammar >> selectKeyRuleGiven: configuration [
+GPContextFreeGrammar >> selectKeyRuleGiven: aConfiguration [
 
-	 ^ (configuration keysOfRuleWeights includesAll:
-		  self allButMessageRuleKeys) ifFalse: [ self selectKeyRule ] ifTrue: [ 
-	  GPRandom instance randomlySelectGivenProbabilities:
-		   configuration rulesWeights ]
+	^ (aConfiguration keysOfRuleWeights includesAll:
+		   self allButMessageRuleKeys)
+		  ifFalse: [ self selectKeyRule ]
+		  ifTrue: [ 
+			  GPRandom instance randomlySelectGivenProbabilities:
+				  aConfiguration rulesWeights ]
 ]
 
 { #category : #'collecting leaves' }

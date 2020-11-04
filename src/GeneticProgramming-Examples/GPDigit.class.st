@@ -35,6 +35,12 @@ GPDigit >> mul: digit [
 	 ^ self class new value: self value * digit value
 ]
 
+{ #category : #printing }
+GPDigit >> printOn: aStream [
+
+	aStream nextPutAll: value asString
+]
+
 { #category : #accessing }
 GPDigit >> sub: digit [
 

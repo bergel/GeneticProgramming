@@ -180,7 +180,7 @@ GPAbstractNode >> gtInspectorViewIn: composite [
 	<gtInspectorPresentationOrder: -1>
 	| m |
 	m := RSMondrian new.
-	"m shape circle."
+	"m shape circle. "
 	m nodes: self withAllChildren forEach: [ :n | 
 		m shape label color: Color white.
 		m nodes: (Array with: n id) ].

@@ -1034,6 +1034,56 @@ GPContextFreeGrammarTest >> testGenerateASTOfMessage3 [
 ]
 
 { #category : #tests }
+GPContextFreeGrammarTest >> testGenerateASTOfMessage4 [
+
+	| result ast |
+	random seed: 5.
+	grammar
+		addLeafRule: #Variable
+		ofClass: RBVariableNode
+		withValues: #( #a #v #m );
+		addRule: #Value withOptions: #( #Literal #Message #Variable );
+		addLeafRule: #Literal
+		ofClass: RBLiteralNode
+		withValues: (1 to: 10) asArray;
+		addRule: #Message
+		ofClass: RBMessageNode
+		withSequence: #( #Receiver #Selector #Args );
+		addRule: #Receiver redirectingTo: #Value;
+		addMessageRule: #Selector withValues: #( #foo:bar: );
+		addRule: #Args withCollectionOptions: #( #Value ).
+	result := grammar expandFrom: #Message.
+	self assert: result numberOfNodes equals: 4.
+	ast := grammar generateASTFrom: result
+	"self assert: ast equals: (RBParser parseExpression: '8 + (7 - v)')"
+]
+
+{ #category : #tests }
+GPContextFreeGrammarTest >> testGenerateASTOfMessage5 [
+
+	| result ast |
+	random seed: 5.
+	grammar
+		addLeafRule: #Variable
+		ofClass: RBVariableNode
+		withValues: #( #a #v #m );
+		addRule: #Value withOptions: #( #Literal #Message #Variable );
+		addLeafRule: #Literal
+		ofClass: RBLiteralNode
+		withValues: ((1 to: 10) collect: [ :n | GPDigit value: n ]);
+		addRule: #Message
+		ofClass: RBMessageNode
+		withSequence: #( #Receiver #Selector #Args );
+		addRule: #Receiver redirectingTo: #Value;
+		addMessageRule: #Selector withValues: #( #foo:bar: );
+		addRule: #Args withCollectionOptions: #( #Value ).
+	result := grammar expandFrom: #Message.
+	self assert: result numberOfNodes equals: 4.
+	ast := grammar generateASTFrom: result
+	"self assert: ast equals: (RBParser parseExpression: '8 + (7 - v)')"
+]
+
+{ #category : #tests }
 GPContextFreeGrammarTest >> testGenerateASTOfRoassal3 [
 
 	| result configuration ast |
