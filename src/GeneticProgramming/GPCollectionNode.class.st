@@ -7,6 +7,11 @@ Class {
 	#category : #'GeneticProgramming-Core'
 }
 
+{ #category : #accessing }
+GPCollectionNode class >> transform: node [
+	^ self new children: (Array with: node)
+]
+
 { #category : #copying }
 GPCollectionNode >> deepCopy [
 
@@ -91,7 +96,8 @@ GPCollectionNode >> generateAST: visitor [
 
 	(id == #Statements and: [ size == 0 ]) ifTrue: [ self size: 1 ].
 	size == 0 ifTrue: [ ^ value ].
-	self expand: visitor grammar.
+	(id isNotNil and: [ children isEmpty ]) ifTrue: [ 
+	self expand: visitor grammar].
 	^ children collect: [ :child | child generateAST: visitor ]
 ]
 
@@ -113,6 +119,12 @@ GPCollectionNode >> initialize [
 	super initialize.
 	size := 0.
 	value := OrderedCollection new
+]
+
+{ #category : #testing }
+GPCollectionNode >> isCollectionNode [
+
+	^ true
 ]
 
 { #category : #printing }

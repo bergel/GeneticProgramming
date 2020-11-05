@@ -4,6 +4,17 @@ Class {
 	#category : #'GeneticProgramming-Tests'
 }
 
+{ #category : #running }
+GPNodeTest >> setUp [
+
+	GPRandom seed: 75314
+]
+
+{ #category : #running }
+GPNodeTest >> tearDown [ 
+	GPRandom resetInstance
+]
+
 { #category : #tests }
 GPNodeTest >> testCrossOver [
 	| i1 i2 offspring c |

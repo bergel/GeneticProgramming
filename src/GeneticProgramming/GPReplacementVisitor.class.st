@@ -77,13 +77,18 @@ GPReplacementVisitor >> visitLiteralNode: literal [
 { #category : #visiting }
 GPReplacementVisitor >> visitMessageNode: messageNode [
 
-	| children symbol |
+	| children symbol child |
 	nodes ifEmpty: [ ^ self ].
 	children := nodes pop children.
 	messageNode receiver: (children first generateAST: self).
 	symbol := children second generateAST: self.
 	messageNode selector: symbol.
-	messageNode arguments: (children third size:  (self numberOfArguments: symbol); generateAST: self).
+	child := children third.
+	child isCollectionNode ifFalse: [ 
+		child := GPCollectionNode transform: child ].
+	messageNode arguments: (child
+			 size: (self numberOfArguments: symbol);
+			 generateAST: self).
 	lastValue := messageNode
 ]
 

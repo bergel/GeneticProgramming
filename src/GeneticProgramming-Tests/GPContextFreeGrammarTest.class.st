@@ -1129,13 +1129,50 @@ GPContextFreeGrammarTest >> testGenerateASTOfRoassal3 [
 GPContextFreeGrammarTest >> testSimpleExample [
 
 	| tree ast |
-	grammar := GPContextFreeGrammar new.
-	grammar addRule: #E ofClass: RBMessageNode withSequence: #( #E #AddOp #E ).
-	grammar addRule: #E withCollectionOptions: #( #Number ).
+	grammar
+		addRule: #E
+		ofClass: RBMessageNode
+		withSequence: #( #E #AddOp #E ).
+	grammar addRule: #E redirectingTo: #Number.
 	grammar addMessageRule: #AddOp withValues: #( #+ ).
-	grammar addLeafRule: #Number ofClass: RBLiteralNode withValues: (-30 to: 30).
-
+	grammar
+		addLeafRule: #Number
+		ofClass: RBLiteralNode
+		withValues: (-30 to: 30) asArray.
 	tree := grammar expandFrom: #E.
-	
+	self assert: tree numberOfNodes equals: 82.
 	ast := grammar generateASTFrom: tree.
+	self assert: ast evaluate equals: 73
+]
+
+{ #category : #tests }
+GPContextFreeGrammarTest >> testSimpleExample2 [
+
+	| tree ast configuration |
+	random seed: 689667.
+	grammar
+		addMessageRule: #AddOp withValues: #( #+ #- );
+		addRule: #E ofClass: RBMessageNode withSequence: #( #E #AddOp #T );
+		addRule: #E redirectingTo: #T;
+		addMessageRule: #MulOp withValues: #( #* #/ );
+		addRule: #T ofClass: RBMessageNode withSequence: #( #T #MulOp #F );
+		addRule: #T redirectingTo: #F;
+		addLeafRule: #F
+		ofClass: RBLiteralNode
+		withValues: (1 to: 10) asArray.
+	configuration := GPASTConfiguration new
+		                 addWeight: 8 forRule: #E;
+		                 addWeight: 5 forRule: #T;
+		                 addWeight: 4 forRule: #F;
+		                 addOptionWeights: #( 8 5 ) forRule: #E;
+		                 addOptionWeights: #( 6 3 ) forRule: #T;
+		                 addOptionWeights: #( 6 4 ) forRule: #AddOp;
+		                 addOptionWeights: #( 6 3 ) forRule: #MulOp;
+		                 addOptionWeights: #( 4 6 3 8 9 7 7 2 6 5 )
+		                 forRule: #F.
+	tree := grammar expandUsing: configuration.
+	self assert: tree id equals: #E.
+	self assert: tree numberOfNodes equals: 40.
+	ast := grammar generateASTFrom: tree.
+	self assert: ast evaluate equals: 5687/20	
 ]

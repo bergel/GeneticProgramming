@@ -108,30 +108,29 @@ GPContextFreeGrammar >> addRule: symbol withSequence: sequence [
 { #category : #accessing }
 GPContextFreeGrammar >> allButMessageRuleKeys [
 
-	 ^ rules associations
-		   reject: [ :assoc | 
-			   assoc value isMemberOf: GPMessageNode ]
-		   thenCollect: [ :assoc | assoc key ]
+	^ rules associations
+		  reject: [ :assoc | assoc value isMessageNode ]
+		  thenCollect: [ :assoc | assoc key ]
 ]
 
 { #category : #'collecting leaves' }
 GPContextFreeGrammar >> allComplexRulesKeysBut: symbols [
 
-	 ^ rules associations
-		   select: [ :assoc | 
-			   (assoc value isMemberOf: GPNode) and: [ 
-				   (symbols includes: assoc key) not ] ]
-		   thenCollect: [ :assoc | assoc key ]
+	^ rules associations
+		  select: [ :assoc | 
+			  (assoc value isComplexNode) and: [ 
+				  (symbols includes: assoc key) not ] ]
+		  thenCollect: [ :assoc | assoc key ]
 ]
 
 { #category : #'collecting leaves' }
 GPContextFreeGrammar >> allLeavesRuleKeysBut: symbols [
 
-	 ^ rules associations
-		   select: [ :assoc | 
-			   (assoc value isMemberOf: GPLeafNode) and: [ 
-				   (symbols includes: assoc key) not ] ]
-		   thenCollect: [ :assoc | assoc key ]
+	^ rules associations
+		  select: [ :assoc | 
+			  (assoc value isLeafNode) and: [ 
+				  (symbols includes: assoc key) not ] ]
+		  thenCollect: [ :assoc | assoc key ]
 ]
 
 { #category : #accessing }

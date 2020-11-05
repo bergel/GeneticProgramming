@@ -29,6 +29,11 @@ GPLeafNode >> expandGiven: grammar depth: anInteger and: booleans [
 	^ self newNode: grammar with: anInteger
 ]
 
+{ #category : #testing }
+GPLeafNode >> isLeafNode [ 		
+	^ true
+]
+
 { #category : #initialization }
 GPLeafNode >> printOn: aStream [
 

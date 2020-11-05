@@ -120,6 +120,12 @@ GPNode >> expandGiven: grammar depth: anInteger and: booleans [
 	^ node
 ]
 
+{ #category : #testing }
+GPNode >> isComplexNode [
+
+	^ true
+]
+
 { #category : #initialization }
 GPNode >> printOn: aStream [
 

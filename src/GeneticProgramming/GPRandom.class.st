@@ -101,10 +101,15 @@ GPRandom >> multiplierOf: numbers from: begin to: end [
 		  self multiplierOf: numbers from: begin * 10 to: end * 10 ]
 ]
 
+{ #category : #'as yet unclassified' }
+GPRandom >> randomNumber: number [
+	^ random nextInt: number
+]
+
 { #category : #enumerating }
 GPRandom >> randomlySelect: collection [
 
-	 ^ collection at: (random nextInt: collection size)
+	^ collection at: (self randomNumber: collection size)
 ]
 
 { #category : #enumerating }

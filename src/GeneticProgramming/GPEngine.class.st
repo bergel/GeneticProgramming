@@ -27,22 +27,23 @@ GPEngine >> createInitialPopulation [
 
 { #category : #evolution }
 GPEngine >> createNewGeneration [
+
 	"The argument is a collection of GPNode, each element being the root node of an individual."
+
 	"check if problem solved"
+
 	| i1 i2 newInd newPopulation |
-	(self distanceFromSolutionOf: self pickBestIndividual) = 0 ifTrue: [ ^ self ].
-	
-	newPopulation := OrderedCollection new. 
-	population size timesRepeat: [
-		((configuration randomInt: 100) < 90) 
-			ifTrue: [  
+	(self distanceFromSolutionOf: self pickBestIndividual) = 0 ifTrue: [ 
+		^ self ].
+	newPopulation := OrderedCollection new.
+	population size timesRepeat: [ 
+		(configuration randomInt: 100) < 90
+			ifTrue: [ 
 				i1 := self tournament.
 				i2 := self tournament.
 				newInd := i1 crossOverWith: i2 using: configuration random ]
-			ifFalse: [ 
-				newInd := self mutation ].
-		newPopulation add: newInd
-	].
+			ifFalse: [ newInd := self mutation ].
+		newPopulation add: newInd ].
 	population := newPopulation
 ]
 

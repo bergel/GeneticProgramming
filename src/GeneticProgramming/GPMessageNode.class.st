@@ -34,6 +34,12 @@ GPMessageNode >> generateAST: visitor [
 	^ visitor randomlySelectOption: id
 ]
 
+{ #category : #testing }
+GPMessageNode >> isMessageNode [
+
+	^ true
+]
+
 { #category : #initialization }
 GPMessageNode >> printOn: aStream [
 

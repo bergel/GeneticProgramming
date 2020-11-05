@@ -77,8 +77,15 @@ GPAbstractNode >> collectOptions: options with: numbers [
 
 { #category : #operations }
 GPAbstractNode >> crossOverWith: anotherNode [
+
 	"This method should be called with two root nodes"
-	^ self crossOverWith: anotherNode at: (self numberOfNodes - 1) atRandom + 1 at: (anotherNode numberOfNodes - 1) atRandom + 1
+
+	^ self
+		  crossOverWith: anotherNode
+		  at: (GPRandom instance randomNumber: self numberOfNodes - 1) + 1
+		  at:
+			  (GPRandom instance randomNumber: anotherNode numberOfNodes - 1)
+				   + 1
 ]
 
 { #category : #operations }
@@ -92,12 +99,12 @@ GPAbstractNode >> crossOverWith: anotherNode at: index1 at: index2 [
 
 { #category : #operations }
 GPAbstractNode >> crossOverWith: anotherNode using: random [
-	"This method should be called with two root nodes"
 
+	"This method should be called with two root nodes"
 	^ self
-		crossOverWith: anotherNode
-		at: (random nextInt: self numberOfNodes - 1) + 1
-		at: (random nextInt: anotherNode numberOfNodes - 1) + 1
+		  crossOverWith: anotherNode
+		  at: (random nextInt: self numberOfNodes - 1) + 1
+		  at: (random nextInt: anotherNode numberOfNodes - 1) + 1
 ]
 
 { #category : #copying }
@@ -132,7 +139,7 @@ GPAbstractNode >> evaluate: grammar given: configuration [
 { #category : #initialization }
 GPAbstractNode >> evaluateUsing: context [
 
-	 ^ evaluationBlock value: children value: context "evaluationBlock value: children value: context"
+	^ evaluationBlock value: children value: context
 ]
 
 { #category : #accessing }
@@ -221,8 +228,31 @@ GPAbstractNode >> initialize [
 ]
 
 { #category : #testing }
+GPAbstractNode >> isCollectionNode [
+
+	^ false
+]
+
+{ #category : #testing }
+GPAbstractNode >> isComplexNode [
+
+	^ false
+]
+
+{ #category : #testing }
 GPAbstractNode >> isLeaf [
 	^ children isEmpty
+]
+
+{ #category : #testing }
+GPAbstractNode >> isLeafNode [
+	^ false
+]
+
+{ #category : #testing }
+GPAbstractNode >> isMessageNode [
+
+	^ false
 ]
 
 { #category : #'instance creation' }
