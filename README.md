@@ -36,10 +36,13 @@ grammar addMessageRule: #AddOp withValues: #( #+ ).
 grammar addLeafRule: #Number withValues: (-30 to: 30).
 ```
 
-An AST can be generated using:
+A meta-tree can be generated using:
 ```Smalltalk
 grammar expandFrom: #E
 ```
+
+An ast (therefore directly evaluable) can be generated using:
+
 
 ## Adding a configuration
 
