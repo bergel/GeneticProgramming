@@ -1124,3 +1124,18 @@ GPContextFreeGrammarTest >> testGenerateASTOfRoassal3 [
 		assert: ast
 		equals: (Array with: (RBParser parseExpression: 'shapes size size'))
 ]
+
+{ #category : #tests }
+GPContextFreeGrammarTest >> testSimpleExample [
+
+	| tree ast |
+	grammar := GPContextFreeGrammar new.
+	grammar addRule: #E ofClass: RBMessageNode withSequence: #( #E #AddOp #E ).
+	grammar addRule: #E withCollectionOptions: #( #Number ).
+	grammar addMessageRule: #AddOp withValues: #( #+ ).
+	grammar addLeafRule: #Number ofClass: RBLiteralNode withValues: (-30 to: 30).
+
+	tree := grammar expandFrom: #E.
+	
+	ast := grammar generateASTFrom: tree.
+]
