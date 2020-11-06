@@ -30,10 +30,10 @@ It can be implemented using:
 
 ```Smalltalk
 grammar := GPContextFreeGrammar new.
-grammar addRule: #E withSequence: #( #E #AddOp #E ).
-grammar addRule: #E withSequence: #( #Number ).
+grammar addRule: #E ofClass: RBMessageNode withSequence: #( #E #AddOp #E ).
+grammar addRule: #E redirectingTo: #Number.
 grammar addMessageRule: #AddOp withValues: #( #+ ).
-grammar addLeafRule: #Number withValues: (-30 to: 30).
+grammar addLeafRule: #Number ofClass: RBLiteralNode withValues: (-30 to: 30).
 ```
 
 A meta-tree can be generated using:
