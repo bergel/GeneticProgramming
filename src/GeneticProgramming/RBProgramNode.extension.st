@@ -4,16 +4,76 @@ Extension { #name : #RBProgramNode }
 RBProgramNode >> gtInspectorCanvasIn: composite [
 
 	<gtInspectorPresentationOrder: 1>
-	| m |
-	m := RSMondrian new.
-	"m shape circle. "
-	m nodes: self allChildren forEach: [ :n | 
-		m shape label color: Color white.
-		m nodes: (Array with: n class name) ].
-	m line
-		color: (Color r: 59 / 255 g: 131 / 255 b: 189 / 255);
-		width: 0.5;
-		connectToAll: #children.
-	m layout tree.
-	^ m gtInspectorViewIn: composite
+	^ composite roassal3
+		  title: [ 'AST Node' ];
+		  initializeCanvas: [ 
+			  | canvas eb |
+			  canvas := RSCanvas new.
+			  canvas addAll: self shapesOfNodes.
+			  eb := RSEdgeBuilder line
+				        color: (Color
+						         r: 0.2316715542521994
+						         g: 0.5141739980449658
+						         b: 0.7409579667644184);
+				        canvas: canvas;
+				        connectFrom: #parent.
+			  canvas edges pushBack.
+			  RSTreeLayout new
+				  verticalGap: 10;
+				  on: canvas nodes.
+			  canvas @ RSCanvasController ]
+]
+
+{ #category : #'*GeneticProgramming' }
+RBProgramNode >> shapesOfNodes [
+
+	| boxColor borderColor |
+	boxColor := Color
+		            r: 0.5298142717497556
+		            g: 0.8074291300097751
+		            b: 0.9804496578690127.
+	borderColor := Color
+		               r: 0.2316715542521994
+		               g: 0.5141739980449658
+		               b: 0.7409579667644184.
+	^ (self allChildren collect: [ :child | 
+		   | group |
+		   group := RSGroup new
+			            add: (RSComposite new
+					             addShape: (RSBox new
+							              color: boxColor;
+							              extent: 150 @ 20;
+							              border: (RSBorder new
+									               color: borderColor;
+									               yourself);
+							              @ RSDraggable);
+					             addShape: (RSLabel new
+							              text: child class name;
+							              color: Color black;
+							              fontSize: 10);
+					             padding: 0;
+					             yourself);
+			            add: (RSComposite new
+					             addShape: (RSBox new
+							              extent: 150 @ 100;
+							              color: boxColor;
+							              border: (RSBorder new
+									               color: borderColor;
+									               yourself);
+							              @ RSDraggable);
+					             addShape: (RSLabel new
+							              text: 'hello World!!';
+							              color: Color black;
+							              fontSize: 10);
+					             padding: 0;
+					             yourself);
+			            yourself.
+		   RSVerticalLineLayout new
+			   gapSize: 0;
+			   on: group.
+		   RSComposite new
+			   model: child;
+			   shapes: (group collect: #yourself);
+			   padding: 10;
+			   yourself ]) asOrderedCollection
 ]

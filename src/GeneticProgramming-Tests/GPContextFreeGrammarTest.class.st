@@ -652,7 +652,7 @@ GPContextFreeGrammarTest >> testExpandReplacingFromLiteralNode [
 	self assert: result numberOfNodes equals: 1.
 	self
 		assertCollection: (result withAllChildren collect: #id)
-		hasSameElements: #( #Literal ).
+		hasSameElements: #( #Literal )
 ]
 
 { #category : #tests }
@@ -1138,7 +1138,7 @@ GPContextFreeGrammarTest >> testSimpleExample [
 	grammar
 		addLeafRule: #Number
 		ofClass: RBLiteralNode
-		withValues: (-30 to: 30) asArray.
+		withValues: (-30 to: 30).
 	tree := grammar expandFrom: #E.
 	self assert: tree numberOfNodes equals: 82.
 	ast := grammar generateASTFrom: tree.

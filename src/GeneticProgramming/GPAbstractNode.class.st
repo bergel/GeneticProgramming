@@ -185,18 +185,24 @@ GPAbstractNode >> generateAST: visitor [
 GPAbstractNode >> gtInspectorViewIn: composite [
 
 	<gtInspectorPresentationOrder: -1>
-	| m |
-	m := RSMondrian new.
-	"m shape circle. "
-	m nodes: self withAllChildren forEach: [ :n | 
-		m shape label color: Color white.
-		m nodes: (Array with: n id) ].
-	m line
-		color: (Color r: 59 / 255 g: 131 / 255 b: 189 / 255);
-		width: 0.5;
-		connectToAll: #children.
-	m layout tree.
-	^ m gtInspectorViewIn: composite
+	^ composite roassal3
+		  title: [ 'MetaDescription Tree' ];
+		  initializeCanvas: [ 
+			  | canvas eb |
+			  canvas := RSCanvas new.
+			  canvas addAll: (self shapes).
+			  eb := RSEdgeBuilder line
+				        color: (Color
+						         r: 0.2316715542521994
+						         g: 0.5141739980449658
+						         b: 0.7409579667644184);
+				        canvas: canvas;
+				        connectToAll: #children.
+			  canvas edges pushBack.
+			  RSTreeLayout new
+				  verticalGap: 10;
+				  on: canvas nodes.
+			  canvas @ RSCanvasController ]
 ]
 
 { #category : #accessing }
@@ -321,6 +327,31 @@ GPAbstractNode >> selectedOptionNode: options given: configuration [
 		  (GPRandom instance randomlySelectGivenProbabilities: (self
 				    collectOptions: (1 to: options size)
 				    with: (configuration optionWeightsOf: id)))
+]
+
+{ #category : #visualization }
+GPAbstractNode >> shapes [
+
+	^ (self withAllChildren collect: [ :child | 
+		   RSComposite new
+			   model: child;
+			   addShape: (RSEllipse new
+					    extent: 20 @ 20;
+					    color: (Color r: 0.5298142717497556 g: 0.8074291300097751 b: 0.9804496578690127);
+					    border: (RSBorder new
+							     color: (Color
+									      r: 0.2316715542521994
+									      g: 0.5141739980449658
+									      b: 0.7409579667644184);
+							     yourself);
+					    @ RSDraggable);
+			   addShape: (RSLabel new
+					    text: child id;
+					    color: Color black;
+					    bold;
+					    fontSize: 2);
+			   padding: 10;
+			   yourself ]) asOrderedCollection
 ]
 
 { #category : #accessing }
