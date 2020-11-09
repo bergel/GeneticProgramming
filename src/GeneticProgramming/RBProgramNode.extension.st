@@ -27,7 +27,7 @@ RBProgramNode >> gtInspectorCanvasIn: composite [
 { #category : #'*GeneticProgramming' }
 RBProgramNode >> shapesOfNodes [
 
-	| boxColor borderColor |
+	| boxColor borderColor visitor |
 	boxColor := Color
 		            r: 0.5298142717497556
 		            g: 0.8074291300097751
@@ -36,33 +36,38 @@ RBProgramNode >> shapesOfNodes [
 		               r: 0.2316715542521994
 		               g: 0.5141739980449658
 		               b: 0.7409579667644184.
+	visitor := GPCollectorDataVisitor new.
 	^ (self allChildren collect: [ :child | 
-		   | group |
+		   | group text cName max |
+		   child acceptVisitor: visitor.
+		   text := visitor string.
+		   cName := child class name.
+		   max := text size max: cName size.
 		   group := RSGroup new
 			            add: (RSComposite new
 					             addShape: (RSBox new
 							              color: boxColor;
-							              extent: 150 @ 20;
+							              extent: max * 8 @ 20;
 							              border: (RSBorder new
 									               color: borderColor;
 									               yourself);
 							              @ RSDraggable);
 					             addShape: (RSLabel new
-							              text: child class name;
+							              text: cName;
 							              color: Color black;
 							              fontSize: 10);
 					             padding: 0;
 					             yourself);
 			            add: (RSComposite new
 					             addShape: (RSBox new
-							              extent: 150 @ 100;
+							              extent: max * 8 @ 100;
 							              color: boxColor;
 							              border: (RSBorder new
 									               color: borderColor;
 									               yourself);
 							              @ RSDraggable);
 					             addShape: (RSLabel new
-							              text: 'hello World!!';
+							              text: text;
 							              color: Color black;
 							              fontSize: 10);
 					             padding: 0;
