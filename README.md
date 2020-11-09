@@ -55,3 +55,22 @@ ast := grammar expandFrom: #E given: config.
 ```
 
 In that case, the depth of the tree will be maximum 3.
+
+## Specifying priorities
+
+```Smalltalk
+grammar := GPContextFreeGrammar new.
+grammar addRule: #E ofClass: RBMessageNode withSequence: #( #E #AddOp #E ).
+grammar addRule: #E redirectingTo: #Number.
+grammar addRule: #E redirectingTo: #Variable.
+
+grammar addMessageRule: #AddOp withValues: #( #+ ).
+grammar addLeafRule: #Number ofClass: RBLiteralNode withValues: (-30 to: 30).
+grammar addLeafRule: #Variable ofClass: RBVariableNode withValues: #('x').
+
+config := GPASTConfiguration new.
+config addOptionWeights: #( 100 10 10 ) forRule: #E.
+
+tree := grammar expandFrom: #E given: config.
+```
+ast := grammar generateASTFrom: tree.
