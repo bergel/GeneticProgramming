@@ -72,5 +72,6 @@ config := GPASTConfiguration new.
 config addOptionWeights: #( 100 10 10 ) forRule: #E.
 
 tree := grammar expandFrom: #E given: config.
-```
 ast := grammar generateASTFrom: tree.
+```
+
