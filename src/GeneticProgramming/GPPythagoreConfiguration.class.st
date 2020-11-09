@@ -87,3 +87,8 @@ GPPythagoreConfiguration >> newTerminalC [
 GPPythagoreConfiguration >> numberOfGenerations [
 	^ 20
 ]
+
+{ #category : #hooks }
+GPPythagoreConfiguration >> populationSize [
+	^ 10
+]
