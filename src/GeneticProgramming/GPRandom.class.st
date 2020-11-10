@@ -115,9 +115,8 @@ GPRandom >> randomlySelect: collection [
 { #category : #enumerating }
 GPRandom >> randomlySelectGivenProbabilities: dictionary [
 
-	 ^ self randomlySelect:
-		   ((self collectionOfProbabilities: dictionary) 
-			    shuffleBy: random)
+	^ self randomlySelect:
+		  ((self collectionOfProbabilities: dictionary) shuffleBy: random)
 ]
 
 { #category : #'instance creation' }

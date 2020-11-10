@@ -149,15 +149,15 @@ GPContextFreeGrammar >> createNode: symbol ofClass: classNode type: aClass withS
 
 { #category : #'collecting leaves' }
 GPContextFreeGrammar >> dictionaryOfOptionsWithWeights: symbol [
-	| dict opts weights |
+
+	| dict indexOpts weights |
 	dict := Dictionary new.
-		opts := self optionsOf: symbol.
-		weights := configuration optionWeightsOf: symbol.
-		(opts size == weights size) ifTrue: [ 
-				dict :=  (opts
-					   with: weights
-					   collect: [ :i :w | i -> w ]) asDictionary ].
-				^ dict
+	indexOpts := 1 to: (self optionsOf: symbol) size.
+	weights := configuration optionWeightsOf: symbol.
+	indexOpts size == weights size ifTrue: [ 
+		dict := (indexOpts with: weights collect: [ :i :w | i -> w ])
+			        asOrderedDictionary ].
+	^ dict
 ]
 
 { #category : #controlling }
@@ -280,13 +280,15 @@ GPContextFreeGrammar >> randomOptions: symbol [
 { #category : #'as yet unclassified' }
 GPContextFreeGrammar >> randomlySelectOption: symbol [
 
-	| dict|
-	configuration ifNil: [ ^ GPRandom instance randomlySelect: (self optionsOf: symbol) ].
+	| dict |
+	configuration ifNil: [ 
+		^ GPRandom instance randomlySelect: (self optionsOf: symbol) ].
 	dict := self dictionaryOfOptionsWithWeights: symbol.
-	^ dict ifEmpty: [ GPRandom instance randomlySelectGivenProbabilities: dict ] ifNotEmpty: [  
-		
-				  
-	GPRandom instance randomlySelect: (self optionsOf: symbol) ]
+	^ dict
+		  ifEmpty: [ 
+		  GPRandom instance randomlySelect: (self optionsOf: symbol) ]
+		  ifNotEmpty: [ 
+		  (self optionsOf: symbol) at: (GPRandom instance randomlySelectGivenProbabilities: dict) ]
 ]
 
 { #category : #selecting }
@@ -322,7 +324,7 @@ GPContextFreeGrammar >> selectKeyRuleGiven: depth and: ruleKeys [
 			  GPRandom instance randomlySelectGivenProbabilities:
 				  (newCollection
 					   with: (configuration rulesWeightsOf: newCollection)
-					   collect: [ :i :w | i -> w ]) asDictionary ]
+					   collect: [ :i :w | i -> w ]) asOrderedDictionary ]
 ]
 
 { #category : #'collecting leaves' }

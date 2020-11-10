@@ -72,7 +72,7 @@ GPAbstractNode >> collectOptions: options with: numbers [
 	weights size < options size ifTrue: [ 
 		weights := (1 to: options size) collect: [ :n | 1 ] ].
 	^ (options with: weights collect: [ :opt :w | opt -> w ])
-		  asDictionary
+		  asOrderedDictionary
 ]
 
 { #category : #operations }
