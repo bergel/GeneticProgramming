@@ -45,11 +45,3 @@ GPMessageNode >> printOn: aStream [
 
 	aStream nextPutAll: id
 ]
-
-{ #category : #'public access' }
-GPMessageNode >> replaceWithValueFrom: visitor [
-
-	^ GPRandom instance randomlySelect:
-		  (visitor selectOption: self id)
-	"GPRandom instance selectRandomly: (grammar optionsOf: self id)"
-]

@@ -64,6 +64,7 @@ GPRandom >> initialize [
 
 { #category : #rounding }
 GPRandom >> multiplierOf: numbers [
+
 	"```Smalltalk
 	r := GPRandom seed: 1.
 	r multiplierOf: #(0.5 0.4 0.2)
@@ -75,30 +76,13 @@ GPRandom >> multiplierOf: numbers [
 	r multiplierOf: #(0.0003 0.03 0.114 4 5.34 1.323)```
 	
 	return the value 10000"
-	
-	"return the multiplier necessary to transform all the numbers to integer"
-	^ self multiplierOf: numbers from: 0 to: 100
-]
 
-{ #category : #rounding }
-GPRandom >> multiplierOf: numbers from: begin to: end [
-	"r := GPRandom seed: 3.
-	r multiplierOf: #(0.8 2 3.5 0.47) from: 1 to: 10.
-	
-	return the value 100"
-	^ (begin to: end by: 10)
-		  detect: [ :n | 
-			  | num |
-			  num := n == 0
-				         ifTrue: [ n + 1 ]
-				         ifFalse: [ n ].
-			  numbers * num allSatisfy: [ :r | r fractionPart = 0 ] ]
-		  ifFound: [ :n | 
-			  n == 0
-				  ifTrue: [ n + 1 ]
-				  ifFalse: [ n ] ]
-		  ifNone: [ 
-		  self multiplierOf: numbers from: begin * 10 to: end * 10 ]
+	"return the multiplier necessary to transform all the numbers to integer"
+
+	^ (numbers allSatisfy: [ :r | r fractionPart = 0 ])
+		  ifTrue: [ 1 ]
+		  ifFalse: [
+			  10 raisedTo: numbers min log abs asInteger + 1 ]
 ]
 
 { #category : #'as yet unclassified' }

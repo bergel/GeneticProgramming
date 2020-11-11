@@ -172,14 +172,23 @@ GPContextFreeGrammar >> expandFrom: axiom [
 	rules
 		at: axiom
 		ifPresent: [ :node | 
-			(configuration isNotNil and: [ configuration depth isNotNil ])
+			configuration isNotNil
 				ifTrue: [ 
+					configuration depth ifNil: [ 
+						| result |
+						result := nil.
+						[ result isNil ] whileTrue: [ 
+							configuration depth: (GPRandom instance randomNumber: 30).
+							result := node
+								          expandGiven: self
+								          depth: configuration depth
+								          and: OrderedCollection new ].
+						^ result ].
 					^ node
-						          expandGiven: self
-						          depth: configuration depth
-						          and: OrderedCollection new ]
-				ifFalse: [ ^ node expandGiven: self ].
-			 ]
+						  expandGiven: self
+						  depth: configuration depth
+						  and: OrderedCollection new ]
+				ifFalse: [ ^ node expandGiven: self ] ]
 		ifAbsent: [ ^ nil ]
 ]
 
