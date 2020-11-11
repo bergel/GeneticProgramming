@@ -1,6 +1,13 @@
 Extension { #name : #RBProgramNode }
 
 { #category : #'*GeneticProgramming' }
+RBProgramNode >> depth [
+
+	parent ifNil: [ ^ 1 ].
+	^ parent depth + 1.
+]
+
+{ #category : #'*GeneticProgramming' }
 RBProgramNode >> gtInspectorCanvasIn: composite [
 
 	<gtInspectorPresentationOrder: 1>

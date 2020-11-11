@@ -1146,10 +1146,10 @@ GPContextFreeGrammarTest >> testGeneratingManyTrees [
 
 	| config asts |
 	config := GPASTConfiguration new.
-	config addOptionWeights: #( 10 1 1 ) forRule: #E.
+	config addOptionWeights: #( 100 10 10 ) forRule: #E.
 	asts := (1 to: 3) collect: [ :i | 
 		        | tree ast |
-					grammar := GPContextFreeGrammar new.
+		        grammar := GPContextFreeGrammar new.
 		        grammar
 			        addRule: #E
 			        ofClass: RBMessageNode
