@@ -45,41 +45,46 @@ RBProgramNode >> shapesOfNodes [
 		               b: 0.7409579667644184.
 	visitor := GPCollectorDataVisitor new.
 	^ (self allChildren collect: [ :child | 
-		   | group text cName max |
-		   child acceptVisitor: visitor.
-		   text := visitor string.
+		   | group texts cName max composite labels |
+		   texts := child formattedCode splitOn: Character cr.
 		   cName := child class name.
-		   max := text size max: cName size.
+		   max := ((texts collect: #size) max max: cName size) * 8.
 		   group := RSGroup new
 			            add: (RSComposite new
 					             addShape: (RSBox new
 							              color: boxColor;
-							              extent: max * 8 @ 20;
+							              extent: max @ 20;
 							              border: (RSBorder new
 									               color: borderColor;
-									               yourself);
-							              @ RSDraggable);
+									               yourself));
 					             addShape: (RSLabel new
 							              text: cName;
 							              color: Color black;
 							              fontSize: 10);
 					             padding: 0;
 					             yourself);
-			            add: (RSComposite new
-					             addShape: (RSBox new
-							              extent: max * 8 @ 100;
-							              color: boxColor;
-							              border: (RSBorder new
-									               color: borderColor;
-									               yourself);
-							              @ RSDraggable);
-					             addShape: (RSLabel new
-							              text: text;
-							              color: Color black;
-							              fontSize: 10);
-					             padding: 0;
-					             yourself);
 			            yourself.
+		   composite := RSComposite new.
+		   composite addShape: (RSBox new
+				    extent: max @ (texts size * 20);
+				    color: boxColor;
+				    border: (RSBorder new
+						     color: borderColor;
+						     yourself)).
+		   labels := (texts collect: [ :str | 
+			              RSLabel new
+				              text: str;
+				              color: Color black;
+				              fontSize: 10 ]) asGroup.
+		   RSVerticalLineLayout new
+			   gapSize: 1.5;
+			   on: labels.
+		   composite addShape: (RSComposite new
+				    shapes: labels;
+				    position: 0 @ 0;
+				    yourself).
+		   composite padding: 0.
+		   group add: composite.
 		   RSVerticalLineLayout new
 			   gapSize: 0;
 			   on: group.
