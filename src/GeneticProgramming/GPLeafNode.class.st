@@ -17,6 +17,11 @@ GPLeafNode >> evaluate: grammar given: configuration [
 ]
 
 { #category : #'collecting leaves' }
+GPLeafNode >> expandChildrenGiven: grammar and: optionKey [
+	^ self expandGiven: grammar
+]
+
+{ #category : #'collecting leaves' }
 GPLeafNode >> expandGiven: context [
 
 	^ self newNode: context 

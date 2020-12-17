@@ -50,9 +50,30 @@ GPNode >> evaluate: grammar given: configuration [
 GPNode >> expandChildrenGiven: grammar [
 
 	| resultNode |
+	"problem is here"
 	self children size == 1 ifTrue: [ 
 		^ (grammar nodeOf: self children first) expandGiven: grammar ].
-	
+	"evaluate when execute here"
+	resultNode := self newNode: grammar.
+	children doWithIndex: [ :child :index | 
+		| newChild |
+		newChild := (grammar nodeOf: child) expandGiven: grammar.
+		newChild
+			ifNil: [ ^ nil ]
+			ifNotNil: [ resultNode children at: index put: newChild ] ].
+	^ resultNode
+]
+
+{ #category : #'collecting leaves' }
+GPNode >> expandChildrenGiven: grammar and: optionKey [
+
+	| resultNode |
+	"problem is here"
+	optionKey == 'nodeOptions' ifTrue: [ 
+		^ (grammar nodeOf: self children first) expandGiven: grammar ].
+	"self children size == 1 ifTrue: [ 
+		^ (grammar nodeOf: self children first) expandGiven: grammar ]."
+	"evaluate when execute here"
 	resultNode := self newNode: grammar.
 	children doWithIndex: [ :child :index | 
 		| newChild |
@@ -88,10 +109,11 @@ GPNode >> expandChildrenGiven: grammar depth: anInteger and: booleans [
 
 { #category : #'collecting leaves' }
 GPNode >> expandGiven: grammar [
-
-
-	^ (grammar randomlySelectOption: id) expandChildrenGiven:
-		        grammar.
+	| assoc |
+	assoc := grammar randomlySelectOption: id.
+	^ [assoc value expandChildrenGiven: grammar and: assoc key] 
+		on: MessageNotUnderstood 
+		do: [ (grammar nodeOf: assoc value) expandChildrenGiven: grammar and: assoc key ].
 
 	"| result |
 	result := (GPRandom instance selectRandomly: (grammar optionsOf: id)) 

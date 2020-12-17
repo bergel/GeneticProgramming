@@ -3,9 +3,10 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'rules',
-		'options',
 		'nodeNumber',
-		'configuration'
+		'configuration',
+		'options',
+		'nodeOptions'
 	],
 	#category : #'GeneticProgramming-Grammar'
 }
@@ -45,6 +46,18 @@ rules at: symbol ifAbsentPut: [
 ]
 
 { #category : #adding }
+GPContextFreeGrammar >> addNodeOptions: collection of: symbol [
+
+	 nodeOptions 
+		 at: symbol
+		 ifPresent: [ :col | col addAll: collection ]
+		 ifAbsentPut: [ 
+			 OrderedCollection new
+				 addAll: collection;
+				 yourself ]
+]
+
+{ #category : #adding }
 GPContextFreeGrammar >> addOptions: collection of: symbol [
 
 	 options
@@ -72,9 +85,14 @@ GPContextFreeGrammar >> addRule: symbol ofClass: aClass withSequence: collection
 { #category : #adding }
 GPContextFreeGrammar >> addRule: symbol redirectingTo: anotherSymbol [
 
-	 self
-		 addRule: symbol
-		 withSequence: (Array with: anotherSymbol)
+	 self addNodeOptions: (Array with: anotherSymbol) of: symbol
+	 "nodeOptions
+		 at: symbol
+		 ifPresent: [ :col | col add: anotherSymbol ]
+		 ifAbsentPut: [ 
+			 OrderedCollection new
+				 add: anotherSymbol;
+				 yourself ]."
 ]
 
 { #category : #adding }
@@ -85,7 +103,7 @@ GPContextFreeGrammar >> addRule: symbol withCollectionOptions: collection [
 		ofClass: GPCollectionNode
 		andType: nil.
 	self
-		addOptions: (collection collect: [ :s | 
+		addNodeOptions: (collection collect: [ :s | 
 				 self
 					 createNode: symbol
 					 ofClass: GPCollectionNode
@@ -134,6 +152,17 @@ GPContextFreeGrammar >> allLeavesRuleKeysBut: symbols [
 ]
 
 { #category : #accessing }
+GPContextFreeGrammar >> allOptionsOf: symbol [
+	| opts nodeOpts dict |
+	opts := self optionsOf: symbol.
+	nodeOpts := self nodeOptionsOf: symbol.
+	dict := Dictionary new.
+	opts ifNotEmpty: [	dict at: 'options' put: opts ].
+	nodeOpts ifNotEmpty: [ dict at: 'nodeOptions' put: nodeOpts ].
+	^ dict
+]
+
+{ #category : #accessing }
 GPContextFreeGrammar >> configuration: aConfiguration [
 	configuration := aConfiguration 
 ]
@@ -152,7 +181,7 @@ GPContextFreeGrammar >> dictionaryOfOptionsWithWeights: symbol [
 
 	| dict indexOpts weights |
 	dict := Dictionary new.
-	indexOpts := 1 to: (self optionsOf: symbol) size.
+	indexOpts := 1 to: "(self optionsOf: symbol)" ((self allOptionsOf: symbol) flatCollect: #value) size.
 	weights := configuration optionWeightsOf: symbol.
 	indexOpts size == weights size ifTrue: [ 
 		dict := (indexOpts with: weights collect: [ :i :w | i -> w ])
@@ -260,6 +289,7 @@ GPContextFreeGrammar >> initialize [
 
 	rules := Dictionary new.
 	options := Dictionary new.
+	nodeOptions := Dictionary new.
 	nodeNumber := 0
 ]
 
@@ -275,6 +305,12 @@ GPContextFreeGrammar >> nodeOf: symbol [
 ]
 
 { #category : #accessing }
+GPContextFreeGrammar >> nodeOptionsOf: symbol [
+
+	 ^ nodeOptions at: symbol ifAbsent: [ #() ]
+]
+
+{ #category : #accessing }
 GPContextFreeGrammar >> optionsOf: symbol [
 
 	 ^ options at: symbol
@@ -283,7 +319,7 @@ GPContextFreeGrammar >> optionsOf: symbol [
 { #category : #'as yet unclassified' }
 GPContextFreeGrammar >> randomOptions: symbol [
 
-	^ self shuffle: (self optionsOf: symbol)
+	^ self shuffle: (self allOptionsOf: symbol) associations "(self optionsOf: symbol)"
 ]
 
 { #category : #'as yet unclassified' }
@@ -291,13 +327,13 @@ GPContextFreeGrammar >> randomlySelectOption: symbol [
 
 	| dict |
 	configuration ifNil: [ 
-		^ GPRandom instance randomlySelect: (self optionsOf: symbol) ].
+		^ GPRandom instance randomlySelectOfDictionary: (self allOptionsOf: symbol) "randomlySelect: (self optionsOf: symbol)" ].
 	dict := self dictionaryOfOptionsWithWeights: symbol.
 	^ dict
 		  ifEmpty: [ 
-		  GPRandom instance randomlySelect: (self optionsOf: symbol) ]
+		  GPRandom instance randomlySelectOfDictionary: (self allOptionsOf: symbol) "randomlySelect: (self optionsOf: symbol)" ]
 		  ifNotEmpty: [ 
-		  (self optionsOf: symbol) at: (GPRandom instance randomlySelectGivenProbabilities: dict) ]
+		  "(self optionsOf: symbol)" (self allOptionsOf: symbol) at: (GPRandom instance randomlySelectGivenProbabilities: dict) ]
 ]
 
 { #category : #selecting }

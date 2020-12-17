@@ -154,6 +154,11 @@ GPAbstractNode >> evaluationBlock: aOneArgBlock [
 ]
 
 { #category : #'collecting leaves' }
+GPAbstractNode >> expandChildrenGiven: grammar and: optionKey [
+	^ self subclassResponsibility 
+]
+
+{ #category : #'collecting leaves' }
 GPAbstractNode >> expandGiven: context [
 
 	^ self subclassResponsibility

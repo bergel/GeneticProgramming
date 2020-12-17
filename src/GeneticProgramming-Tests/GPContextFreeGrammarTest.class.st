@@ -56,6 +56,44 @@ GPContextFreeGrammarTest >> testAddRuleOfClassWithSequence [
 ]
 
 { #category : #tests }
+GPContextFreeGrammarTest >> testAddRuleWithBlock [
+	| result |
+	random seed: 1.
+	grammar 
+		addRule: #E ofClass: RBMessageNode withSequence: #(#E #And #Block);
+		addMessageRule: #And withValues: #(#and:);
+		"addRule: #E redirectingTo: #Block;"
+		addRule: #E redirectingTo: #F;
+		addRule: #Block ofClass: RBBlockNode withSequence: #(#Sequence);
+		addRule: #Sequence ofClass: RBSequenceNode withSequence: #(#Fs);
+		addRule: #Fs withCollectionOptions: #(#F);
+		addLeafRule: #F withValues: #(true false). "self halt."
+	result := grammar expandFrom: #E.
+	"self assert: result numberOfNodes equals: 10."
+	self assert: (result evaluate: grammar) equals: false.
+]
+
+{ #category : #tests }
+GPContextFreeGrammarTest >> testAddRuleWithBlock2 [
+	| result |
+	random seed: 98345.
+	grammar 
+		addRule: #E ofClass: RBMessageNode withSequence: #(#E #And #Block);
+		addMessageRule: #And withValues: #(#and:);
+		"addRule: #E redirectingTo: #Block;"
+		addRule: #E redirectingTo: #F;
+		addRule: #Block ofClass: RBBlockNode withSequence: #(#Sequence);
+		addRule: #Sequence ofClass: RBSequenceNode withSequence: #(#F);
+		"addRule: #Fs withCollectionOptions: #(#F);"
+		addLeafRule: #F withValues: #(true false). "self halt."
+	result := grammar expandFrom: #E.
+	self assert: result numberOfNodes equals: 6.
+	self halt.
+	grammar generateASTFrom: result.
+	self assert: (result evaluate: grammar) equals: false.
+]
+
+{ #category : #tests }
 GPContextFreeGrammarTest >> testAddRuleWithCollectionOptions [
 
 	| result |
@@ -461,7 +499,6 @@ GPContextFreeGrammarTest >> testExpandOnFooExample [
 { #category : #tests }
 GPContextFreeGrammarTest >> testExpandOnMethodNode [
 
-	| result configuration |
 	random seed: 1.
 	grammar
 		addRule: #Method
