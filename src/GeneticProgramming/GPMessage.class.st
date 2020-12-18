@@ -68,10 +68,10 @@ GPMessage >> message: anObject [
 
 { #category : #operations }
 GPMessage >> mutate [
+
 	| list |
-	list := #(#mutateReceiver #mutateArgs).
-	^ self deepCopy perform: (list at: (random nextInt: list size)).
-	
+	list := #( #mutateReceiver #mutateArgs ).
+	^ self deepCopy perform: (list at: (random nextInteger: list size))
 ]
 
 { #category : #operations }

@@ -47,29 +47,11 @@ GPNode >> evaluate: grammar given: configuration [
 ]
 
 { #category : #'collecting leaves' }
-GPNode >> expandChildrenGiven: grammar [
-
-	| resultNode |
-	"problem is here"
-	self children size == 1 ifTrue: [ 
-		^ (grammar nodeOf: self children first) expandGiven: grammar ].
-	"evaluate when execute here"
-	resultNode := self newNode: grammar.
-	children doWithIndex: [ :child :index | 
-		| newChild |
-		newChild := (grammar nodeOf: child) expandGiven: grammar.
-		newChild
-			ifNil: [ ^ nil ]
-			ifNotNil: [ resultNode children at: index put: newChild ] ].
-	^ resultNode
-]
-
-{ #category : #'collecting leaves' }
 GPNode >> expandChildrenGiven: grammar and: optionKey [
 
 	| resultNode |
 	"problem is here"
-	optionKey == 'nodeOptions' ifTrue: [ 
+	optionKey = 'nodeOptions' ifTrue: [ 
 		^ (grammar nodeOf: self children first) expandGiven: grammar ].
 	"self children size == 1 ifTrue: [ 
 		^ (grammar nodeOf: self children first) expandGiven: grammar ]."
@@ -113,7 +95,7 @@ GPNode >> expandGiven: grammar [
 	assoc := grammar randomlySelectOption: id.
 	^ [assoc value expandChildrenGiven: grammar and: assoc key] 
 		on: MessageNotUnderstood 
-		do: [ (grammar nodeOf: assoc value) expandChildrenGiven: grammar and: assoc key ].
+		do: [ (grammar nodeOf: assoc value) expandGiven: grammar "expandChildrenGiven: grammar and: assoc key" ].
 
 	"| result |
 	result := (GPRandom instance selectRandomly: (grammar optionsOf: id)) 
@@ -132,10 +114,12 @@ GPNode >> expandGiven: grammar depth: anInteger and: booleans [
 	options := grammar randomOptions: id.
 	options
 		detect: [ :option | 
-			node := option
+			node := option isSymbol
+				ifTrue: [ (grammar nodeOf: option) expandGiven: grammar depth: anInteger and: booleans ]
+				ifFalse: [ option
 				        expandChildrenGiven: grammar
 				        depth: anInteger
-				        and: booleans.
+				        and: booleans ].
 			node isNotNil and: [ 
 				booleans inject: false into: [ :b :e | e or: [ b ] ] ] ]
 		ifNone: [  ].

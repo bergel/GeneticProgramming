@@ -40,10 +40,11 @@ GPBlock >> initialize [
 ]
 
 { #category : #operations }
-GPBlock >> mutate [ 
+GPBlock >> mutate [
+
 	| index random |
 	random := Random seed: 42.
-	index := random nextInt: exprs size. 
+	index := random nextInteger: exprs size.
 	^ self deepCopy exprs at: index put: (exprs at: index) mutate
 ]
 

@@ -84,7 +84,9 @@ GPContextFreeGrammar >> addRule: symbol ofClass: aClass withSequence: collection
 
 { #category : #adding }
 GPContextFreeGrammar >> addRule: symbol redirectingTo: anotherSymbol [
-
+	 self addNodeIfNecessary: symbol
+			ofClass: GPNode
+			andType: nil.
 	 self addNodeOptions: (Array with: anotherSymbol) of: symbol
 	 "nodeOptions
 		 at: symbol
@@ -313,13 +315,14 @@ GPContextFreeGrammar >> nodeOptionsOf: symbol [
 { #category : #accessing }
 GPContextFreeGrammar >> optionsOf: symbol [
 
-	 ^ options at: symbol
+	 ^ options at: symbol ifAbsent: [ #() ]
 ]
 
 { #category : #'as yet unclassified' }
 GPContextFreeGrammar >> randomOptions: symbol [
 
-	^ self shuffle: (self allOptionsOf: symbol) associations "(self optionsOf: symbol)"
+	^ self shuffle: (
+		(self shuffle: (self allOptionsOf: symbol) associations) flatCollect: #value) "(self optionsOf: symbol)"
 ]
 
 { #category : #'as yet unclassified' }
@@ -333,7 +336,7 @@ GPContextFreeGrammar >> randomlySelectOption: symbol [
 		  ifEmpty: [ 
 		  GPRandom instance randomlySelectOfDictionary: (self allOptionsOf: symbol) "randomlySelect: (self optionsOf: symbol)" ]
 		  ifNotEmpty: [ 
-		  "(self optionsOf: symbol)" (self allOptionsOf: symbol) at: (GPRandom instance randomlySelectGivenProbabilities: dict) ]
+		  "(self optionsOf: symbol)" (self allOptionsOf: symbol) associations first value at: (GPRandom instance randomlySelectGivenProbabilities: dict) ]
 ]
 
 { #category : #selecting }

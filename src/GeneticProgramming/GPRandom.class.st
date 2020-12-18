@@ -87,7 +87,8 @@ GPRandom >> multiplierOf: numbers [
 
 { #category : #'as yet unclassified' }
 GPRandom >> randomNumber: number [
-	^ random nextInt: number
+
+	^ random nextInteger: number
 ]
 
 { #category : #enumerating }
