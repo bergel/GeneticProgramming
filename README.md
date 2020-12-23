@@ -88,6 +88,8 @@ GPRandom instance seed: 10.
 The following two lines are equivalent:
 
 ```Smalltalk
-grammar addRule: #E ofClass: RBMessageNode withSequence: #( #E #Message0 ).
-grammar addMessageRule: #E withValues: #( #E #Message0 ).
+grammar addRule: #E ofClass: RBMessageNode withSequence: #( #foo #bar ).
+grammar addMessageRule: #E withValues: #( #foo #bar ).
 ```
+
+Both `#foo` and `#bar` are selector used in message.
