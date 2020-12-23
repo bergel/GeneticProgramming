@@ -65,14 +65,14 @@ GPRandom instance seed: 10.
 grammar := GPContextFreeGrammar new.
 grammar 
          addRule: #E ofClass: RBMessageNode withSequence: #( #E #AddOp #T );
-			addMessageRule: #AddOp withValues: #( #+ );
+	 addMessageRule: #AddOp withValues: #( #+ );
          addRule: #E redirectingTo: #T;
 
-			addRule: #T ofClass: RBMessageNode  withSequence: #( #T #MultOp #F );
-			addMessageRule: #MultOp withValues: #( #* );
-			addRule: #T redirectingTo: #F;
+	 addRule: #T ofClass: RBMessageNode  withSequence: #( #T #MultOp #F );
+	 addMessageRule: #MultOp withValues: #( #* );
+	 addRule: #T redirectingTo: #F;
 
-			addLeafRule: #F ofClass: RBLiteralNode withValues: ((1 to: 10)).
+	 addLeafRule: #F ofClass: RBLiteralNode withValues: ((1 to: 10)).
 
 result := OrderedCollection new.
 1000 timesRepeat: [
