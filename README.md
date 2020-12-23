@@ -82,3 +82,12 @@ Simply perform:
 ```Smalltalk
 GPRandom instance seed: 10.
 ```
+
+## Simple shortcut
+
+The following two lines are equivalent:
+
+```Smalltalk
+grammar addRule: #E ofClass: RBMessageNode withSequence: #( #E #Message0 ).
+grammar addMessageRule: #E withValues: #( #E #Message0 ).
+```
