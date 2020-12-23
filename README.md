@@ -75,3 +75,10 @@ tree := grammar expandFrom: #E given: config.
 ast := grammar generateASTFrom: tree.
 ```
 
+## Setting a seed for the random number generation
+
+Simply perform:
+
+```Smalltalk
+GPRandom instance seed: 10.
+```
