@@ -56,6 +56,33 @@ ast := grammar expandFrom: #E given: config.
 
 In that case, the depth of the tree will be maximum 3.
 
+## ETF Example
+
+Here another example:
+```Smalltalk
+GPRandom instance seed: 10.
+
+grammar := GPContextFreeGrammar new.
+grammar 
+         addRule: #E ofClass: RBMessageNode withSequence: #( #E #AddOp #T );
+	 addMessageRule: #AddOp withValues: #( #+ );
+         addRule: #E redirectingTo: #T;
+
+	 addRule: #T ofClass: RBMessageNode  withSequence: #( #T #MultOp #F );
+	 addMessageRule: #MultOp withValues: #( #* );
+	 addRule: #T redirectingTo: #F;
+
+	 addLeafRule: #F ofClass: RBLiteralNode withValues: ((1 to: 10)).
+
+result := OrderedCollection new.
+1000 timesRepeat: [
+	tree := grammar expandFrom: #E.
+	ast := grammar generateASTFrom: tree.
+	result add: ast formattedCode
+].
+result
+```
+
 ## Specifying priorities
 
 ```Smalltalk
@@ -75,3 +102,21 @@ tree := grammar expandFrom: #E given: config.
 ast := grammar generateASTFrom: tree.
 ```
 
+## Setting a seed for the random number generation
+
+Simply perform:
+
+```Smalltalk
+GPRandom instance seed: 10.
+```
+
+## Simple shortcut
+
+The following two lines are equivalent:
+
+```Smalltalk
+grammar addRule: #E ofClass: RBMessageNode withSequence: #( #foo #bar ).
+grammar addMessageRule: #E withValues: #( #foo #bar ).
+```
+
+Both `#foo` and `#bar` are selector used in message.
