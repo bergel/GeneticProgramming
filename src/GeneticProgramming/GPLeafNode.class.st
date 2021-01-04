@@ -36,8 +36,27 @@ GPLeafNode >> expandGiven: grammar depth: anInteger and: booleans [
 
 { #category : #'collecting leaves' }
 GPLeafNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans [
-
-	^ self expandGiven: grammar depth: anInteger and: booleans
+	
+	"^ self expandGiven: grammar depth: anInteger and: booleans"
+	| node options  |
+	options := grammar nodeOptionsOf: id.
+	(options isEmpty or: [ anInteger = 1 ]) ifTrue: [ ^ self expandGiven: grammar depth: anInteger and: booleans ].
+	node := nil.
+	options := grammar shuffle: (options).
+	options
+		detect: [ :option | | bool prevSize size |
+			prevSize := booleans size.
+			node := option isSymbol
+				ifTrue: [ (grammar nodeOf: option) expandGiven: grammar depth: anInteger method: methodName and: booleans ]
+				ifFalse: [ nil].
+			size := booleans size.
+			bool := node isNotNil and: [ 
+				booleans inject: true into: [ :b :e | e and: [ b ] ] ].
+			(size - prevSize) > 0 ifTrue: [ 
+				1 to: (size - prevSize) do: [:n | booleans pop ] ].
+			bool ]
+		ifNone: [ node := nil ].
+	^ node
 ]
 
 { #category : #testing }

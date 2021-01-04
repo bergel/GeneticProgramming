@@ -9,21 +9,22 @@ GPNodeTest >> grammarETF [
 	| grammar configuration |
 	grammar := GPContextFreeGrammar new.
 	grammar
-		addMessageRule: #AddOp withValues: #( #+ #- );
-		addRule: #E ofClass: RBMessageNode withSequence: #( #E #AddOp #T );
+		addMessageRule: #Add withValues: #( #+ #- );
+		addRule: #E ofClass: RBMessageNode withSequence: #( #E #Add #T );
 		addRule: #E redirectingTo: #T;
-		addMessageRule: #MulOp withValues: #( #* #/ );
-		addRule: #T ofClass: RBMessageNode withSequence: #( #T #MulOp #F );
+		addMessageRule: #Mul withValues: #( #* #/ );
+		addRule: #T ofClass: RBMessageNode withSequence: #( #T #Mul #F );
 		addRule: #T redirectingTo: #F;
-		addLeafRule: #F ofClass: RBLiteralNode withValues: (1 to: 10).
+		addLeafRule: #F ofClass: RBLiteralNode withValues: (1 to: 10);
+		addRule: #F redirectingTo: #E.
 	configuration := GPASTConfiguration new
 		                 addWeight: 8 forRule: #E;
 		                 addWeight: 5 forRule: #T;
 		                 addWeight: 4 forRule: #F;
 		                 addOptionWeights: #( 8 5 ) forRule: #E;
 		                 addOptionWeights: #( 6 3 ) forRule: #T;
-		                 addOptionWeights: #( 6 4 ) forRule: #AddOp;
-		                 addOptionWeights: #( 6 3 ) forRule: #MulOp;
+		                 addOptionWeights: #( 6 4 ) forRule: #Add;
+		                 addOptionWeights: #( 6 3 ) forRule: #Mul;
 		                 addOptionWeights: #( 4 6 3 8 9 7 7 2 6 5 )
 		                 forRule: #F.
 		grammar configuration: configuration.
@@ -93,7 +94,7 @@ GPNodeTest >> testExpandGivenDepthMethodAnd [
 	node := grammar nodeOf: #E.
 	col := Stack new.
 	"grammar configuration methodDepth: #full."
-	node := node expandGiven: grammar depth: 2 method: #full and: col.
+	node := node expandGiven: grammar depth: 4 method: #full and: col.
 	self assert: (node allLeaves select: #isLeafNode thenCollect: #depth) asSet size equals: 1
 ]
 

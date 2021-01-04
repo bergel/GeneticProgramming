@@ -154,13 +154,11 @@ GPNode >> expandGiven: grammar depth: anInteger and: booleans [
 { #category : #'collecting leaves' }
 GPNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans [
 
-	| node options prevSize size |
+	| node options  |
 	node := nil.
-	size := booleans size.
-	prevSize := size.
 	options := grammar randomOptions: id.
 	options
-		detect: [ :option | | bool |
+		detect: [ :option | | bool prevSize size |
 			prevSize := booleans size.
 			node := option isSymbol
 				ifTrue: [ (grammar nodeOf: option) expandGiven: grammar depth: anInteger method: methodName and: booleans ]
@@ -173,7 +171,7 @@ GPNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans
 			bool := node isNotNil and: [ 
 				booleans inject: true into: [ :b :e | e and: [ b ] ] ].
 			(size - prevSize) > 0 ifTrue: [ 
-				1 to: (size - prevSize) do: [:n | booleans pop ] ].
+				1 to: (size - prevSize) do: [:n | booleans pop ] ]."self halt."
 			bool ]
 		ifNone: [ node := nil ].
 	^ node
