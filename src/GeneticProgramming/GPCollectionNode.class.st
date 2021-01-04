@@ -83,6 +83,11 @@ GPCollectionNode >> expandGiven: grammar depth: anInteger and: booleans [
 	^ node"
 ]
 
+{ #category : #'collecting leaves' }
+GPCollectionNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans [
+	^ self expandGiven: grammar depth: anInteger and: booleans
+]
+
 { #category : #'as yet unclassified' }
 GPCollectionNode >> fillArrayOfSize: size1 to: size2 [
 	| aux |

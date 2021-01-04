@@ -326,6 +326,23 @@ GPContextFreeGrammar >> randomOptions: symbol [
 ]
 
 { #category : #'as yet unclassified' }
+GPContextFreeGrammar >> randomOptionsOf: symbol [
+
+	^ configuration 
+		ifNil: [ self randomOptions: symbol ] 
+		ifNotNil: [ | col opts set result | 
+			opts := (self allOptionsOf: symbol) associations flatCollect: #value.
+			col := GPRandom instance shuffledCollectionOf: (self dictionaryOfOptionsWithWeights: symbol).
+			set := Set new.
+			result := OrderedCollection new.
+			col do: [ :i | (set includes: i) 
+				ifFalse: [ set add: i.
+					result add: (opts at: i) ] ].
+			result
+		]
+]
+
+{ #category : #'as yet unclassified' }
 GPContextFreeGrammar >> randomlySelectOption: symbol [
 
 	| dict |

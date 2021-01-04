@@ -101,10 +101,11 @@ GPAbstractNode >> crossOverWith: anotherNode at: index1 at: index2 [
 GPAbstractNode >> crossOverWith: anotherNode using: random [
 
 	"This method should be called with two root nodes"
+
 	^ self
 		  crossOverWith: anotherNode
-		  at: (random nextInt: self numberOfNodes - 1) + 1
-		  at: (random nextInt: anotherNode numberOfNodes - 1) + 1
+		  at: (random nextInteger: self numberOfNodes - 1) + 1
+		  at: (random nextInteger: anotherNode numberOfNodes - 1) + 1
 ]
 
 { #category : #copying }
@@ -112,6 +113,11 @@ GPAbstractNode >> deepCopy [
 
 	^ self class new id: id;
 	type: type
+]
+
+{ #category : #accessing }
+GPAbstractNode >> depth [ 
+	^ depth
 ]
 
 { #category : #accessing }
@@ -168,6 +174,11 @@ GPAbstractNode >> expandGiven: context [
 GPAbstractNode >> expandGiven: grammar depth: aNumber and: booleans [
 
 	^ self subclassResponsibility
+]
+
+{ #category : #'collecting leaves' }
+GPAbstractNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans [
+	^ self subclassResponsibility 
 ]
 
 { #category : #accessing }

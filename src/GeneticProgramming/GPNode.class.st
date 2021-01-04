@@ -90,6 +90,31 @@ GPNode >> expandChildrenGiven: grammar depth: anInteger and: booleans [
 ]
 
 { #category : #'collecting leaves' }
+GPNode >> expandChildrenGiven: grammar depth: anInteger method: methodName and: booleans [
+
+	| resultNode |
+	self children size == 1 ifTrue: [ 
+		^ (grammar nodeOf: self children first)
+			  expandGiven: grammar
+			  depth: anInteger
+			  method: methodName
+			  and: booleans ].
+	anInteger > 1 ifTrue: [ 
+		resultNode := self newNode: grammar with: anInteger.
+		children doWithIndex: [ :child :index | 
+			| newChild |
+			newChild := (grammar nodeOf: child)
+				            expandGiven: grammar
+				            depth: anInteger - 1
+								method: methodName
+				            and: booleans.
+			newChild
+				ifNil: [ ^ nil ]
+				ifNotNil: [ resultNode children at: index put: newChild ] ] ].
+	^ resultNode
+]
+
+{ #category : #'collecting leaves' }
 GPNode >> expandGiven: grammar [
 	| assoc |
 	assoc := grammar randomlySelectOption: id.
@@ -123,6 +148,34 @@ GPNode >> expandGiven: grammar depth: anInteger and: booleans [
 			node isNotNil and: [ 
 				booleans inject: false into: [ :b :e | e or: [ b ] ] ] ]
 		ifNone: [  ].
+	^ node
+]
+
+{ #category : #'collecting leaves' }
+GPNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans [
+
+	| node options prevSize size |
+	node := nil.
+	size := booleans size.
+	prevSize := size.
+	options := grammar randomOptions: id.
+	options
+		detect: [ :option | | bool |
+			prevSize := booleans size.
+			node := option isSymbol
+				ifTrue: [ (grammar nodeOf: option) expandGiven: grammar depth: anInteger method: methodName and: booleans ]
+				ifFalse: [ option
+				        expandChildrenGiven: grammar
+				        depth: anInteger
+						  method: methodName
+				        and: booleans ].
+			size := booleans size.
+			bool := node isNotNil and: [ 
+				booleans inject: true into: [ :b :e | e and: [ b ] ] ].
+			(size - prevSize) > 0 ifTrue: [ 
+				1 to: (size - prevSize) do: [:n | booleans pop ] ].
+			bool ]
+		ifNone: [ node := nil ].
 	^ node
 ]
 

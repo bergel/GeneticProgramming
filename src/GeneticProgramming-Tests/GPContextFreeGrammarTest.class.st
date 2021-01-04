@@ -113,6 +113,35 @@ GPContextFreeGrammarTest >> testAddRuleWithCollectionOptions [
 ]
 
 { #category : #tests }
+GPContextFreeGrammarTest >> testAddRuleWithSequence [
+	| result tree |
+	random seed: 98345.
+	grammar 
+		addRule: #E ofClass: RBSequenceNode withSequence: #(#F #F);
+		"addRule: #E redirectingTo: #F;"
+		addLeafRule: #F withValues: #(true false).
+	result := grammar expandFrom: #E.
+	self assert: result numberOfNodes equals: 3.
+	tree := grammar generateASTFrom: result.
+	"self assertCollection: (tree statements collect: #evaluate) hasSameElements: #(true false)."
+	self assertCollection: (tree statements collect: #evaluate) hasSameElements: #(false false)
+]
+
+{ #category : #tests }
+GPContextFreeGrammarTest >> testAddRuleWithSequence2 [
+	| result tree |
+	random seed: 98345.
+	grammar 
+		addRule: #E ofClass: RBSequenceNode withSequence: #(#E #E);
+		addRule: #E redirectingTo: #F;
+		addLeafRule: #F withValues: #(true false).
+	result := grammar expandFrom: #E.
+	self assert: result numberOfNodes equals: 15.
+	tree := grammar generateASTFrom: result.
+	self assertCollection: (tree statements collect: #evaluate) hasSameElements: #(true false).
+]
+
+{ #category : #tests }
 GPContextFreeGrammarTest >> testDictionaryOfOptionWithWeights [
 
 	| config dict |

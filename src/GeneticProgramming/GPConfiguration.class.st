@@ -99,7 +99,8 @@ GPConfiguration >> random [
 
 { #category : #'private-random operations' }
 GPConfiguration >> randomBoolean [
-	^ (random nextInt: 100) > 50
+
+	^ (random nextInteger: 100) > 50
 ]
 
 { #category : #'private-random operations' }
@@ -110,5 +111,6 @@ GPConfiguration >> randomElementOf: aCollection [
 
 { #category : #'private-random operations' }
 GPConfiguration >> randomInt: anInt [
-	^ random nextInt: anInt
+
+	^ random nextInteger: anInt
 ]

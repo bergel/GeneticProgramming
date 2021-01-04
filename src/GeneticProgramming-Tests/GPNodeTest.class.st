@@ -4,6 +4,32 @@ Class {
 	#category : #'GeneticProgramming-Tests'
 }
 
+{ #category : #'as yet unclassified' }
+GPNodeTest >> grammarETF [
+	| grammar configuration |
+	grammar := GPContextFreeGrammar new.
+	grammar
+		addMessageRule: #AddOp withValues: #( #+ #- );
+		addRule: #E ofClass: RBMessageNode withSequence: #( #E #AddOp #T );
+		addRule: #E redirectingTo: #T;
+		addMessageRule: #MulOp withValues: #( #* #/ );
+		addRule: #T ofClass: RBMessageNode withSequence: #( #T #MulOp #F );
+		addRule: #T redirectingTo: #F;
+		addLeafRule: #F ofClass: RBLiteralNode withValues: (1 to: 10).
+	configuration := GPASTConfiguration new
+		                 addWeight: 8 forRule: #E;
+		                 addWeight: 5 forRule: #T;
+		                 addWeight: 4 forRule: #F;
+		                 addOptionWeights: #( 8 5 ) forRule: #E;
+		                 addOptionWeights: #( 6 3 ) forRule: #T;
+		                 addOptionWeights: #( 6 4 ) forRule: #AddOp;
+		                 addOptionWeights: #( 6 3 ) forRule: #MulOp;
+		                 addOptionWeights: #( 4 6 3 8 9 7 7 2 6 5 )
+		                 forRule: #F.
+		grammar configuration: configuration.
+		^ grammar
+]
+
 { #category : #running }
 GPNodeTest >> setUp [
 
@@ -57,6 +83,18 @@ GPNodeTest >> testCrossOver02 [
 	offspring := i1 crossOverWith: i2.
 	self assert: offspring print ~= i1 print.
 	self assert: offspring print ~= i2 print.
+]
+
+{ #category : #tests }
+GPNodeTest >> testExpandGivenDepthMethodAnd [
+	| grammar node col |
+	grammar := self grammarETF.
+	GPRandom seed: 1.
+	node := grammar nodeOf: #E.
+	col := Stack new.
+	"grammar configuration methodDepth: #full."
+	node := node expandGiven: grammar depth: 2 method: #full and: col.
+	self assert: (node allLeaves select: #isLeafNode thenCollect: #depth) asSet size equals: 1
 ]
 
 { #category : #tests }

@@ -100,8 +100,8 @@ GPRandom >> randomlySelect: collection [
 { #category : #enumerating }
 GPRandom >> randomlySelectGivenProbabilities: dictionary [
 
-	^ self randomlySelect:
-		  ((self collectionOfProbabilities: dictionary) shuffleBy: random)
+	^ self randomlySelect: (self shuffledCollectionOf: dictionary)
+		  "((self collectionOfProbabilities: dictionary) shuffleBy: random)"
 ]
 
 { #category : #enumerating }
@@ -120,4 +120,9 @@ GPRandom >> seed: number [
 GPRandom >> shuffleElementsOf: collection [
 
 	 ^ collection shuffleBy: random
+]
+
+{ #category : #enumerating }
+GPRandom >> shuffledCollectionOf: dictionary [
+	^ (self collectionOfProbabilities: dictionary) shuffleBy: random
 ]

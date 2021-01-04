@@ -28,6 +28,12 @@ GPMessageNode >> expandGiven: grammar depth: anInteger and: booleans [
 	^ self newNode: grammar with: anInteger
 ]
 
+{ #category : #'collecting leaves' }
+GPMessageNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans [
+
+	^ self expandGiven: grammar depth: anInteger and: booleans
+]
+
 { #category : #translating }
 GPMessageNode >> generateAST: visitor [
 
