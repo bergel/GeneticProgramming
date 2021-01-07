@@ -10,6 +10,11 @@ GPNode class >> children: someNodes [
 ]
 
 { #category : #operations }
+GPNode >> atIndex: index put: anotherNode [
+	^ anotherNode isComplexNode ifTrue: [ anotherNode ] ifFalse: [ self ]
+]
+
+{ #category : #operations }
 GPNode >> deepCopy [
 
 	| c |
@@ -67,29 +72,6 @@ GPNode >> expandChildrenGiven: grammar and: optionKey [
 ]
 
 { #category : #'collecting leaves' }
-GPNode >> expandChildrenGiven: grammar depth: anInteger and: booleans [
-
-	| resultNode |
-	self children size == 1 ifTrue: [ 
-		^ (grammar nodeOf: self children first)
-			  expandGiven: grammar
-			  depth: anInteger
-			  and: booleans ].
-	anInteger > 1 ifTrue: [ 
-		resultNode := self newNode: grammar with: anInteger.
-		children doWithIndex: [ :child :index | 
-			| newChild |
-			newChild := (grammar nodeOf: child)
-				            expandGiven: grammar
-				            depth: anInteger - 1
-				            and: booleans.
-			newChild
-				ifNil: [ ^ nil ]
-				ifNotNil: [ resultNode children at: index put: newChild ] ] ].
-	^ resultNode
-]
-
-{ #category : #'collecting leaves' }
 GPNode >> expandChildrenGiven: grammar depth: anInteger method: methodName and: booleans [
 
 	| resultNode |
@@ -132,26 +114,6 @@ GPNode >> expandGiven: grammar [
 ]
 
 { #category : #'collecting leaves' }
-GPNode >> expandGiven: grammar depth: anInteger and: booleans [
-
-	| node options |
-	node := nil.
-	options := grammar randomOptions: id.
-	options
-		detect: [ :option | 
-			node := option isSymbol
-				ifTrue: [ (grammar nodeOf: option) expandGiven: grammar depth: anInteger and: booleans ]
-				ifFalse: [ option
-				        expandChildrenGiven: grammar
-				        depth: anInteger
-				        and: booleans ].
-			node isNotNil and: [ 
-				booleans inject: false into: [ :b :e | e or: [ b ] ] ] ]
-		ifNone: [  ].
-	^ node
-]
-
-{ #category : #'collecting leaves' }
 GPNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans [
 
 	| node options  |
@@ -168,10 +130,9 @@ GPNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans
 						  method: methodName
 				        and: booleans ].
 			size := booleans size.
-			bool := node isNotNil and: [ 
-				booleans inject: true into: [ :b :e | e and: [ b ] ] ].
-			(size - prevSize) > 0 ifTrue: [ 
-				1 to: (size - prevSize) do: [:n | booleans pop ] ]."self halt."
+			bool := (self methodDepthBlock: methodName) valueWithPossibleArgs: (Array with: node with: booleans).
+			(methodName = #full and: [(size - prevSize) > 0]) ifTrue: [ 
+				1 to: (size - prevSize) do: [:n | booleans pop ] ].
 			bool ]
 		ifNone: [ node := nil ].
 	^ node

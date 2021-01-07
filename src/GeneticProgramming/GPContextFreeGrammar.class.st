@@ -209,16 +209,18 @@ GPContextFreeGrammar >> expandFrom: axiom [
 						| result |
 						result := nil.
 						[ result isNil ] whileTrue: [ 
-							configuration depth: (GPRandom instance randomNumber: 30).
+							configuration depth: (GPRandom instance randomNumber: 20).
 							result := node
 								          expandGiven: self
 								          depth: configuration depth
-								          and: OrderedCollection new ].
+											 method: configuration method
+								          and: Stack new ].
 						^ result ].
 					^ node
 						  expandGiven: self
 						  depth: configuration depth
-						  and: OrderedCollection new ]
+						  method: configuration method
+						  and: Stack new ]
 				ifFalse: [ ^ node expandGiven: self ] ]
 		ifAbsent: [ ^ nil ]
 ]
@@ -231,7 +233,14 @@ GPContextFreeGrammar >> expandFrom: axiom given: aConfiguration [
 ]
 
 { #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandGiven:  depth and: ruleKeys [
+GPContextFreeGrammar >> expandGiven: aConfiguration depth: depth method: methodName and: ruleKeys [
+
+	self configuration: aConfiguration.
+	^ self expandGiven: depth method: methodName and: ruleKeys
+]
+
+{ #category : #'collecting leaves' }
+GPContextFreeGrammar >> expandGiven: depth method: methodName and: ruleKeys [
 
 	|axiom |
 	axiom := self selectKeyRuleGiven: depth and: ruleKeys.
@@ -239,21 +248,23 @@ GPContextFreeGrammar >> expandGiven:  depth and: ruleKeys [
 		  at: axiom
 		  ifPresent: [ :node | 
 			  | resNode bools |
-			  bools := OrderedCollection new.
-			  resNode := node expandGiven: self depth: depth and: bools.
+			  bools := Stack new.
+			  resNode := node expandGiven: self depth: depth method: methodName and: bools.
 			  resNode
 				  ifNil: [ 
 					  ruleKeys add: axiom.
-					  self expandGiven: depth and: ruleKeys ]
+					  self expandGiven: depth method: methodName and: ruleKeys ]
 				  ifNotNil: [ resNode ] ]
 		  ifAbsent: [ nil ]
 ]
 
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandGiven: aConfiguration depth: depth and: ruleKeys [
-
-	self configuration: aConfiguration.
-	^ self expandGiven: depth and: ruleKeys
+{ #category : #'as yet unclassified' }
+GPContextFreeGrammar >> expandGivenMethod: methodName [
+	^ rules
+		at: self selectKeyRule
+		ifPresent: [ :node | 
+				node expandGiven: self depth: (GPRandom instance randomNumber: 10) method: methodName and: Stack new ]
+		ifAbsent: [ nil ]
 ]
 
 { #category : #'collecting leaves' }
@@ -268,7 +279,8 @@ GPContextFreeGrammar >> expandUsing: aConfiguration [
 			  self
 				  expandGiven: aConfiguration
 				  depth: aConfiguration depth
-				  and: OrderedCollection new ]
+				  method: aConfiguration method
+				  and: Stack new ]
 ]
 
 { #category : #'as yet unclassified' }
@@ -278,7 +290,8 @@ GPContextFreeGrammar >> generateASTFrom: aNode [
 	visitor := GPReplacementVisitor
 		           new
 		           grammar: self.
-	^ aNode generateAST: visitor
+	aNode ast: (aNode generateAST: visitor).
+	^ aNode ast
 ]
 
 { #category : #testing }

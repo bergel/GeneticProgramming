@@ -88,14 +88,24 @@ GPNodeTest >> testCrossOver02 [
 
 { #category : #tests }
 GPNodeTest >> testExpandGivenDepthMethodAnd [
-	| grammar node col |
+	| grammar node stack |
 	grammar := self grammarETF.
 	GPRandom seed: 1.
 	node := grammar nodeOf: #E.
-	col := Stack new.
-	"grammar configuration methodDepth: #full."
-	node := node expandGiven: grammar depth: 4 method: #full and: col.
+	stack := Stack new.
+	node := node expandGiven: grammar depth: 4 method: #full and: stack.
 	self assert: (node allLeaves select: #isLeafNode thenCollect: #depth) asSet size equals: 1
+]
+
+{ #category : #tests }
+GPNodeTest >> testExpandGivenDepthMethodAndGrow [
+	| grammar node stack |
+	grammar := self grammarETF.
+	GPRandom seed: 10.
+	node := grammar nodeOf: #E.
+	stack := Stack new.
+	node := node expandGiven: grammar depth: 4 method: #grow and: stack.
+	self assert: (node allLeaves select: #isLeafNode thenCollect: #depth) asSet size > 1
 ]
 
 { #category : #tests }

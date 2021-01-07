@@ -4,6 +4,20 @@ Class {
 	#category : #'GeneticProgramming-Core'
 }
 
+{ #category : #operations }
+GPLeafNode >> atIndex: index put: anotherNode [
+	^ anotherNode isLeafNode ifTrue: [ anotherNode ] ifFalse: [ self ]
+]
+
+{ #category : #copying }
+GPLeafNode >> deepCopy [
+	| newNode |
+	newNode := super deepCopy.
+	newNode evaluationBlock: self evaluationBlock;
+	printBlock: self printBlock.
+	^ newNode
+]
+
 { #category : #'public access' }
 GPLeafNode >> evaluate: grammar [
 
@@ -40,7 +54,7 @@ GPLeafNode >> expandGiven: grammar depth: anInteger method: methodName and: bool
 	"^ self expandGiven: grammar depth: anInteger and: booleans"
 	| node options  |
 	options := grammar nodeOptionsOf: id.
-	(options isEmpty or: [ anInteger = 1 ]) ifTrue: [ ^ self expandGiven: grammar depth: anInteger and: booleans ].
+	(options isEmpty or: [ anInteger = 1 or: [ methodName = #grow ] ]) ifTrue: [ ^ self expandGiven: grammar depth: anInteger and: booleans ].
 	node := nil.
 	options := grammar shuffle: (options).
 	options
@@ -50,9 +64,8 @@ GPLeafNode >> expandGiven: grammar depth: anInteger method: methodName and: bool
 				ifTrue: [ (grammar nodeOf: option) expandGiven: grammar depth: anInteger method: methodName and: booleans ]
 				ifFalse: [ nil].
 			size := booleans size.
-			bool := node isNotNil and: [ 
-				booleans inject: true into: [ :b :e | e and: [ b ] ] ].
-			(size - prevSize) > 0 ifTrue: [ 
+			bool := (self methodDepthBlock: methodName) valueWithEnoughArguments: (Array with: node with: booleans).
+			(methodName = #full and: [(size - prevSize) > 0]) ifTrue: [ 
 				1 to: (size - prevSize) do: [:n | booleans pop ] ].
 			bool ]
 		ifNone: [ node := nil ].

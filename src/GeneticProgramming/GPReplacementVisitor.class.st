@@ -113,6 +113,7 @@ GPReplacementVisitor >> visitMessageNode: messageNode [
 	messageNode selector: symbol.
 	[child := children third.
 	child isCollectionNode ifFalse: [ 
+		child isMessageNode ifTrue: [ self halt ].
 		child := GPCollectionNode transform: child ].
 	messageNode arguments: (child
 			 size: (self numberOfArguments: symbol);

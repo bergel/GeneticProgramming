@@ -4,6 +4,11 @@ Class {
 	#category : #'GeneticProgramming-Core'
 }
 
+{ #category : #operations }
+GPMessageNode >> atIndex: index put: anotherNode [
+	^ anotherNode isMessageNode ifTrue: [ anotherNode ] ifFalse: [ self ]
+]
+
 { #category : #'public access' }
 GPMessageNode >> evaluate: grammar [
 
@@ -23,15 +28,9 @@ GPMessageNode >> expandGiven: context [
 ]
 
 { #category : #'collecting leaves' }
-GPMessageNode >> expandGiven: grammar depth: anInteger and: booleans [
-
-	^ self newNode: grammar with: anInteger
-]
-
-{ #category : #'collecting leaves' }
 GPMessageNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans [
 
-	^ self expandGiven: grammar depth: anInteger and: booleans
+	^ self newNode: grammar with: anInteger
 ]
 
 { #category : #translating }
