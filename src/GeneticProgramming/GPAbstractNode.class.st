@@ -9,7 +9,8 @@ Class {
 		'printBlock',
 		'value',
 		'depth',
-		'idNumber'
+		'idNumber',
+		'ast'
 	],
 	#category : #'GeneticProgramming-Core'
 }
@@ -37,6 +38,16 @@ GPAbstractNode >> allLeaves: collection [
 ]
 
 { #category : #accessing }
+GPAbstractNode >> ast [
+	^ ast
+]
+
+{ #category : #accessing }
+GPAbstractNode >> ast: anASTNode [
+	ast := anASTNode 
+]
+
+{ #category : #accessing }
 GPAbstractNode >> atIndex: anIndex [
 	^ self withAllChildren at: anIndex
 ]
@@ -47,10 +58,23 @@ GPAbstractNode >> atIndex: index put: anotherNode [
 	index < 1 ifTrue: [ ^ self ].
 	i := index.
 	i := i - 1.
-	self children doWithIndex: [ :child :ii |
-		i = 1 ifTrue: [  self children at: ii put: anotherNode. ^ self ].
-		child atIndex: i put: anotherNode.
-		i := i - 1. ].
+	(self children collect: #class) asSet size = 1 
+		ifFalse: [ | ind |
+			ind := 0.
+			self children detect: [ :ch | ind := ind + 1.
+				ch isKindOf: anotherNode class ] 
+			ifFound: [ :ch | self children at: ind put: anotherNode ].
+			^ self ] 
+		ifTrue: [ 
+			self children doWithIndex: [ :child :ii |
+				i = 1 ifTrue: [ "| n | 
+				n := self children at: ii.
+				n isComplexNode ifTrue: [ self children at: ii put: anotherNode ] 
+				ifFalse: [self children at: ii put: (n atIndex: i put: anotherNode )]. ^ self "
+					self children at: ii put: anotherNode.
+					^ self ].
+				child atIndex: i put: anotherNode.
+				i := i - 1. ] ].
 	
 ]
 
@@ -101,10 +125,11 @@ GPAbstractNode >> crossOverWith: anotherNode at: index1 at: index2 [
 GPAbstractNode >> crossOverWith: anotherNode using: random [
 
 	"This method should be called with two root nodes"
+
 	^ self
 		  crossOverWith: anotherNode
-		  at: (random nextInt: self numberOfNodes - 1) + 1
-		  at: (random nextInt: anotherNode numberOfNodes - 1) + 1
+		  at: ([ random nextInteger: self numberOfNodes - 1 ] on: Error do: [ 0 ]) + 1
+		  at: ( [random nextInteger: anotherNode numberOfNodes - 1] on: Error do: [ 0 ] ) + 1
 ]
 
 { #category : #copying }
@@ -112,6 +137,11 @@ GPAbstractNode >> deepCopy [
 
 	^ self class new id: id;
 	type: type
+]
+
+{ #category : #accessing }
+GPAbstractNode >> depth [ 
+	^ depth
 ]
 
 { #category : #accessing }
@@ -139,7 +169,7 @@ GPAbstractNode >> evaluate: grammar given: configuration [
 { #category : #initialization }
 GPAbstractNode >> evaluateUsing: context [
 
-	^ evaluationBlock value: children value: context
+	^ evaluationBlock value: self value: context
 ]
 
 { #category : #accessing }
@@ -154,15 +184,19 @@ GPAbstractNode >> evaluationBlock: aOneArgBlock [
 ]
 
 { #category : #'collecting leaves' }
+GPAbstractNode >> expandChildrenGiven: grammar and: optionKey [
+	^ self subclassResponsibility 
+]
+
+{ #category : #'collecting leaves' }
 GPAbstractNode >> expandGiven: context [
 
 	^ self subclassResponsibility
 ]
 
 { #category : #'collecting leaves' }
-GPAbstractNode >> expandGiven: grammar depth: aNumber and: booleans [
-
-	^ self subclassResponsibility
+GPAbstractNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans [
+	^ self subclassResponsibility 
 ]
 
 { #category : #accessing }
@@ -259,6 +293,18 @@ GPAbstractNode >> isLeafNode [
 GPAbstractNode >> isMessageNode [
 
 	^ false
+]
+
+{ #category : #'as yet unclassified' }
+GPAbstractNode >> methodDepthBlock: string [
+	| block |
+	block := nil.
+	string = #full 
+		ifTrue: [ block := [ :node :bools | node isNotNil and: [ 
+				bools inject: true into: [ :b :e | e and: [ b ] ] ] ] ].
+	string = #grow ifTrue: [ block := [ :node :bools | node isNotNil and: [ 
+				bools inject: false into: [ :b :e | e or: [ b ] ] ] ] ].
+	^ block
 ]
 
 { #category : #'instance creation' }

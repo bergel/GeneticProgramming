@@ -87,7 +87,8 @@ GPRandom >> multiplierOf: numbers [
 
 { #category : #'as yet unclassified' }
 GPRandom >> randomNumber: number [
-	^ random nextInt: number
+
+	^ random nextInteger: number
 ]
 
 { #category : #enumerating }
@@ -99,8 +100,15 @@ GPRandom >> randomlySelect: collection [
 { #category : #enumerating }
 GPRandom >> randomlySelectGivenProbabilities: dictionary [
 
-	^ self randomlySelect:
-		  ((self collectionOfProbabilities: dictionary) shuffleBy: random)
+	^ self randomlySelect: (self shuffledCollectionOf: dictionary)
+		  "((self collectionOfProbabilities: dictionary) shuffleBy: random)"
+]
+
+{ #category : #enumerating }
+GPRandom >> randomlySelectOfDictionary: dictionary [
+	| assoc |
+	assoc := (self randomlySelect: dictionary associations).
+	^ assoc key -> (self randomlySelect: assoc value)
 ]
 
 { #category : #'instance creation' }
@@ -112,4 +120,9 @@ GPRandom >> seed: number [
 GPRandom >> shuffleElementsOf: collection [
 
 	 ^ collection shuffleBy: random
+]
+
+{ #category : #enumerating }
+GPRandom >> shuffledCollectionOf: dictionary [
+	^ (self collectionOfProbabilities: dictionary) shuffleBy: random
 ]

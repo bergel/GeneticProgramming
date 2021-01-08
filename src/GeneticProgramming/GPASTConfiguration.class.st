@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'rulesWeights',
 		'optionsWeights',
-		'depth'
+		'depth',
+		'method'
 	],
 	#category : #'GeneticProgramming-Grammar'
 }
@@ -35,12 +36,25 @@ GPASTConfiguration >> depth: number [
 { #category : #initialization }
 GPASTConfiguration >> initialize [ 	
 	rulesWeights := Dictionary new.
-	optionsWeights := Dictionary new
+	optionsWeights := Dictionary new.
+	method := #grow
 ]
 
 { #category : #accesing }
 GPASTConfiguration >> keysOfRuleWeights [ 
 	^ rulesWeights keys
+]
+
+{ #category : #accessing }
+GPASTConfiguration >> method [
+
+	^ method
+]
+
+{ #category : #accessing }
+GPASTConfiguration >> method: anObject [
+	(#(#full #grow) includes: anObject)
+		ifTrue: [ method := anObject ]
 ]
 
 { #category : #accesing }

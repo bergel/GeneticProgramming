@@ -3,9 +3,10 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'rules',
-		'options',
 		'nodeNumber',
-		'configuration'
+		'configuration',
+		'options',
+		'nodeOptions'
 	],
 	#category : #'GeneticProgramming-Grammar'
 }
@@ -45,6 +46,18 @@ rules at: symbol ifAbsentPut: [
 ]
 
 { #category : #adding }
+GPContextFreeGrammar >> addNodeOptions: collection of: symbol [
+
+	 nodeOptions 
+		 at: symbol
+		 ifPresent: [ :col | col addAll: collection ]
+		 ifAbsentPut: [ 
+			 OrderedCollection new
+				 addAll: collection;
+				 yourself ]
+]
+
+{ #category : #adding }
 GPContextFreeGrammar >> addOptions: collection of: symbol [
 
 	 options
@@ -71,10 +84,17 @@ GPContextFreeGrammar >> addRule: symbol ofClass: aClass withSequence: collection
 
 { #category : #adding }
 GPContextFreeGrammar >> addRule: symbol redirectingTo: anotherSymbol [
-
-	 self
-		 addRule: symbol
-		 withSequence: (Array with: anotherSymbol)
+	 self addNodeIfNecessary: symbol
+			ofClass: GPNode
+			andType: nil.
+	 self addNodeOptions: (Array with: anotherSymbol) of: symbol
+	 "nodeOptions
+		 at: symbol
+		 ifPresent: [ :col | col add: anotherSymbol ]
+		 ifAbsentPut: [ 
+			 OrderedCollection new
+				 add: anotherSymbol;
+				 yourself ]."
 ]
 
 { #category : #adding }
@@ -85,7 +105,7 @@ GPContextFreeGrammar >> addRule: symbol withCollectionOptions: collection [
 		ofClass: GPCollectionNode
 		andType: nil.
 	self
-		addOptions: (collection collect: [ :s | 
+		addNodeOptions: (collection collect: [ :s | 
 				 self
 					 createNode: symbol
 					 ofClass: GPCollectionNode
@@ -134,6 +154,17 @@ GPContextFreeGrammar >> allLeavesRuleKeysBut: symbols [
 ]
 
 { #category : #accessing }
+GPContextFreeGrammar >> allOptionsOf: symbol [
+	| opts nodeOpts dict |
+	opts := self optionsOf: symbol.
+	nodeOpts := self nodeOptionsOf: symbol.
+	dict := Dictionary new.
+	opts ifNotEmpty: [	dict at: 'options' put: opts ].
+	nodeOpts ifNotEmpty: [ dict at: 'nodeOptions' put: nodeOpts ].
+	^ dict
+]
+
+{ #category : #accessing }
 GPContextFreeGrammar >> configuration: aConfiguration [
 	configuration := aConfiguration 
 ]
@@ -152,7 +183,7 @@ GPContextFreeGrammar >> dictionaryOfOptionsWithWeights: symbol [
 
 	| dict indexOpts weights |
 	dict := Dictionary new.
-	indexOpts := 1 to: (self optionsOf: symbol) size.
+	indexOpts := 1 to: "(self optionsOf: symbol)" ((self allOptionsOf: symbol) flatCollect: #value) size.
 	weights := configuration optionWeightsOf: symbol.
 	indexOpts size == weights size ifTrue: [ 
 		dict := (indexOpts with: weights collect: [ :i :w | i -> w ])
@@ -178,16 +209,18 @@ GPContextFreeGrammar >> expandFrom: axiom [
 						| result |
 						result := nil.
 						[ result isNil ] whileTrue: [ 
-							configuration depth: (GPRandom instance randomNumber: 30).
+							configuration depth: (GPRandom instance randomNumber: 20).
 							result := node
 								          expandGiven: self
 								          depth: configuration depth
-								          and: OrderedCollection new ].
+											 method: configuration method
+								          and: Stack new ].
 						^ result ].
 					^ node
 						  expandGiven: self
 						  depth: configuration depth
-						  and: OrderedCollection new ]
+						  method: configuration method
+						  and: Stack new ]
 				ifFalse: [ ^ node expandGiven: self ] ]
 		ifAbsent: [ ^ nil ]
 ]
@@ -200,7 +233,14 @@ GPContextFreeGrammar >> expandFrom: axiom given: aConfiguration [
 ]
 
 { #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandGiven:  depth and: ruleKeys [
+GPContextFreeGrammar >> expandGiven: aConfiguration depth: depth method: methodName and: ruleKeys [
+
+	self configuration: aConfiguration.
+	^ self expandGiven: depth method: methodName and: ruleKeys
+]
+
+{ #category : #'collecting leaves' }
+GPContextFreeGrammar >> expandGiven: depth method: methodName and: ruleKeys [
 
 	|axiom |
 	axiom := self selectKeyRuleGiven: depth and: ruleKeys.
@@ -208,21 +248,23 @@ GPContextFreeGrammar >> expandGiven:  depth and: ruleKeys [
 		  at: axiom
 		  ifPresent: [ :node | 
 			  | resNode bools |
-			  bools := OrderedCollection new.
-			  resNode := node expandGiven: self depth: depth and: bools.
+			  bools := Stack new.
+			  resNode := node expandGiven: self depth: depth method: methodName and: bools.
 			  resNode
 				  ifNil: [ 
 					  ruleKeys add: axiom.
-					  self expandGiven: depth and: ruleKeys ]
+					  self expandGiven: depth method: methodName and: ruleKeys ]
 				  ifNotNil: [ resNode ] ]
 		  ifAbsent: [ nil ]
 ]
 
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandGiven: aConfiguration depth: depth and: ruleKeys [
-
-	self configuration: aConfiguration.
-	^ self expandGiven: depth and: ruleKeys
+{ #category : #'as yet unclassified' }
+GPContextFreeGrammar >> expandGivenMethod: methodName [
+	^ rules
+		at: self selectKeyRule
+		ifPresent: [ :node | 
+				node expandGiven: self depth: (GPRandom instance randomNumber: 10) method: methodName and: Stack new ]
+		ifAbsent: [ nil ]
 ]
 
 { #category : #'collecting leaves' }
@@ -237,7 +279,8 @@ GPContextFreeGrammar >> expandUsing: aConfiguration [
 			  self
 				  expandGiven: aConfiguration
 				  depth: aConfiguration depth
-				  and: OrderedCollection new ]
+				  method: aConfiguration method
+				  and: Stack new ]
 ]
 
 { #category : #'as yet unclassified' }
@@ -247,7 +290,8 @@ GPContextFreeGrammar >> generateASTFrom: aNode [
 	visitor := GPReplacementVisitor
 		           new
 		           grammar: self.
-	^ aNode generateAST: visitor
+	aNode ast: (aNode generateAST: visitor).
+	^ aNode ast
 ]
 
 { #category : #testing }
@@ -260,6 +304,7 @@ GPContextFreeGrammar >> initialize [
 
 	rules := Dictionary new.
 	options := Dictionary new.
+	nodeOptions := Dictionary new.
 	nodeNumber := 0
 ]
 
@@ -275,15 +320,39 @@ GPContextFreeGrammar >> nodeOf: symbol [
 ]
 
 { #category : #accessing }
+GPContextFreeGrammar >> nodeOptionsOf: symbol [
+
+	 ^ nodeOptions at: symbol ifAbsent: [ #() ]
+]
+
+{ #category : #accessing }
 GPContextFreeGrammar >> optionsOf: symbol [
 
-	 ^ options at: symbol
+	 ^ options at: symbol ifAbsent: [ #() ]
 ]
 
 { #category : #'as yet unclassified' }
 GPContextFreeGrammar >> randomOptions: symbol [
 
-	^ self shuffle: (self optionsOf: symbol)
+	^ self shuffle: (
+		(self shuffle: (self allOptionsOf: symbol) associations) flatCollect: #value) "(self optionsOf: symbol)"
+]
+
+{ #category : #'as yet unclassified' }
+GPContextFreeGrammar >> randomOptionsOf: symbol [
+
+	^ configuration 
+		ifNil: [ self randomOptions: symbol ] 
+		ifNotNil: [ | col opts set result | 
+			opts := (self allOptionsOf: symbol) associations flatCollect: #value.
+			col := GPRandom instance shuffledCollectionOf: (self dictionaryOfOptionsWithWeights: symbol).
+			set := Set new.
+			result := OrderedCollection new.
+			col do: [ :i | (set includes: i) 
+				ifFalse: [ set add: i.
+					result add: (opts at: i) ] ].
+			result
+		]
 ]
 
 { #category : #'as yet unclassified' }
@@ -291,13 +360,13 @@ GPContextFreeGrammar >> randomlySelectOption: symbol [
 
 	| dict |
 	configuration ifNil: [ 
-		^ GPRandom instance randomlySelect: (self optionsOf: symbol) ].
+		^ GPRandom instance randomlySelectOfDictionary: (self allOptionsOf: symbol) "randomlySelect: (self optionsOf: symbol)" ].
 	dict := self dictionaryOfOptionsWithWeights: symbol.
 	^ dict
 		  ifEmpty: [ 
-		  GPRandom instance randomlySelect: (self optionsOf: symbol) ]
+		  GPRandom instance randomlySelectOfDictionary: (self allOptionsOf: symbol) "randomlySelect: (self optionsOf: symbol)" ]
 		  ifNotEmpty: [ 
-		  (self optionsOf: symbol) at: (GPRandom instance randomlySelectGivenProbabilities: dict) ]
+		  "(self optionsOf: symbol)" (self allOptionsOf: symbol) associations first value at: (GPRandom instance randomlySelectGivenProbabilities: dict) ]
 ]
 
 { #category : #selecting }

@@ -4,6 +4,33 @@ Class {
 	#category : #'GeneticProgramming-Tests'
 }
 
+{ #category : #'as yet unclassified' }
+GPNodeTest >> grammarETF [
+	| grammar configuration |
+	grammar := GPContextFreeGrammar new.
+	grammar
+		addMessageRule: #Add withValues: #( #+ #- );
+		addRule: #E ofClass: RBMessageNode withSequence: #( #E #Add #T );
+		addRule: #E redirectingTo: #T;
+		addMessageRule: #Mul withValues: #( #* #/ );
+		addRule: #T ofClass: RBMessageNode withSequence: #( #T #Mul #F );
+		addRule: #T redirectingTo: #F;
+		addLeafRule: #F ofClass: RBLiteralNode withValues: (1 to: 10);
+		addRule: #F redirectingTo: #E.
+	configuration := GPASTConfiguration new
+		                 addWeight: 8 forRule: #E;
+		                 addWeight: 5 forRule: #T;
+		                 addWeight: 4 forRule: #F;
+		                 addOptionWeights: #( 8 5 ) forRule: #E;
+		                 addOptionWeights: #( 6 3 ) forRule: #T;
+		                 addOptionWeights: #( 6 4 ) forRule: #Add;
+		                 addOptionWeights: #( 6 3 ) forRule: #Mul;
+		                 addOptionWeights: #( 4 6 3 8 9 7 7 2 6 5 )
+		                 forRule: #F.
+		grammar configuration: configuration.
+		^ grammar
+]
+
 { #category : #running }
 GPNodeTest >> setUp [
 
@@ -36,7 +63,7 @@ GPNodeTest >> testCrossOver [
 	self assert: (i1 atIndex: 3) print equals: '(4 * 3)'.
 	self assert: (i2 atIndex: 3) print equals: '(1 + (6 - 3))'.
 	self assert: (i2 atIndex: 2) print equals: '5'.
-
+	
 	offspring := i1 crossOverWith: i2 at: 4 at: 2.
 	self assert: offspring print equals: '(5 + (5 * 3))'.
 	self assert: i1 print equals: '(5 + (4 * 3))'.
@@ -57,6 +84,28 @@ GPNodeTest >> testCrossOver02 [
 	offspring := i1 crossOverWith: i2.
 	self assert: offspring print ~= i1 print.
 	self assert: offspring print ~= i2 print.
+]
+
+{ #category : #tests }
+GPNodeTest >> testExpandGivenDepthMethodAnd [
+	| grammar node stack |
+	grammar := self grammarETF.
+	GPRandom seed: 1.
+	node := grammar nodeOf: #E.
+	stack := Stack new.
+	node := node expandGiven: grammar depth: 4 method: #full and: stack.
+	self assert: (node allLeaves select: #isLeafNode thenCollect: #depth) asSet size equals: 1
+]
+
+{ #category : #tests }
+GPNodeTest >> testExpandGivenDepthMethodAndGrow [
+	| grammar node stack |
+	grammar := self grammarETF.
+	GPRandom seed: 10.
+	node := grammar nodeOf: #E.
+	stack := Stack new.
+	node := node expandGiven: grammar depth: 4 method: #grow and: stack.
+	self assert: (node allLeaves select: #isLeafNode thenCollect: #depth) asSet size > 1
 ]
 
 { #category : #tests }

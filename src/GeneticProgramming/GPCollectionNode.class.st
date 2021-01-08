@@ -55,8 +55,7 @@ GPCollectionNode >> expandGiven: grammar [
 ]
 
 { #category : #'collecting leaves' }
-GPCollectionNode >> expandGiven: grammar depth: anInteger and: booleans [
-
+GPCollectionNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans [
 	^ self newNode: grammar with: anInteger
 	"| node newCollection |
 	anInteger == 1 ifTrue: [ ^ self newNode: grammar with: anInteger ].

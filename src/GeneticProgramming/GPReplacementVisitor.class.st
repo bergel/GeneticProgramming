@@ -50,7 +50,17 @@ GPReplacementVisitor >> numberOfArguments: string [
 { #category : #'as yet unclassified' }
 GPReplacementVisitor >> randomlySelectOption: symbol [
 
-	^ grammar randomlySelectOption: symbol
+	^ (grammar randomlySelectOption: symbol) value
+]
+
+{ #category : #visiting }
+GPReplacementVisitor >> visitArgumentNode: argumentNode [
+	^ self visitVariableNode: argumentNode 
+]
+
+{ #category : #visiting }
+GPReplacementVisitor >> visitArgumentNodes: nodeCollection [
+	^ nodeCollection do: [ :n | self visitArgumentNode: n ]
 ]
 
 { #category : #visiting }
@@ -62,6 +72,23 @@ GPReplacementVisitor >> visitAssignmentNode: assignmentNode [
 	assignmentNode variable: (children first generateAST: self).
 	assignmentNode value: (children second generateAST: self).
 	lastValue := assignmentNode
+]
+
+{ #category : #visiting }
+GPReplacementVisitor >> visitBlockNode: blockNode [
+	| children child |
+	nodes ifEmpty: [ ^ self ].
+	children := nodes pop children.
+	children size > 1 
+		ifTrue: [ child := children first.
+			child isCollectionNode ifFalse: [ child := GPCollectionNode transform: child ].
+			blockNode arguments: (child generateAST: self).
+			child := children second ]
+		ifFalse: [ child := children first. ].
+	blockNode body: (child generateAST: self) asSequenceNode.	
+	lastValue := blockNode.
+	"self visitArgumentNodes: blockNode arguments.
+	self visitNode: blockNode body"
 ]
 
 { #category : #visiting }
@@ -83,12 +110,13 @@ GPReplacementVisitor >> visitMessageNode: messageNode [
 	messageNode receiver: (children first generateAST: self).
 	symbol := children second generateAST: self.
 	messageNode selector: symbol.
-	child := children third.
+	[child := children third.
 	child isCollectionNode ifFalse: [ 
+		child isMessageNode ifTrue: [ self halt ].
 		child := GPCollectionNode transform: child ].
 	messageNode arguments: (child
 			 size: (self numberOfArguments: symbol);
-			 generateAST: self).
+			 generateAST: self)] on: SubscriptOutOfBounds do: [ messageNode arguments: OrderedCollection new ].
 	lastValue := messageNode
 ]
 
@@ -112,7 +140,13 @@ GPReplacementVisitor >> visitNode: node [
 
 { #category : #visiting }
 GPReplacementVisitor >> visitSequenceNode: sequenceNode [
-
+	| children |
+	nodes ifEmpty: [ ^ self ].
+	children := nodes pop children.
+	sequenceNode 
+		temporaries: OrderedCollection new;
+		statements: (children collect: [ :ch | ch generateAST: self ]).
+	lastValue := sequenceNode 
 	"| children |
 	nodes isEmpty ifTrue: [ ^ self ].
 	children := nodes pop children.
