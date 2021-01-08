@@ -79,14 +79,13 @@ GPReplacementVisitor >> visitBlockNode: blockNode [
 	| children child |
 	nodes ifEmpty: [ ^ self ].
 	children := nodes pop children.
-	child := children first.
-	child isCollectionNode ifFalse: [ 
-		child := GPCollectionNode transform: child ].
-	blockNode 
-		arguments: (child
-			 "size: (self numberOfArguments: symbol);"
-			 generateAST: self);
-		body: (children second generateAST: self) asSequenceNode.	
+	children size > 1 
+		ifTrue: [ child := children first.
+			child isCollectionNode ifFalse: [ child := GPCollectionNode transform: child ].
+			blockNode arguments: (child generateAST: self).
+			child := children second ]
+		ifFalse: [ child := children first. ].
+	blockNode body: (child generateAST: self) asSequenceNode.	
 	lastValue := blockNode.
 	"self visitArgumentNodes: blockNode arguments.
 	self visitNode: blockNode body"

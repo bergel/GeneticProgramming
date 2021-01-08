@@ -10,11 +10,6 @@ GPNode class >> children: someNodes [
 ]
 
 { #category : #operations }
-GPNode >> atIndex: index put: anotherNode [
-	^ anotherNode isComplexNode ifTrue: [ anotherNode ] ifFalse: [ self ]
-]
-
-{ #category : #operations }
 GPNode >> deepCopy [
 
 	| c |

@@ -4,11 +4,6 @@ Class {
 	#category : #'GeneticProgramming-Core'
 }
 
-{ #category : #operations }
-GPMessageNode >> atIndex: index put: anotherNode [
-	^ anotherNode isMessageNode ifTrue: [ anotherNode ] ifFalse: [ self ]
-]
-
 { #category : #'public access' }
 GPMessageNode >> evaluate: grammar [
 

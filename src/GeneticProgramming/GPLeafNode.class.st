@@ -4,11 +4,6 @@ Class {
 	#category : #'GeneticProgramming-Core'
 }
 
-{ #category : #operations }
-GPLeafNode >> atIndex: index put: anotherNode [
-	^ anotherNode isLeafNode ifTrue: [ anotherNode ] ifFalse: [ self ]
-]
-
 { #category : #copying }
 GPLeafNode >> deepCopy [
 	| newNode |

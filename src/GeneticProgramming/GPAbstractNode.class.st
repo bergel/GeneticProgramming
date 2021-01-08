@@ -59,13 +59,13 @@ GPAbstractNode >> atIndex: index put: anotherNode [
 	i := index.
 	i := i - 1.
 	(self children collect: #class) asSet size = 1 
-		ifTrue: [ | ind |
+		ifFalse: [ | ind |
 			ind := 0.
 			self children detect: [ :ch | ind := ind + 1.
 				ch isKindOf: anotherNode class ] 
 			ifFound: [ :ch | self children at: ind put: anotherNode ].
 			^ self ] 
-		ifFalse: [ 
+		ifTrue: [ 
 			self children doWithIndex: [ :child :ii |
 				i = 1 ifTrue: [ "| n | 
 				n := self children at: ii.

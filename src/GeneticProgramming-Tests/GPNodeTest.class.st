@@ -63,7 +63,7 @@ GPNodeTest >> testCrossOver [
 	self assert: (i1 atIndex: 3) print equals: '(4 * 3)'.
 	self assert: (i2 atIndex: 3) print equals: '(1 + (6 - 3))'.
 	self assert: (i2 atIndex: 2) print equals: '5'.
-
+	
 	offspring := i1 crossOverWith: i2 at: 4 at: 2.
 	self assert: offspring print equals: '(5 + (5 * 3))'.
 	self assert: i1 print equals: '(5 + (4 * 3))'.
