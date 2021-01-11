@@ -10,7 +10,8 @@ Class {
 		'value',
 		'depth',
 		'idNumber',
-		'ast'
+		'ast',
+		'fitness'
 	],
 	#category : #'GeneticProgramming-Core'
 }
@@ -212,6 +213,16 @@ GPAbstractNode >> expandGiven: grammar depth: anInteger method: methodName and: 
 { #category : #accessing }
 GPAbstractNode >> first [
 	^ children first
+]
+
+{ #category : #accessing }
+GPAbstractNode >> fitness [
+	^ fitness 
+]
+
+{ #category : #accessing }
+GPAbstractNode >> fitness: aNumber [
+	fitness := aNumber 
 ]
 
 { #category : #translating }
