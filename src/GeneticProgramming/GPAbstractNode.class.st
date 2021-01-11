@@ -172,6 +172,16 @@ GPAbstractNode >> evaluateUsing: context [
 	^ evaluationBlock value: self value: context
 ]
 
+{ #category : #'as yet unclassified' }
+GPAbstractNode >> evaluateWith: orderedDictionary [
+	| block |
+	block := (RBBlockNode 
+		arguments: (orderedDictionary keys collect: [:k | RBVariableNode named: k ])
+		body: (RBSequenceNode new statements: (OrderedCollection with: self evaluate))) evaluate.
+	^ block 
+			valueWithPossibleArgs: orderedDictionary values
+]
+
 { #category : #accessing }
 GPAbstractNode >> evaluationBlock [
 	^ evaluationBlock
