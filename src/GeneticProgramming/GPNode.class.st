@@ -14,8 +14,8 @@ GPNode >> deepCopy [
 
 	| c |
 	c := super deepCopy
-		     evaluationBlock: evaluationBlock;
-		     printBlock: printBlock.
+		     "evaluationBlock: evaluationBlock;
+		     printBlock: printBlock.".
 	self children do: [ :child | c addChild: child deepCopy ].
 	^ c
 ]
@@ -49,7 +49,7 @@ GPNode >> evaluate: grammar given: configuration [
 { #category : #'collecting leaves' }
 GPNode >> expandChildrenGiven: grammar and: optionKey [
 
-	| resultNode |
+	| resultNode nVal |
 	"problem is here"
 	optionKey = 'nodeOptions' ifTrue: [ 
 		^ (grammar nodeOf: self children first) expandGiven: grammar ].
@@ -57,12 +57,15 @@ GPNode >> expandChildrenGiven: grammar and: optionKey [
 		^ (grammar nodeOf: self children first) expandGiven: grammar ]."
 	"evaluate when execute here"
 	resultNode := self newNode: grammar.
+	nVal := OrderedCollection new.
 	children doWithIndex: [ :child :index | 
 		| newChild |
 		newChild := (grammar nodeOf: child) expandGiven: grammar.
 		newChild
 			ifNil: [ ^ nil ]
-			ifNotNil: [ resultNode children at: index put: newChild ] ].
+			ifNotNil: [ resultNode children at: index put: newChild.
+				nVal add: newChild nodeValue ] ].
+	resultNode nodeValue: nVal.
 	^ resultNode
 ]
 
@@ -76,8 +79,9 @@ GPNode >> expandChildrenGiven: grammar depth: anInteger method: methodName and: 
 			  depth: anInteger
 			  method: methodName
 			  and: booleans ].
-	anInteger > 1 ifTrue: [ 
+	anInteger > 1 ifTrue: [ | nVal |
 		resultNode := self newNode: grammar with: anInteger.
+		nVal := OrderedCollection new.
 		children doWithIndex: [ :child :index | 
 			| newChild |
 			newChild := (grammar nodeOf: child)
@@ -87,7 +91,9 @@ GPNode >> expandChildrenGiven: grammar depth: anInteger method: methodName and: 
 				            and: booleans.
 			newChild
 				ifNil: [ ^ nil ]
-				ifNotNil: [ resultNode children at: index put: newChild ] ] ].
+				ifNotNil: [ resultNode children at: index put: newChild.
+					nVal add: newChild nodeValue ] ].
+		resultNode nodeValue: nVal ].
 	^ resultNode
 ]
 
@@ -113,7 +119,7 @@ GPNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans
 
 	| node options  |
 	node := nil.
-	options := grammar randomOptions: id.
+	options := grammar randomOptionsOf: id.
 	options
 		detect: [ :option | | bool prevSize size |
 			prevSize := booleans size.

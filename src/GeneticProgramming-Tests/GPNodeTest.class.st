@@ -31,6 +31,27 @@ GPNodeTest >> grammarETF [
 		^ grammar
 ]
 
+{ #category : #'as yet unclassified' }
+GPNodeTest >> grammarRoassal [
+	| grammar |
+	grammar := GPContextFreeGrammar new.
+	grammar
+		addRule: #Stms
+		withCollectionOptions: #( #Assignment #Message ) ofSize: 1;
+		addRule: #Assignment
+		ofClass: RBAssignmentNode
+		withSequence: #( #Variable #Value );
+		addRule: #Message
+		ofClass: RBMessageNode
+		withSequence: #( #Value #Selector );
+		addMessageRule: #Selector withValues: #( #size );
+		addRule: #Value withOptions: #( #Message #Variable );
+		addLeafRule: #Variable
+		ofClass: RBVariableNode
+		withValues: #( #shapes ).
+	^ grammar
+]
+
 { #category : #running }
 GPNodeTest >> setUp [
 
@@ -109,6 +130,16 @@ GPNodeTest >> testExpandGivenDepthMethodAndGrow [
 ]
 
 { #category : #tests }
+GPNodeTest >> testExpandGivenDepthMethodAndOnCollectionNode [
+	| grammar node |
+	grammar := self grammarRoassal.
+	GPRandom seed: 1.
+	node := grammar nodeOf: #Stms.
+	node := node expandGiven: grammar depth: 3 method: #grow and: Stack new.
+	self assertCollection: node nodeValue flattened hasSameElements: #(#shapes #size)
+]
+
+{ #category : #tests }
 GPNodeTest >> testMutate [
 	| c i p |
 	c := GPArithConfiguration new.
@@ -136,4 +167,37 @@ GPNodeTest >> testMutate2 [
 		 ].
 	self assert: p asSet size > 1
 	 
+]
+
+{ #category : #tests }
+GPNodeTest >> testNodeValueForComplexNode [
+	| grammar node |
+	grammar := self grammarETF.
+	GPRandom seed: 48393.
+	node := grammar expandFrom: #E.
+	self assertCollection: node nodeValue flattened hasSameElements: #(6 #* 10 #/ 8 #/ 8 #* 3 #/ 2 #* 2 #* 9).
+	
+
+]
+
+{ #category : #tests }
+GPNodeTest >> testNodeValueForLeafNode [
+	| grammar node |
+	grammar := self grammarETF.
+	GPRandom seed: 12.
+	node := grammar expandFrom: #F.
+	self assert: node nodeValue equals: 6.
+	
+
+]
+
+{ #category : #tests }
+GPNodeTest >> testNodeValueForMessageNode [
+	| grammar node |
+	grammar := self grammarETF.
+	GPRandom seed: 1.
+	node := (grammar nodeOf: #Add) expandGiven: grammar depth: 1 method: #grow and: Stack new.
+	self assert: node nodeValue equals: #+.
+	
+
 ]

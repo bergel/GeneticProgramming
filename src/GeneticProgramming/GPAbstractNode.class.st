@@ -7,11 +7,10 @@ Class {
 		'type',
 		'evaluationBlock',
 		'printBlock',
-		'value',
 		'depth',
 		'idNumber',
-		'ast',
-		'fitness'
+		'fitness',
+		'nodeValue'
 	],
 	#category : #'GeneticProgramming-Core'
 }
@@ -36,16 +35,6 @@ GPAbstractNode >> allLeaves: collection [
 		c isLeaf 
 			ifTrue: [ collection add: c ]
 			ifFalse: [ c allLeaves: collection ] ]
-]
-
-{ #category : #accessing }
-GPAbstractNode >> ast [
-	^ ast
-]
-
-{ #category : #accessing }
-GPAbstractNode >> ast: anASTNode [
-	ast := anASTNode 
 ]
 
 { #category : #accessing }
@@ -137,7 +126,10 @@ GPAbstractNode >> crossOverWith: anotherNode using: random [
 GPAbstractNode >> deepCopy [
 
 	^ self class new id: id;
-	type: type
+	type: type;
+	evaluationBlock: evaluationBlock;
+	printBlock: printBlock;
+	nodeValue: nodeValue deepCopy 
 ]
 
 { #category : #accessing }
@@ -348,6 +340,18 @@ GPAbstractNode >> newNode: grammar with: aNumber [
 	^ node
 ]
 
+{ #category : #accessing }
+GPAbstractNode >> nodeValue [
+
+	^ nodeValue
+]
+
+{ #category : #accessing }
+GPAbstractNode >> nodeValue: anObject [
+
+	nodeValue := anObject
+]
+
 { #category : #metrics }
 GPAbstractNode >> numberOfNodes [
 	^ self withAllChildren size
@@ -385,6 +389,11 @@ GPAbstractNode >> printUsing: context [
 { #category : #accessing }
 GPAbstractNode >> second [
 	^ children second
+]
+
+{ #category : #'as yet unclassified' }
+GPAbstractNode >> selectOption: grammar [
+	^ grammar randomlySelectJustOption: id
 ]
 
 { #category : #'collecting leaves' }
@@ -429,17 +438,6 @@ GPAbstractNode >> type [
 { #category : #accessing }
 GPAbstractNode >> type: aSymbol [
 	type := aSymbol
-]
-
-{ #category : #accessing }
-GPAbstractNode >> value [
-
-	^ value
-]
-
-{ #category : #accessing }
-GPAbstractNode >> value: anObject [
-	value := anObject
 ]
 
 { #category : #accessing }

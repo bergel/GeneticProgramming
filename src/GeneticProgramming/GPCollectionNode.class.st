@@ -40,8 +40,10 @@ GPCollectionNode >> expand: grammar [
 { #category : #'collecting leaves' }
 GPCollectionNode >> expandGiven: grammar [
 
-	| node "options newCollection" |
+	| node | 
 	node := self newNode: grammar.
+	node children: (node getOptions: grammar).
+	node nodeValue: (node children collect: [:ch | ch nodeValue ]).
 	"node := nil.
 	options := grammar randomOptions: id.
 	newCollection := options
@@ -56,30 +58,45 @@ GPCollectionNode >> expandGiven: grammar [
 
 { #category : #'collecting leaves' }
 GPCollectionNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans [
-	^ self newNode: grammar with: anInteger
-	"| node newCollection |
-	anInteger == 1 ifTrue: [ ^ self newNode: grammar with: anInteger ].
+	"^ self newNode: grammar with: anInteger"
+	| node newCollection |
+	"anInteger == 1 ifTrue: [ ^ self newNode: grammar with: anInteger ]."
+	(anInteger == 1 and: [ size == 0 ]) ifTrue: [ ^ self newNode: grammar with: anInteger ].
 	node := nil.
-	newCollection := (grammar randomOptions: id)
+	newCollection := (grammar randomOptionsOf: id)
 		                 collect: [ :opt | 
-			                 | newNode newBooleans |
+			                 | newNode newBooleans bool |
 			                 newBooleans := booleans deepCopy.
 			                 newNode := (grammar nodeOf: opt children first)
 				                            expandGiven: grammar
 				                            depth: anInteger - 1
+													method: methodName
 				                            and: newBooleans.
-			                 (newNode isNotNil and: [ 
+								 bool := (self methodDepthBlock: methodName) valueWithPossibleArgs: (Array with: newNode with: newBooleans).
+			                 "(newNode isNotNil and: [ 
 				                  newBooleans
 					                  inject: false
 					                  into: [ :b :e | e or: [ b ] ] ]) ifFalse: [ 
-				                 newNode := nil ].
-			                 newNode ]
+				                 newNode := nil ]."
+			                 bool ifTrue: [ methodName = #grow ifTrue: [ booleans push: true ]. 
+				newNode] ifFalse: [ nil ] ]
 		                 thenReject: [ :n | n isNil ].
-	newCollection ifNotEmpty: [ 
-		node := (self newNode: grammar with: anInteger)
-			        children: newCollection;
+	newCollection ifNotEmpty: [  | indexes |
+		newCollection size < size 
+			ifTrue: [
+				indexes := grammar shuffle: (self fillArrayOfSize: newCollection size to: size).
+				node := (self newNode: grammar with: anInteger)
+			        children: (indexes collect: [:i | (newCollection at: i) deepCopy ]);
+			        yourself ] 
+			ifFalse: [ indexes := grammar shuffle: (1 to: size) asArray.
+				node := (self newNode: grammar with: anInteger)
+			        children: (indexes collect: [:i | newCollection at: i ]);
 			        yourself ].
-	^ node"
+		node nodeValue: (node children collect: [:ch | ch nodeValue ])
+		"node := (self newNode: grammar with: anInteger)
+			        children: newCollection;
+			        yourself "].
+	^ node
 ]
 
 { #category : #'as yet unclassified' }
@@ -93,10 +110,10 @@ GPCollectionNode >> fillArrayOfSize: size1 to: size2 [
 { #category : #translating }
 GPCollectionNode >> generateAST: visitor [
 
-	(id == #Statements and: [ size == 0 ]) ifTrue: [ self size: 1 ].
-	size == 0 ifTrue: [ ^ value ].
+	"(id == #Statements and: [ size == 0 ]) ifTrue: [ self size: 1 ].
+	size == 0 ifTrue: [ ^ OrderedCollection new ].
 	(id isNotNil and: [ children isEmpty ]) ifTrue: [ 
-	self expand: visitor grammar].
+	self expand: visitor grammar]."
 	^ children collect: [ :child | child generateAST: visitor ]
 ]
 
@@ -104,7 +121,7 @@ GPCollectionNode >> generateAST: visitor [
 GPCollectionNode >> getOptions: grammar [
 
 	| options indexes |
-	options := (grammar randomOptions: id) collect: [ :node | 
+	options := (grammar randomOptionsOf: id) collect: [ :node | 
 		           node children first ].
 	indexes := grammar shuffle:
 		           (self fillArrayOfSize: options size to: size).
@@ -116,14 +133,30 @@ GPCollectionNode >> getOptions: grammar [
 GPCollectionNode >> initialize [
 
 	super initialize.
-	size := 0.
-	value := OrderedCollection new
+	size := 0
 ]
 
 { #category : #testing }
 GPCollectionNode >> isCollectionNode [
 
 	^ true
+]
+
+{ #category : #'instance creation' }
+GPCollectionNode >> newNode: grammar [
+	| node |
+	node := super newNode: grammar.
+	node size: size.
+	^ node
+]
+
+{ #category : #'instance creation' }
+GPCollectionNode >> newNode: grammar with: aNumber [
+	| node |
+	node := self newNode: grammar.
+	node idNumber: grammar nodeNumber;
+		depth: aNumber.
+	^ node
 ]
 
 { #category : #printing }

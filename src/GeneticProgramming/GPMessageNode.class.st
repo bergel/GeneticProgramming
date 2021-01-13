@@ -7,31 +7,33 @@ Class {
 { #category : #'public access' }
 GPMessageNode >> evaluate: grammar [
 
-	 ^ GPRandom instance randomlySelect: (grammar optionsOf: self id)
+	 ^ self nodeValue "GPRandom instance randomlySelect: (grammar optionsOf: self id)"
 ]
 
 { #category : #'public access' }
 GPMessageNode >> evaluate: grammar given: configuration [
-
-	^ (self selectedOptionNode: (grammar optionsOf: id) given: configuration) deepCopy
+	
+	^ self evaluate: grammar "(self selectedOptionNode: (grammar optionsOf: id) given: configuration) deepCopy"
 ]
 
 { #category : #'collecting leaves' }
 GPMessageNode >> expandGiven: context [
 
-	^ self newNode: context
+	^ self expandGiven: context depth: 1 method: nil and: #()
 ]
 
 { #category : #'collecting leaves' }
 GPMessageNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans [
-
-	^ self newNode: grammar with: anInteger
+	| node |
+	node := self newNode: grammar with: anInteger.
+	node nodeValue: (self selectOption: grammar).
+	^ node
 ]
 
 { #category : #translating }
 GPMessageNode >> generateAST: visitor [
 
-	^ visitor randomlySelectOption: id
+	^ nodeValue "visitor randomlySelectOption: id"
 ]
 
 { #category : #testing }

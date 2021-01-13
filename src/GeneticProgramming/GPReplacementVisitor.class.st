@@ -96,9 +96,9 @@ GPReplacementVisitor >> visitLiteralNode: literal [
 
 	| node |
 	node := nodes pop.
-	lastValue := literal class value:
-		             (self
-			              randomlySelectOption: node id)
+	lastValue := literal class value: node nodeValue
+		             "(self
+			              randomlySelectOption: node id)"
 ]
 
 { #category : #visiting }
@@ -164,6 +164,6 @@ GPReplacementVisitor >> visitVariableNode: variable [
 
 	| node |
 	node := nodes pop.
-	lastValue := variable name:
-		             (self randomlySelectOption: node id)
+	lastValue := variable name: node nodeValue
+		            " (self randomlySelectOption: node id)"
 ]

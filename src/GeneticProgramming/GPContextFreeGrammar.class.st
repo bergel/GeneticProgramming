@@ -46,6 +46,16 @@ rules at: symbol ifAbsentPut: [
 ]
 
 { #category : #adding }
+GPContextFreeGrammar >> addNodeIfNecessary: symbol ofClass: aClass size: anInteger andType: anotherClass [
+rules at: symbol ifAbsentPut: [ 
+		(self
+			createNode: symbol
+			ofClass: aClass
+			type: anotherClass
+			withSequence: #(  )) size: anInteger ].
+]
+
+{ #category : #adding }
 GPContextFreeGrammar >> addNodeOptions: collection of: symbol [
 
 	 nodeOptions 
@@ -98,19 +108,21 @@ GPContextFreeGrammar >> addRule: symbol redirectingTo: anotherSymbol [
 ]
 
 { #category : #adding }
-GPContextFreeGrammar >> addRule: symbol withCollectionOptions: collection [
+GPContextFreeGrammar >> addRule: symbol withCollectionOptions: collection ofSize: anInteger [
 
 	self
 		addNodeIfNecessary: symbol
 		ofClass: GPCollectionNode
+		size: anInteger
 		andType: nil.
 	self
 		addNodeOptions: (collection collect: [ :s | 
-				 self
+				 (self
 					 createNode: symbol
 					 ofClass: GPCollectionNode
 					 type: nil
-					 withSequence: (Array with: s) ])
+					 withSequence: (Array with: s))
+					size: anInteger ])
 		of: symbol
 ]
 
@@ -290,8 +302,7 @@ GPContextFreeGrammar >> generateASTFrom: aNode [
 	visitor := GPReplacementVisitor
 		           new
 		           grammar: self.
-	aNode ast: (aNode generateAST: visitor).
-	^ aNode ast
+	^ aNode generateAST: visitor
 ]
 
 { #category : #testing }
@@ -341,9 +352,9 @@ GPContextFreeGrammar >> randomOptions: symbol [
 { #category : #'as yet unclassified' }
 GPContextFreeGrammar >> randomOptionsOf: symbol [
 
-	^ configuration 
-		ifNil: [ self randomOptions: symbol ] 
-		ifNotNil: [ | col opts set result | 
+	^ (configuration isNil or: [ (self dictionaryOfOptionsWithWeights: symbol) isEmpty ])
+		ifTrue: [ self randomOptions: symbol ] 
+		ifFalse: [ | col opts set result | 
 			opts := (self allOptionsOf: symbol) associations flatCollect: #value.
 			col := GPRandom instance shuffledCollectionOf: (self dictionaryOfOptionsWithWeights: symbol).
 			set := Set new.
@@ -353,6 +364,17 @@ GPContextFreeGrammar >> randomOptionsOf: symbol [
 					result add: (opts at: i) ] ].
 			result
 		]
+]
+
+{ #category : #'as yet unclassified' }
+GPContextFreeGrammar >> randomlySelectJustOption: symbol [
+
+	| dict |
+	configuration ifNil: [ 
+		^ GPRandom instance randomlySelect: (self optionsOf: symbol) ].
+	dict := self dictionaryOfOptionsWithWeights: symbol.
+	^ dict ifEmpty: [ GPRandom instance randomlySelect: (self optionsOf: symbol) ]
+		  ifNotEmpty: [ (self optionsOf: symbol) at: (GPRandom instance randomlySelectGivenProbabilities: dict) ]
 ]
 
 { #category : #'as yet unclassified' }

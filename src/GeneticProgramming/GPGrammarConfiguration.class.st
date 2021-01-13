@@ -75,9 +75,8 @@ GPGrammarConfiguration >> newFunction [
 	isTerminal := node isLeafNode ]."
 	node := grammar expand"GivenMethod: (GPRandom instance randomlySelect: #(#grow #full))".
 	"ast := grammar generateASTFrom: node."
-	node evaluationBlock: [ :n :ctx | grammar generateASTFrom: n.
-		n ast evaluate ];
-		printBlock: [ :n :ctx | n ast formattedCode ].
+	node evaluationBlock: [ :n :ctx | (grammar generateASTFrom: n) evaluate ];
+		printBlock: [ :n :ctx | (grammar generateASTFrom: n) formattedCode ].
 	"node children do: [ :child | 
 		child evaluationBlock: [ :ch :ctx | ast evaluate ];
 		printBlock: [ :ch :ctx | ast formattedCode ] ].

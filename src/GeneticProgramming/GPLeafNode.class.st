@@ -8,21 +8,22 @@ Class {
 GPLeafNode >> deepCopy [
 	| newNode |
 	newNode := super deepCopy.
-	newNode evaluationBlock: self evaluationBlock;
-	printBlock: self printBlock.
+	"newNode evaluationBlock: self evaluationBlock;
+	printBlock: self printBlock."
+	"newNode nodeValue: nodeValue deepCopy."
 	^ newNode
 ]
 
 { #category : #'public access' }
 GPLeafNode >> evaluate: grammar [
 
-	 ^ GPRandom instance randomlySelect: (grammar optionsOf: self id)
+	 ^ self nodeValue
 ]
 
 { #category : #'public access' }
 GPLeafNode >> evaluate: grammar given: configuration [
-
-	^ (self selectedOptionNode: (grammar optionsOf: id) given: configuration) deepCopy
+	
+	^ self evaluate: grammar "(self selectedOptionNode: (grammar optionsOf: id) given: configuration) deepCopy"
 ]
 
 { #category : #'collecting leaves' }
@@ -32,15 +33,19 @@ GPLeafNode >> expandChildrenGiven: grammar and: optionKey [
 
 { #category : #'collecting leaves' }
 GPLeafNode >> expandGiven: context [
-
-	^ self newNode: context 
+	| node |
+	node := self newNode: context.
+	node nodeValue: (self selectOption: context).
+	^ node
 ]
 
 { #category : #'collecting leaves' }
 GPLeafNode >> expandGiven: grammar depth: anInteger and: booleans [
-
+	| node |
 	booleans add: anInteger == 1.
-	^ self newNode: grammar with: anInteger
+	node := self newNode: grammar with: anInteger.
+	node nodeValue: (self selectOption: grammar).
+	^ node
 ]
 
 { #category : #'collecting leaves' }

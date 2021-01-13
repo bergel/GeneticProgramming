@@ -83,7 +83,7 @@ GPContextFreeGrammarTest >> testAddRuleWithBlock2 [
 		"addRule: #E redirectingTo: #Block;"
 		addRule: #E redirectingTo: #F;
 		addRule: #Block ofClass: RBBlockNode withSequence: #(#Args #Sequence);
-		addRule: #Args withCollectionOptions: #();
+		addRule: #Args withCollectionOptions: #() ofSize: 0;
 		addRule: #Sequence ofClass: RBSequenceNode withSequence: #(#F);
 		"addRule: #Fs withCollectionOptions: #(#F);"
 		addLeafRule: #F withValues: #(true false).
@@ -111,7 +111,7 @@ GPContextFreeGrammarTest >> testAddRuleWithBlockOfOneRule [
 ]
 
 { #category : #tests }
-GPContextFreeGrammarTest >> testAddRuleWithCollectionOptions [
+GPContextFreeGrammarTest >> testAddRuleWithCollectionOptionsOfSize [
 
 	| result |
 	random seed: 1.
@@ -119,10 +119,10 @@ GPContextFreeGrammarTest >> testAddRuleWithCollectionOptions [
 		addLeafRule: #number
 		ofClass: RBLiteralNode
 		withValues: #( 1 2 3 4 5 6 );
-		addRule: #numbers withCollectionOptions: #( #number ).
+		addRule: #numbers withCollectionOptions: #( #number ) ofSize: 3.
 	result := grammar expandFrom: #numbers.
-	self assert: result numberOfNodes equals: 1.
-	self assert: result value isEmpty
+	self assert: result numberOfNodes equals: 4.
+	self assertCollection: result nodeValue hasSameElements: #(5 3 4)
 	"result := grammar expandFrom: #numbers ofSize: 4.
 	self
 		assertCollection: (result evaluate: grammar)
@@ -141,7 +141,7 @@ GPContextFreeGrammarTest >> testAddRuleWithSequence [
 	self assert: result numberOfNodes equals: 3.
 	tree := grammar generateASTFrom: result.
 	"self assertCollection: (tree statements collect: #evaluate) hasSameElements: #(true false)."
-	self assertCollection: (tree statements collect: #evaluate) hasSameElements: #(false false)
+	self assertCollection: (tree statements collect: #evaluate) hasSameElements: #(true false)
 ]
 
 { #category : #tests }
@@ -191,12 +191,12 @@ GPContextFreeGrammarTest >> testExpand [
 		withValues: ((1 to: 10) collect: [ :n | GPDigit value: n ]).
 	result := grammar expand.
 	self assert: result id equals: #E.
-	self assert: result numberOfNodes equals: 10"13".
+	self assert: result numberOfNodes equals: 13.
 	"self
 		assertCollection: (result withAllChildren collect: #id)
 		hasSameElements:
 		#( #E #T #F #MulOp #F #AddOp #T #T #F #MulOp #F #MulOp #F )."
-	self assert: (result evaluate: grammar) value equals: -4 "13 / 28"
+	self assert: (result evaluate: grammar) value equals: -33 / 10
 ]
 
 { #category : #tests }
@@ -261,7 +261,7 @@ GPContextFreeGrammarTest >> testExpandOnASTNodes [
 	Receiver -> Literal 
 	Selector -> #+ | #- 
 	Args -> #(Literal)"
-	random seed: 78652.
+	random seed: 78653.
 	grammar
 		addRule: #Assignment
 		ofClass: RBAssignmentNode
@@ -278,7 +278,7 @@ GPContextFreeGrammarTest >> testExpandOnASTNodes [
 		withSequence: #( #Receiver #Selector #Args );
 		addRule: #Receiver redirectingTo: #Literal;
 		addMessageRule: #Selector withValues: #( #+ #- );
-		addRule: #Args withCollectionOptions: #( #Literal ).
+		addRule: #Args withCollectionOptions: #( #Literal ) ofSize: 1.
 	result := grammar expandFrom: #Assignment.
 	"result -> 			 		Ass
 						  	Var  			Mess
@@ -287,11 +287,11 @@ GPContextFreeGrammarTest >> testExpandOnASTNodes [
 									           1          
 				           "
 	self assert: result id equals: #Assignment.
-	self assert: result numberOfNodes equals: 6.
+	self assert: result numberOfNodes equals: 7.
 	self
 		assertCollection: (result withAllChildren collect: #id)
 		hasSameElements:
-		#( #Assignment #Variable #Message #Literal #Selector #Args ).
+		#( #Assignment #Variable #Message #Literal #Selector #Args #Literal ).
 	"result := result value.
 	self assert: result equals: (RBAssignmentNode
 			 variable: (RBVariableNode named: #m)
@@ -306,7 +306,7 @@ GPContextFreeGrammarTest >> testExpandOnASTNodes [
 GPContextFreeGrammarTest >> testExpandOnASTNodesRecursively [
 
 	| result |
-	random seed: 78654.
+	random seed: 78653.
 	grammar
 		addRule: #Assignment
 		ofClass: RBAssignmentNode
@@ -323,10 +323,10 @@ GPContextFreeGrammarTest >> testExpandOnASTNodesRecursively [
 		withSequence: #( #Receiver #Selector #Args );
 		addRule: #Receiver redirectingTo: #Literal;
 		addMessageRule: #Selector withValues: #( #+ #- );
-		addRule: #Args withCollectionOptions: #( #Value ).
+		addRule: #Args withCollectionOptions: #( #Value ) ofSize: 1.
 	result := grammar expandFrom: #Assignment.
 	self assert: result id equals: #Assignment.
-	self assert: result numberOfNodes equals: 6.
+	self assert: result numberOfNodes equals: 43.
 	"result := result value.
 	self assert: result evaluate equals: 10"
 ]
@@ -335,7 +335,7 @@ GPContextFreeGrammarTest >> testExpandOnASTNodesRecursively [
 GPContextFreeGrammarTest >> testExpandOnASTNodesRecursively2 [
 
 	| result |
-	random seed: 78661.
+	random seed: 78662.
 	grammar
 		addRule: #Assignment
 		ofClass: RBAssignmentNode
@@ -352,10 +352,10 @@ GPContextFreeGrammarTest >> testExpandOnASTNodesRecursively2 [
 		withSequence: #( #Receiver #Selector #Args );
 		addRule: #Receiver redirectingTo: #Value;
 		addMessageRule: #Selector withValues: #( #+ #- );
-		addRule: #Args withCollectionOptions: #( #Value ).
+		addRule: #Args withCollectionOptions: #( #Value ) ofSize: 1.
 	result := grammar expandFrom: #Assignment.
 	self assert: result id equals: #Assignment.
-	self assert: result numberOfNodes equals: 12.
+	self assert: result numberOfNodes equals: 7.
 	"result := result value.
 	self assert: result evaluate equals: 63"
 ]
@@ -364,7 +364,7 @@ GPContextFreeGrammarTest >> testExpandOnASTNodesRecursively2 [
 GPContextFreeGrammarTest >> testExpandOnASTNodesRecursivelyWithColorExample [
 
 	| result |
-	random seed: 78650.
+	random seed: 78651.
 	grammar
 		addRule: #Assignment
 		ofClass: RBAssignmentNode
@@ -383,10 +383,10 @@ GPContextFreeGrammarTest >> testExpandOnASTNodesRecursivelyWithColorExample [
 		withSequence: #( #Receiver #Selector #Args );
 		addRule: #Receiver redirectingTo: #Value;
 		addMessageRule: #Selector withValues: #( #lighter #asColor );
-		addRule: #Args withCollectionOptions: #( #Value ).
+		addRule: #Args withCollectionOptions: #( #Value ) ofSize: 1.
 	result := grammar expandFrom: #Assignment.
 	self assert: result id equals: #Assignment.
-	self assert: result numberOfNodes equals: 18.
+	self assert: result numberOfNodes equals: 383.
 	"result := result value.
 	self assert: result evaluate equals: Color green lighter"
 ]
@@ -447,7 +447,7 @@ GPContextFreeGrammarTest >> testExpandOnASTNodesWithWeights [
 		withSequence: #( #Receiver #Selector #Args );
 		addRule: #Receiver redirectingTo: #Literal;
 		addMessageRule: #Selector withValues: #( #+ #- );
-		addRule: #Args withCollectionOptions: #( #Literal ).
+		addRule: #Args withCollectionOptions: #( #Literal ) ofSize: 1.
 	configuration := GPASTConfiguration new
 		                 addOptionWeights: #( 4 10 ) forRule: #Value;
 		                 addOptionWeights: #( 7 6 ) forRule: #Selector;
@@ -479,7 +479,7 @@ GPContextFreeGrammarTest >> testExpandOnASTNodesWithWeights2 [
 		withSequence: #( #Receiver #Selector #Args );
 		addRule: #Receiver redirectingTo: #Literal;
 		addMessageRule: #Selector withValues: #( #+ #- );
-		addRule: #Args withCollectionOptions: #( #Literal ).
+		addRule: #Args withCollectionOptions: #( #Literal ) ofSize: 1.
 	configuration := GPASTConfiguration new
 		                 addOptionWeights: #( 4 10 ) forRule: #Value;
 		                 addOptionWeights: #( 7 6 ) forRule: #Selector;
@@ -487,7 +487,7 @@ GPContextFreeGrammarTest >> testExpandOnASTNodesWithWeights2 [
 		                 forRule: #Literal.
 	result := grammar expandUsing: configuration.
 	self assert: result id equals: #Message.
-	self assert: result numberOfNodes equals: 4
+	self assert: result numberOfNodes equals: 5
 	"result := result value.
 	self assert: result evaluate equals: 1"
 ]
@@ -543,9 +543,9 @@ GPContextFreeGrammarTest >> testExpandOnMethodNode [
 		addRule: #Sequence
 		ofClass: RBSequenceNode
 		withSequence: #( #Temporaries #Statements );
-		addRule: #Temporaries withCollectionOptions: #( #Variable );
+		addRule: #Temporaries withCollectionOptions: #( #Variable ) ofSize: 1;
 		addRule: #Statements
-		withCollectionOptions: #( #Assignment #Message #Return );
+		withCollectionOptions: #( #Assignment #Message #Return ) ofSize: 1;
 		addRule: #Assignment
 		ofClass: RBAssignmentNode
 		withSequence: #( #Variable #Value );
@@ -561,7 +561,7 @@ GPContextFreeGrammarTest >> testExpandOnMethodNode [
 		addRule: #Block
 		ofClass: RBBlockNode
 		withSequence: #( #Arguments #Body );
-		addRule: #Colons withCollectionOptions: #(  );
+		addRule: #Colons withCollectionOptions: #(  ) ofSize: 0;
 		addLeafRule: #Variable ofClass: RBVariableNode withValues: #(  );
 		"addLeafRule: #Variable withValues: (Array
 				 with: (RBVariableNode named: #a)
@@ -630,7 +630,7 @@ GPContextFreeGrammarTest >> testExpandOnMethodNodeOfRoassal3WithDepth [
 	"grammar"
 	grammar
 		addRule: #Statements
-		withCollectionOptions: #( #Assignment #Message #Return );
+		withCollectionOptions: #( #Assignment #Message #Return ) ofSize: 1;
 		addRule: #Assignment
 		ofClass: RBAssignmentNode
 		withSequence: #( #Variable #Value );
@@ -640,7 +640,7 @@ GPContextFreeGrammarTest >> testExpandOnMethodNodeOfRoassal3WithDepth [
 		addRule: #Return ofClass: RBReturnNode withSequence: #( #Value );
 		addRule: #Receiver redirectingTo: #Value;
 		addMessageRule: #Selector withValues: #( #size );
-		addRule: #Arguments withCollectionOptions: #( #Value );
+		addRule: #Arguments withCollectionOptions: #( #Value ) ofSize: 1;
 		addRule: #Value
 		withOptions: #( #Message #Variable #Literal #Block );
 		addRule: #Block
@@ -653,7 +653,7 @@ GPContextFreeGrammarTest >> testExpandOnMethodNodeOfRoassal3WithDepth [
 		addRule: #Sequence
 		ofClass: RBSequenceNode
 		withSequence: #( #Temporaries );
-		addRule: #Temporaries withCollectionOptions: #( #Variable );
+		addRule: #Temporaries withCollectionOptions: #( #Variable ) ofSize: 1;
 		addLeafRule: #Literal ofClass: RBLiteralNode withValues: #( 1 ). "#Statements"
 	configuration := GPASTConfiguration new
 		                 addOptionWeights: #( 10 2 3 )
@@ -680,7 +680,7 @@ GPContextFreeGrammarTest >> testExpandReplacingFrom [
 	Receiver -> Literal 
 	Selector -> #+ | #- 
 	Args -> #(Literal)"
-	random seed: 78652.
+	random seed: 78653.
 	grammar
 		addRule: #Assignment
 		ofClass: RBAssignmentNode
@@ -697,7 +697,7 @@ GPContextFreeGrammarTest >> testExpandReplacingFrom [
 		withSequence: #( #Receiver #Selector #Args );
 		addRule: #Receiver redirectingTo: #Literal;
 		addMessageRule: #Selector withValues: #( #+ #- );
-		addRule: #Args withCollectionOptions: #( #Literal ).
+		addRule: #Args withCollectionOptions: #( #Literal ) ofSize: 1.
 	result := grammar expandFrom: #Assignment.
 	"result -> 			 		Ass
 						  	Var  			 Mess
@@ -706,11 +706,11 @@ GPContextFreeGrammarTest >> testExpandReplacingFrom [
 										         1        
 				           "
 	self assert: result id equals: #Assignment.
-	self assert: result numberOfNodes equals: 6.
+	self assert: result numberOfNodes equals: 7.
 	self
 		assertCollection: (result withAllChildren collect: #id)
 		hasSameElements:
-		#( #Assignment #Variable #Message #Literal #Selector #Args )
+		#( #Assignment #Variable #Message #Literal #Selector #Args #Literal)
 	"result := result value
 	
 	result := grammar replaceValuesOf: result
@@ -808,7 +808,7 @@ GPContextFreeGrammarTest >> testExpandUsingAnotherSeed [
 	self assert: result numberOfNodes equals: 28.
 	self
 		assert: (result evaluate: grammar given: configuration) value
-		equals: 32400/7 "1913625/2"
+		equals: 2/9 "1913625/2"
 ]
 
 { #category : #tests }
@@ -838,12 +838,12 @@ GPContextFreeGrammarTest >> testExpandUsingAnotherSeed2 [
 	result := grammar expandUsing: configuration.
 	self assert: result id equals: #T.
 	self assert: result numberOfNodes equals: 31.
-	self
+	"self
 		assertCollection: (result withAllChildren collect: #id)
-		hasSameElements: #( #T #T #T #F #MulOp #F #MulOp #F ).
+		hasSameElements: #( #T #T #T #F #MulOp #F #MulOp #F )."
 	self
 		assert: (result evaluate: grammar given: configuration) value
-		equals: 12
+		equals: 648000
 ]
 
 { #category : #tests }
@@ -872,10 +872,10 @@ GPContextFreeGrammarTest >> testExpandUsingLongerSeed [
 		                 forRule: #F.
 	result := grammar expandUsing: configuration.
 	self assert: result id equals: #E.
-	self assert: result numberOfNodes equals: 19.
+	self assert: result numberOfNodes equals: 25.
 	self
 		assert: (result evaluate: grammar given: configuration) value
-		equals: 104/25 "-14080"
+		equals: -245
 ]
 
 { #category : #tests }
@@ -908,7 +908,7 @@ GPContextFreeGrammarTest >> testExpandUsingWeightsAndLongDepth [
 	self assert: result numberOfNodes equals: 13.
 	self
 		assert: (result evaluate: grammar given: configuration) value
-		equals: 8"/7"
+		equals: 4480
 ]
 
 { #category : #tests }
@@ -933,11 +933,11 @@ GPContextFreeGrammarTest >> testExpandUsingWithoutWeightsOfRules [
 		                 addOptionWeights: #( 4 6 3 8 9 7 7 2 6 5 )
 		                 forRule: #F.
 	result := grammar expandUsing: configuration.
-	self assert: result id equals: #E.
-	self assert: result numberOfNodes equals: 10.
+	self assert: result id equals: #T.
+	self assert: result numberOfNodes equals: 7.
 	self
 		assert: (result evaluate: grammar given: configuration) value
-		equals: 10
+		equals: 20/7
 ]
 
 { #category : #tests }
@@ -1004,7 +1004,7 @@ GPContextFreeGrammarTest >> testExpandWithWeightsAndLongerDepth [
 	self assert: result numberOfNodes equals: 28.
 	self
 		assert: (result evaluate: grammar given: configuration) value
-		equals: 126/5"28"
+		equals: 4032
 ]
 
 { #category : #tests }
@@ -1025,7 +1025,7 @@ GPContextFreeGrammarTest >> testGenerateAST [
 	result := grammar expandFrom: #Assignment.
 	self assert: result numberOfNodes equals: 3.
 	ast := grammar generateASTFrom: result.
-	self assert: ast equals: (RBParser parseExpression: 'b := 5')
+	self assert: ast equals: (RBParser parseExpression: 'c := 6')
 ]
 
 { #category : #tests }
@@ -1040,7 +1040,7 @@ GPContextFreeGrammarTest >> testGenerateASTOfLiteral [
 	result := grammar expand.
 	self assert: result numberOfNodes equals: 1.
 	ast := grammar generateASTFrom: result.
-	self assert: ast equals: (RBParser parseExpression: '3')
+	self assert: ast equals: (RBParser parseExpression: '1')
 ]
 
 { #category : #tests }
@@ -1061,11 +1061,11 @@ GPContextFreeGrammarTest >> testGenerateASTOfMessage [
 		withSequence: #( #Receiver #Selector #Args );
 		addRule: #Receiver redirectingTo: #Literal;
 		addMessageRule: #Selector withValues: #( #+ #- );
-		addRule: #Args withCollectionOptions: #( #Value ).
+		addRule: #Args withCollectionOptions: #( #Value ) ofSize: 1.
 	result := grammar expandFrom: #Message.
-	self assert: result numberOfNodes equals: 4.
+	self assert: result numberOfNodes equals: 5.
 	ast := grammar generateASTFrom: result.
-	self assert: ast equals: (RBParser parseExpression: '(3 - v)' "'8 + (7 - v)'")
+	self assert: ast equals: (RBParser parseExpression: '6 + m' "'8 + (7 - v)'")
 ]
 
 { #category : #tests }
@@ -1086,11 +1086,11 @@ GPContextFreeGrammarTest >> testGenerateASTOfMessage2 [
 		withSequence: #( #Receiver #Selector #Args );
 		addRule: #Receiver redirectingTo: #Literal;
 		addMessageRule: #Selector withValues: #( #+ #- );
-		addRule: #Args withCollectionOptions: #( #Value ).
+		addRule: #Args withCollectionOptions: #( #Value ) ofSize: 1.
 	result := grammar expandFrom: #Message.
-	self assert: result numberOfNodes equals: 4.
+	self assert: result numberOfNodes equals: 9.
 	ast := grammar generateASTFrom: result.
-	self assert: ast equals: (RBParser parseExpression: '7 + (3 + 10)' "'1 - v'")
+	self assert: ast equals: (RBParser parseExpression: '10 - (3 - 5)' "'1 - v'")
 ]
 
 { #category : #tests }
@@ -1111,13 +1111,13 @@ GPContextFreeGrammarTest >> testGenerateASTOfMessage3 [
 		withSequence: #( #Receiver #Selector #Args );
 		addRule: #Receiver redirectingTo: #Literal;
 		addMessageRule: #Selector withValues: #( #+ #- );
-		addRule: #Args withCollectionOptions: #( #Value ).
+		addRule: #Args withCollectionOptions: #( #Value ) ofSize: 1.
 	result := grammar expandFrom: #Message.
-	self assert: result numberOfNodes equals: 4.
+	self assert: result numberOfNodes equals: 5.
 	ast := grammar generateASTFrom: result.
 	self
 		assert: ast
-		equals: (RBParser parseExpression: '3 - (7 - a)' "'3 - (8 + (3 + (7 - a)))'")
+		equals: (RBParser parseExpression: '4 + v' "'3 - (8 + (3 + (7 - a)))'")
 ]
 
 { #category : #tests }
@@ -1138,9 +1138,9 @@ GPContextFreeGrammarTest >> testGenerateASTOfMessage4 [
 		withSequence: #( #Receiver #Selector #Args );
 		addRule: #Receiver redirectingTo: #Value;
 		addMessageRule: #Selector withValues: #( #foo:bar: );
-		addRule: #Args withCollectionOptions: #( #Value ).
+		addRule: #Args withCollectionOptions: #( #Value ) ofSize: 2.
 	result := grammar expandFrom: #Message.
-	self assert: result numberOfNodes equals: 4.
+	self assert: result numberOfNodes equals: 6.
 	ast := grammar generateASTFrom: result
 	"self assert: ast equals: (RBParser parseExpression: '8 + (7 - v)')"
 ]
@@ -1163,9 +1163,9 @@ GPContextFreeGrammarTest >> testGenerateASTOfMessage5 [
 		withSequence: #( #Receiver #Selector #Args );
 		addRule: #Receiver redirectingTo: #Value;
 		addMessageRule: #Selector withValues: #( #foo:bar: );
-		addRule: #Args withCollectionOptions: #( #Value ).
+		addRule: #Args withCollectionOptions: #( #Value ) ofSize: 2.
 	result := grammar expandFrom: #Message.
-	self assert: result numberOfNodes equals: 4.
+	self assert: result numberOfNodes equals: 6.
 	ast := grammar generateASTFrom: result
 	"self assert: ast equals: (RBParser parseExpression: '8 + (7 - v)')"
 ]
@@ -1178,7 +1178,7 @@ GPContextFreeGrammarTest >> testGenerateASTOfRoassal3 [
 	"grammar"
 	grammar
 		addRule: #Statements
-		withCollectionOptions: #( #Assignment #Message #Return );
+		withCollectionOptions: #( #Assignment #Message #Return ) ofSize: 1;
 		addRule: #Assignment
 		ofClass: RBAssignmentNode
 		withSequence: #( #Variable #Value );
@@ -1188,7 +1188,7 @@ GPContextFreeGrammarTest >> testGenerateASTOfRoassal3 [
 		addRule: #Return ofClass: RBReturnNode withSequence: #( #Value );
 		addRule: #Receiver redirectingTo: #Value;
 		addMessageRule: #Selector withValues: #( #size );
-		addRule: #Arguments withCollectionOptions: #( #Value );
+		addRule: #Arguments withCollectionOptions: #( #Value ) ofSize: 0;
 		addRule: #Value withOptions: #( #Message #Variable );
 		addLeafRule: #Variable
 		ofClass: RBVariableNode
@@ -1203,13 +1203,13 @@ GPContextFreeGrammarTest >> testGenerateASTOfRoassal3 [
 		withSequence: #( #Temporaries );
 		addRule: #Temporaries withCollectionOptions: #( #Variable )" "#Statements"
 	configuration := GPASTConfiguration new
-		                 addOptionWeights: #( 10 2 3 ) forRule: #Value;
+		                 addOptionWeights: #( 10 2 1) forRule: #Value;
 		                 depth: 3.
 	result := grammar expandFrom: #Statements given: configuration.
 	ast := grammar generateASTFrom: result.
 	self
 		assert: ast
-		equals: (Array with: (RBParser parseExpression: 'shapes size size'))
+		equals: (Array with: (RBParser parseExpression: 'shapes size'))
 ]
 
 { #category : #tests }
@@ -1269,6 +1269,30 @@ GPContextFreeGrammarTest >> testLimitNumberOfIterations [
 ]
 
 { #category : #tests }
+GPContextFreeGrammarTest >> testRandomOptionsOf [
+	| configuration |
+	grammar
+		addRule: #Stms
+		withCollectionOptions: #( #Assignment #Message ) ofSize: 1;
+		addRule: #Assignment
+		ofClass: RBAssignmentNode
+		withSequence: #( #Variable #Value );
+		addRule: #Message
+		ofClass: RBMessageNode
+		withSequence: #( #Value #Selector );
+		addMessageRule: #Selector withValues: #( #size );
+		addRule: #Value withOptions: #( #Message #Variable );
+		addLeafRule: #Variable
+		ofClass: RBVariableNode
+		withValues: #( #shapes ).
+	configuration := GPASTConfiguration new
+		                 addOptionWeights: #( 10 2) forRule: #Value;
+		                 depth: 2.
+	grammar configuration: configuration.
+	self assertCollection: (grammar randomOptionsOf: #Value) asArray equals: #(#Variable #Message)
+]
+
+{ #category : #tests }
 GPContextFreeGrammarTest >> testSimpleExample [
 
 	| tree ast |
@@ -1284,9 +1308,9 @@ GPContextFreeGrammarTest >> testSimpleExample [
 		ofClass: RBLiteralNode
 		withValues: (-30 to: 30).
 	tree := grammar expandFrom: #E.
-	self assert: tree numberOfNodes equals: 94 "82".
+	self assert: tree numberOfNodes equals: 109 "82".
 	ast := grammar generateASTFrom: tree.
-	self assert: ast evaluate equals: 56"73"
+	self assert: ast evaluate equals: 9"73"
 ]
 
 { #category : #tests }
@@ -1313,8 +1337,8 @@ GPContextFreeGrammarTest >> testSimpleExample2 [
 		                 addOptionWeights: #( 4 6 3 8 9 7 7 2 6 5 )
 		                 forRule: #F.
 	tree := grammar expandUsing: configuration.
-	self assert: tree id equals: #E.
+	self assert: tree id equals: #T.
 	self assert: tree numberOfNodes equals: 13.
 	ast := grammar generateASTFrom: tree.
-	self assert: ast evaluate equals: 22
+	self assert: ast evaluate equals: 20
 ]
