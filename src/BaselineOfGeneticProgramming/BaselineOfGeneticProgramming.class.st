@@ -9,7 +9,7 @@ BaselineOfGeneticProgramming >> baseline: spec [
 
 	 <baseline>
 	 spec for: #common do: [ 
-		 spec baseline: 'GPPlay' with: [ spec repository: 'github://bergel/GPPlay' ].
+		 spec baseline: 'GPPlay' with: [ spec repository: 'github://bergel/GPPlay/src' ].
 		 spec baseline: 'Roassal3' with: [ spec loads: #('Full');
 			repository: 'github://ObjectProfile/Roassal3' ].
 		 spec
