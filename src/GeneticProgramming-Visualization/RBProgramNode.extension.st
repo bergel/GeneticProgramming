@@ -1,13 +1,13 @@
 Extension { #name : #RBProgramNode }
 
-{ #category : #'*GeneticProgramming' }
+{ #category : #'*GeneticProgramming-Visualization' }
 RBProgramNode >> depth [
 
 	parent ifNil: [ ^ 1 ].
 	^ parent depth + 1.
 ]
 
-{ #category : #'*GeneticProgramming' }
+{ #category : #'*GeneticProgramming-Visualization' }
 RBProgramNode >> gtInspectorCanvasIn: composite [
 
 	<gtInspectorPresentationOrder: 1>
@@ -31,7 +31,7 @@ RBProgramNode >> gtInspectorCanvasIn: composite [
 			  canvas @ RSCanvasController ]
 ]
 
-{ #category : #'*GeneticProgramming' }
+{ #category : #'*GeneticProgramming-Visualization' }
 RBProgramNode >> shapesOfNodes [
 
 	| boxColor borderColor visitor |

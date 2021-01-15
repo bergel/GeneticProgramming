@@ -1,7 +1,7 @@
 Class {
 	#name : #GPPythagoreConfiguration,
 	#superclass : #GPAbstractArithmeticConfiguration,
-	#category : #'GeneticProgramming-Pythagore'
+	#category : #'GeneticProgramming-Configuration-Pythagore'
 }
 
 { #category : #operations }

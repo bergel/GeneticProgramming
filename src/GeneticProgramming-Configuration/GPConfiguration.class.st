@@ -2,10 +2,26 @@ Class {
 	#name : #GPConfiguration,
 	#superclass : #Object,
 	#instVars : [
-		'random'
+		'random',
+		'rulesWeights',
+		'optionsWeights',
+		'method',
+		'depth'
 	],
-	#category : #'GeneticProgramming-Core'
+	#category : #'GeneticProgramming-Configuration-Core'
 }
+
+{ #category : #adding }
+GPConfiguration >> addOptionWeights: numbers forRule: symbol [
+
+	 optionsWeights at: symbol put: numbers
+]
+
+{ #category : #adding }
+GPConfiguration >> addWeight: number forRule: symbol [
+
+	 rulesWeights at: symbol put: number
+]
 
 { #category : #operations }
 GPConfiguration >> createNewIndividual [
@@ -46,6 +62,18 @@ GPConfiguration >> createNewIndividualRoot: rootNode depth: depth [
 			ifFalse: [ rootNode addChild: self newTerminal ] ]
 ]
 
+{ #category : #accessing }
+GPConfiguration >> depth [
+
+	^ depth
+]
+
+{ #category : #accessing }
+GPConfiguration >> depth: anObject [
+
+	depth := anObject
+]
+
 { #category : #operations }
 GPConfiguration >> distanceFromSolutionOf: individual [
 	"This method has to return a number that describes how close the individual is to the solution.
@@ -57,7 +85,27 @@ GPConfiguration >> distanceFromSolutionOf: individual [
 { #category : #initialization }
 GPConfiguration >> initialize [
 	super initialize.
-	random := Random seed: 42
+	random := GPRandom instance.
+	rulesWeights := Dictionary new.
+	optionsWeights := Dictionary new.
+	method := #grow
+]
+
+{ #category : #accesing }
+GPConfiguration >> keysOfRuleWeights [ 
+	^ rulesWeights keys
+]
+
+{ #category : #accessing }
+GPConfiguration >> method [
+
+	^ method
+]
+
+{ #category : #accessing }
+GPConfiguration >> method: anObject [
+
+	method := anObject
 ]
 
 { #category : #operations }
@@ -87,6 +135,12 @@ GPConfiguration >> numberOfGenerations [
 	^ 20
 ]
 
+{ #category : #accesing }
+GPConfiguration >> optionWeightsOf: symbol [
+
+	^ optionsWeights at: symbol ifAbsent: [ #(1) ]
+]
+
 { #category : #accessing }
 GPConfiguration >> populationSize [
 	^ 500
@@ -100,17 +154,29 @@ GPConfiguration >> random [
 { #category : #'private-random operations' }
 GPConfiguration >> randomBoolean [
 
-	^ (random nextInteger: 100) > 50
+	^ (random randomNumber: 100) > 50
 ]
 
 { #category : #'private-random operations' }
 GPConfiguration >> randomElementOf: aCollection [
 
-	^ aCollection at: (random nextInteger: aCollection size)
+	^ aCollection at: (random randomNumber: aCollection size)
 ]
 
 { #category : #'private-random operations' }
 GPConfiguration >> randomInt: anInt [
 
-	^ random nextInteger: anInt
+	^ random randomNumber: anInt
+]
+
+{ #category : #accessing }
+GPConfiguration >> rulesWeights [
+
+	^ rulesWeights
+]
+
+{ #category : #accesing }
+GPConfiguration >> rulesWeightsOf: keys [
+
+	 ^ rulesWeights associations select: [ :assoc | keys includes: assoc key ] thenCollect: [ :assoc | assoc value ]
 ]

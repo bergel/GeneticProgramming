@@ -14,6 +14,11 @@ GPReplacementVisitor >> addNode: aNode [
 	nodes push: aNode
 ]
 
+{ #category : #'as yet unclassified' }
+GPReplacementVisitor >> emptyStack [ 
+	nodes := Stack new
+]
+
 { #category : #accessing }
 GPReplacementVisitor >> grammar [
 	^ grammar
@@ -47,7 +52,7 @@ GPReplacementVisitor >> numberOfArguments: string [
 	^ number
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #selecting }
 GPReplacementVisitor >> randomlySelectOption: symbol [
 
 	^ (grammar randomlySelectOption: symbol) value

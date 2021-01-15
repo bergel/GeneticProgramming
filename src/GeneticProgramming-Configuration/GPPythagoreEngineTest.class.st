@@ -1,7 +1,7 @@
 Class {
 	#name : #GPPythagoreEngineTest,
 	#superclass : #GPAbstactEngineTest,
-	#category : #'GeneticProgramming-Pythagore'
+	#category : #'GeneticProgramming-Configuration-Pythagore'
 }
 
 { #category : #initialization }

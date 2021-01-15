@@ -23,7 +23,13 @@ GPAbstactEngineTest >> configurationClass [
 GPAbstactEngineTest >> setUp [
 	configuration := self configurationClass new.
 	engine := GPEngine new.
-	engine configuration: configuration
+	engine configuration: configuration.
+	GPRandom seed: 42
+]
+
+{ #category : #running }
+GPAbstactEngineTest >> tearDown [
+	GPRandom resetInstance
 ]
 
 { #category : #tests }

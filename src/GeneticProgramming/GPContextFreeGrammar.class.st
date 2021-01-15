@@ -209,6 +209,12 @@ GPContextFreeGrammar >> expand [
 	 ^ self expandFrom: self selectKeyRule
 ]
 
+{ #category : #controlling }
+GPContextFreeGrammar >> expandAny [
+
+	 ^ self expandFrom: (GPRandom instance randomlySelect: rules keys)
+]
+
 { #category : #'collecting leaves' }
 GPContextFreeGrammar >> expandFrom: axiom [
 
@@ -245,6 +251,23 @@ GPContextFreeGrammar >> expandFrom: axiom given: aConfiguration [
 ]
 
 { #category : #'collecting leaves' }
+GPContextFreeGrammar >> expandFrom: symbol given: depth method: methodName and: ruleKeys [
+
+	^ rules
+		  at: symbol
+		  ifPresent: [ :node | 
+			  | resNode bools |
+			  bools := Stack new.
+			  resNode := node expandGiven: self depth: depth method: methodName and: bools.
+			  resNode
+				  ifNil: [ 
+					  ruleKeys add: symbol.
+					  self expandGiven: depth method: methodName and: ruleKeys ]
+				  ifNotNil: [ resNode ] ]
+		  ifAbsent: [ nil ]
+]
+
+{ #category : #'collecting leaves' }
 GPContextFreeGrammar >> expandGiven: aConfiguration depth: depth method: methodName and: ruleKeys [
 
 	self configuration: aConfiguration.
@@ -256,21 +279,10 @@ GPContextFreeGrammar >> expandGiven: depth method: methodName and: ruleKeys [
 
 	|axiom |
 	axiom := self selectKeyRuleGiven: depth and: ruleKeys.
-	^ rules
-		  at: axiom
-		  ifPresent: [ :node | 
-			  | resNode bools |
-			  bools := Stack new.
-			  resNode := node expandGiven: self depth: depth method: methodName and: bools.
-			  resNode
-				  ifNil: [ 
-					  ruleKeys add: axiom.
-					  self expandGiven: depth method: methodName and: ruleKeys ]
-				  ifNotNil: [ resNode ] ]
-		  ifAbsent: [ nil ]
+	^ self expandFrom: axiom given: depth method: methodName and: ruleKeys.
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'collecting leaves' }
 GPContextFreeGrammar >> expandGivenMethod: methodName [
 	^ rules
 		at: self selectKeyRule
@@ -366,7 +378,7 @@ GPContextFreeGrammar >> randomOptionsOf: symbol [
 		]
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #selecting }
 GPContextFreeGrammar >> randomlySelectJustOption: symbol [
 
 	| dict |
@@ -377,7 +389,7 @@ GPContextFreeGrammar >> randomlySelectJustOption: symbol [
 		  ifNotEmpty: [ (self optionsOf: symbol) at: (GPRandom instance randomlySelectGivenProbabilities: dict) ]
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #selecting }
 GPContextFreeGrammar >> randomlySelectOption: symbol [
 
 	| dict |

@@ -162,7 +162,7 @@ GPContextFreeGrammarTest >> testAddRuleWithSequence2 [
 GPContextFreeGrammarTest >> testDictionaryOfOptionWithWeights [
 
 	| config dict |
-	config := GPASTConfiguration new.
+	config := GPConfiguration new.
 	config addOptionWeights: #( 10 1 1 ) forRule: #E.
 		        grammar
 			        addRule: #E
@@ -197,6 +197,24 @@ GPContextFreeGrammarTest >> testExpand [
 		hasSameElements:
 		#( #E #T #F #MulOp #F #AddOp #T #T #F #MulOp #F #MulOp #F )."
 	self assert: (result evaluate: grammar) value equals: -33 / 10
+]
+
+{ #category : #tests }
+GPContextFreeGrammarTest >> testExpandAny [
+
+	| result |
+	random seed: 1.
+	grammar
+		addMessageRule: #AddOp withValues: #( #sum: #sub: );
+		addRule: #E withSequence: #( #E #AddOp #T );
+		addRule: #E redirectingTo: #T;
+		addMessageRule: #MulOp withValues: #( #mul: #div: );
+		addRule: #T withSequence: #( #T #MulOp #F );
+		addRule: #T redirectingTo: #F;
+		addLeafRule: #F
+		withValues: ((1 to: 10) collect: [ :n | GPDigit value: n ]).
+	result := (1 to: 10) collect: [:n | grammar expandAny ].
+	self assertCollection: (result collect: #id) includesAny: #(#MulOp #AddOp).
 ]
 
 { #category : #tests }
@@ -448,7 +466,7 @@ GPContextFreeGrammarTest >> testExpandOnASTNodesWithWeights [
 		addRule: #Receiver redirectingTo: #Literal;
 		addMessageRule: #Selector withValues: #( #+ #- );
 		addRule: #Args withCollectionOptions: #( #Literal ) ofSize: 1.
-	configuration := GPASTConfiguration new
+	configuration := GPConfiguration new
 		                 addOptionWeights: #( 4 10 ) forRule: #Value;
 		                 addOptionWeights: #( 7 6 ) forRule: #Selector;
 		                 addOptionWeights: #( 4 6 3 8 9 7 7 2 6 5 )
@@ -480,7 +498,7 @@ GPContextFreeGrammarTest >> testExpandOnASTNodesWithWeights2 [
 		addRule: #Receiver redirectingTo: #Literal;
 		addMessageRule: #Selector withValues: #( #+ #- );
 		addRule: #Args withCollectionOptions: #( #Literal ) ofSize: 1.
-	configuration := GPASTConfiguration new
+	configuration := GPConfiguration new
 		                 addOptionWeights: #( 4 10 ) forRule: #Value;
 		                 addOptionWeights: #( 7 6 ) forRule: #Selector;
 		                 addOptionWeights: #( 4 6 3 8 9 7 7 2 6 5 )
@@ -655,7 +673,7 @@ GPContextFreeGrammarTest >> testExpandOnMethodNodeOfRoassal3WithDepth [
 		withSequence: #( #Temporaries );
 		addRule: #Temporaries withCollectionOptions: #( #Variable ) ofSize: 1;
 		addLeafRule: #Literal ofClass: RBLiteralNode withValues: #( 1 ). "#Statements"
-	configuration := GPASTConfiguration new
+	configuration := GPConfiguration new
 		                 addOptionWeights: #( 10 2 3 )
 		                 forRule: #Value. "1" ";
 		                 depth: 7"
@@ -757,7 +775,7 @@ GPContextFreeGrammarTest >> testExpandUsing [
 		addRule: #T redirectingTo: #F;
 		addLeafRule: #F
 		withValues: ((1 to: 10) collect: [ :n | GPDigit value: n ]).
-	configuration := GPASTConfiguration new
+	configuration := GPConfiguration new
 		                 addWeight: 8 forRule: #E;
 		                 addWeight: 5 forRule: #T;
 		                 addWeight: 4 forRule: #F;
@@ -793,7 +811,7 @@ GPContextFreeGrammarTest >> testExpandUsingAnotherSeed [
 		addRule: #T redirectingTo: #F;
 		addLeafRule: #F
 		withValues: ((1 to: 10) collect: [ :n | GPDigit value: n ]).
-	configuration := GPASTConfiguration new
+	configuration := GPConfiguration new
 		                 addWeight: 8 forRule: #E;
 		                 addWeight: 5 forRule: #T;
 		                 addWeight: 4 forRule: #F;
@@ -825,7 +843,7 @@ GPContextFreeGrammarTest >> testExpandUsingAnotherSeed2 [
 		addRule: #T redirectingTo: #F;
 		addLeafRule: #F
 		withValues: ((1 to: 10) collect: [ :n | GPDigit value: n ]).
-	configuration := GPASTConfiguration new
+	configuration := GPConfiguration new
 		                 addWeight: 8 forRule: #E;
 		                 addWeight: 5 forRule: #T;
 		                 addWeight: 4 forRule: #F;
@@ -860,7 +878,7 @@ GPContextFreeGrammarTest >> testExpandUsingLongerSeed [
 		addRule: #T redirectingTo: #F;
 		addLeafRule: #F
 		withValues: ((1 to: 10) collect: [ :n | GPDigit value: n ]).
-	configuration := GPASTConfiguration new
+	configuration := GPConfiguration new
 		                 addWeight: 8 forRule: #E;
 		                 addWeight: 5 forRule: #T;
 		                 addWeight: 4 forRule: #F;
@@ -892,7 +910,7 @@ GPContextFreeGrammarTest >> testExpandUsingWeightsAndLongDepth [
 		addRule: #T redirectingTo: #F;
 		addLeafRule: #F
 		withValues: ((1 to: 10) collect: [ :n | GPDigit value: n ]).
-	configuration := GPASTConfiguration new
+	configuration := GPConfiguration new
 		                 addWeight: 8 forRule: #E;
 		                 addWeight: 5 forRule: #T;
 		                 addWeight: 4 forRule: #F;
@@ -925,7 +943,7 @@ GPContextFreeGrammarTest >> testExpandUsingWithoutWeightsOfRules [
 		addRule: #T redirectingTo: #F;
 		addLeafRule: #F
 		withValues: ((1 to: 10) collect: [ :n | GPDigit value: n ]).
-	configuration := GPASTConfiguration new
+	configuration := GPConfiguration new
 		                 addOptionWeights: #( 8 5 ) forRule: #E;
 		                 addOptionWeights: #( 6 3 ) forRule: #T;
 		                 addOptionWeights: #( 6 4 ) forRule: #AddOp;
@@ -954,7 +972,7 @@ GPContextFreeGrammarTest >> testExpandWithWeightsAndDepth [
 		addRule: #T redirectingTo: #F;
 		addLeafRule: #F
 		withValues: ((1 to: 10) collect: [ :n | GPDigit value: n ]).
-	configuration := GPASTConfiguration new
+	configuration := GPConfiguration new
 		                 addWeight: 8 forRule: #E;
 		                 addWeight: 5 forRule: #T;
 		                 addWeight: 4 forRule: #F;
@@ -988,7 +1006,7 @@ GPContextFreeGrammarTest >> testExpandWithWeightsAndLongerDepth [
 		addRule: #T redirectingTo: #F;
 		addLeafRule: #F
 		withValues: ((1 to: 10) collect: [ :n | GPDigit value: n ]).
-	configuration := GPASTConfiguration new
+	configuration := GPConfiguration new
 		                 addWeight: 8 forRule: #E;
 		                 addWeight: 5 forRule: #T;
 		                 addWeight: 4 forRule: #F;
@@ -1202,7 +1220,7 @@ GPContextFreeGrammarTest >> testGenerateASTOfRoassal3 [
 		ofClass: RBSequenceNode
 		withSequence: #( #Temporaries );
 		addRule: #Temporaries withCollectionOptions: #( #Variable )" "#Statements"
-	configuration := GPASTConfiguration new
+	configuration := GPConfiguration new
 		                 addOptionWeights: #( 10 2 1) forRule: #Value;
 		                 depth: 3.
 	result := grammar expandFrom: #Statements given: configuration.
@@ -1216,7 +1234,7 @@ GPContextFreeGrammarTest >> testGenerateASTOfRoassal3 [
 GPContextFreeGrammarTest >> testGeneratingManyTrees [
 
 	| config asts |
-	config := GPASTConfiguration new.
+	config := GPConfiguration new.
 	config addOptionWeights: #( 100 10 10 ) forRule: #E.
 	asts := (1 to: 3) collect: [ :i | 
 		        | tree ast |
@@ -1247,7 +1265,7 @@ GPContextFreeGrammarTest >> testLimitNumberOfIterations [
 
 	| config tree ast |
 	GPRandom seed: 10.
-	config := GPASTConfiguration new.
+	config := GPConfiguration new.
 	config addOptionWeights: #( 10 1 1 ) forRule: #E.
 	grammar
 		addRule: #E
@@ -1285,7 +1303,7 @@ GPContextFreeGrammarTest >> testRandomOptionsOf [
 		addLeafRule: #Variable
 		ofClass: RBVariableNode
 		withValues: #( #shapes ).
-	configuration := GPASTConfiguration new
+	configuration := GPConfiguration new
 		                 addOptionWeights: #( 10 2) forRule: #Value;
 		                 depth: 2.
 	grammar configuration: configuration.
@@ -1326,7 +1344,7 @@ GPContextFreeGrammarTest >> testSimpleExample2 [
 		addRule: #T ofClass: RBMessageNode withSequence: #( #T #MulOp #F );
 		addRule: #T redirectingTo: #F;
 		addLeafRule: #F ofClass: RBLiteralNode withValues: (1 to: 10).
-	configuration := GPASTConfiguration new
+	configuration := GPConfiguration new
 		                 addWeight: 8 forRule: #E;
 		                 addWeight: 5 forRule: #T;
 		                 addWeight: 4 forRule: #F;

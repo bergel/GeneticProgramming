@@ -1,7 +1,7 @@
 Class {
 	#name : #GPPoly2EngineTest,
 	#superclass : #GPAbstactEngineTest,
-	#category : #'GeneticProgramming-Polynom2'
+	#category : #'GeneticProgramming-Configuration-Polynom2'
 }
 
 { #category : #initialization }

@@ -7,7 +7,7 @@ Configuration that produce an equation following
 Class {
 	#name : #GPPoly2Configuration,
 	#superclass : #GPAbstractArithmeticConfiguration,
-	#category : #'GeneticProgramming-Polynom2'
+	#category : #'GeneticProgramming-Configuration-Polynom2'
 }
 
 { #category : #operations }

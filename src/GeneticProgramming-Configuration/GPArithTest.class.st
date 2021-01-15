@@ -1,7 +1,7 @@
 Class {
 	#name : #GPArithTest,
 	#superclass : #GPAbstactEngineTest,
-	#category : #'GeneticProgramming-Arithmetic'
+	#category : #'GeneticProgramming-Configuration-Arithmetic'
 }
 
 { #category : #initialization }

@@ -1,7 +1,7 @@
 Class {
 	#name : #GPArithConfiguration,
 	#superclass : #GPAbstractArithmeticConfiguration,
-	#category : #'GeneticProgramming-Arithmetic'
+	#category : #'GeneticProgramming-Configuration-Arithmetic'
 }
 
 { #category : #operations }

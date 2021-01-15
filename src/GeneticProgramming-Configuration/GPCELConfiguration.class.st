@@ -1,7 +1,7 @@
 Class {
 	#name : #GPCELConfiguration,
 	#superclass : #GPAbstractArithmeticConfiguration,
-	#category : #'GeneticProgramming-ChiffresEtLettres'
+	#category : #'GeneticProgramming-Configuration-ChiffresEtLettres'
 }
 
 { #category : #operations }

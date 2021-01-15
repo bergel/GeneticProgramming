@@ -48,11 +48,11 @@ GPAbstractNode >> atIndex: index put: anotherNode [
 	index < 1 ifTrue: [ ^ self ].
 	i := index.
 	i := i - 1.
-	(self children collect: #class) asSet size = 1 
+	(self children collect: #id) asSet size = 1 
 		ifFalse: [ | ind |
 			ind := 0.
 			self children detect: [ :ch | ind := ind + 1.
-				ch isKindOf: anotherNode class ] 
+				ch id == anotherNode id ] 
 			ifFound: [ :ch | self children at: ind put: anotherNode ].
 			^ self ] 
 		ifTrue: [ 
@@ -222,34 +222,11 @@ GPAbstractNode >> generateAST: visitor [
 
 	| inst |
 	type ifNil: [ ^ nil ].
+	"visitor emptyStack."
 	visitor addNode: self.
 	inst := type new.
 	inst acceptVisitor: visitor.
 	^ visitor lastValue
-]
-
-{ #category : #visualization }
-GPAbstractNode >> gtInspectorViewIn: composite [
-
-	<gtInspectorPresentationOrder: -1>
-	^ composite roassal3
-		  title: [ 'MetaDescription Tree' ];
-		  initializeCanvas: [ 
-			  | canvas eb |
-			  canvas := RSCanvas new.
-			  canvas addAll: (self shapes).
-			  eb := RSEdgeBuilder line
-				        color: (Color
-						         r: 0.2316715542521994
-						         g: 0.5141739980449658
-						         b: 0.7409579667644184);
-				        canvas: canvas;
-				        connectToAll: #children.
-			  canvas edges pushBack.
-			  RSTreeLayout new
-				  verticalGap: 10;
-				  on: canvas nodes.
-			  canvas @ RSCanvasController ]
 ]
 
 { #category : #accessing }
@@ -438,6 +415,26 @@ GPAbstractNode >> type [
 { #category : #accessing }
 GPAbstractNode >> type: aSymbol [
 	type := aSymbol
+]
+
+{ #category : #visualization }
+GPAbstractNode >> visualize [
+	 | canvas eb |
+			  canvas := RSCanvas new.
+			  canvas addAll: (self shapes).
+			  eb := RSEdgeBuilder line
+				        color: (Color
+						         r: 0.2316715542521994
+						         g: 0.5141739980449658
+						         b: 0.7409579667644184);
+				        canvas: canvas;
+				        connectToAll: #children.
+			  canvas edges pushBack.
+			  RSTreeLayout new
+				  verticalGap: 10;
+				  on: canvas nodes.
+			  canvas @ RSCanvasController.
+	^ canvas
 ]
 
 { #category : #accessing }

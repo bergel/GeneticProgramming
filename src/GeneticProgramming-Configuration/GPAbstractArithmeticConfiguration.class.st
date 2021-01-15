@@ -1,7 +1,7 @@
 Class {
 	#name : #GPAbstractArithmeticConfiguration,
 	#superclass : #GPConfiguration,
-	#category : #'GeneticProgramming-Core'
+	#category : #'GeneticProgramming-Configuration-Core'
 }
 
 { #category : #'instance creation' }

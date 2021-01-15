@@ -123,14 +123,6 @@ GPEngine >> fitnessOfWorstIndividual [
 	^ self distanceFromSolutionOf: self pickWorstIndividual
 ]
 
-{ #category : #visualization }
-GPEngine >> gtInspectorViewIn: composite [
-	<gtInspectorPresentationOrder: -10>
-	composite roassal2
-		title: 'View';
-		initializeView: [ self visualize ]
-]
-
 { #category : #initialization }
 GPEngine >> initialize [
 	super initialize.
@@ -243,23 +235,4 @@ GPEngine >> tournament [
 			fitness := self distanceFromSolutionOf: competitor ]
 	].
 	^ best
-]
-
-{ #category : #visualization }
-GPEngine >> visualize [
-
-	| g d |
-	g := RTGrapher new.
-	d := RTData new.
-	d connectColor: Color blue.
-	d points: logs.
-	d y: #bestFitnessValue.
-	g add: d.
-	
-	d := RTData new.
-	d connectColor: Color red.
-	d points: logs.
-	d y: #worstFitnessValue.
-	g add: d.
-	^ g
 ]

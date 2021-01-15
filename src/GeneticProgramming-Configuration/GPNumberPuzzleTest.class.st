@@ -1,7 +1,7 @@
 Class {
 	#name : #GPNumberPuzzleTest,
 	#superclass : #GPAbstactEngineTest,
-	#category : #'GeneticProgramming-NumberPuzzle'
+	#category : #'GeneticProgramming-Configuration-NumberPuzzle'
 }
 
 { #category : #initialization }

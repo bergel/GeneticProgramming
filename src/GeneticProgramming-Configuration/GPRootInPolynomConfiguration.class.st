@@ -1,7 +1,7 @@
 Class {
 	#name : #GPRootInPolynomConfiguration,
 	#superclass : #GPConfiguration,
-	#category : #'GeneticProgramming-RootInPolynom'
+	#category : #'GeneticProgramming-Configuration-RootInPolynom'
 }
 
 { #category : #hooks }

@@ -1,7 +1,7 @@
 Class {
 	#name : #GPKnapsackConfiguration,
 	#superclass : #GPConfiguration,
-	#category : #'GeneticProgramming-Knapsack'
+	#category : #'GeneticProgramming-Configuration-Knapsack'
 }
 
 { #category : #operations }

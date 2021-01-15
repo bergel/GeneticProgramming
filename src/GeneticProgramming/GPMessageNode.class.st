@@ -36,6 +36,12 @@ GPMessageNode >> generateAST: visitor [
 	^ nodeValue "visitor randomlySelectOption: id"
 ]
 
+{ #category : #initialization }
+GPMessageNode >> initialize [ 
+	super initialize.
+	printBlock := [ :n :ctx | nodeValue ]
+]
+
 { #category : #testing }
 GPMessageNode >> isMessageNode [
 

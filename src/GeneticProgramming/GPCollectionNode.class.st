@@ -43,7 +43,7 @@ GPCollectionNode >> expandGiven: grammar [
 	| node | 
 	node := self newNode: grammar.
 	node children: (node getOptions: grammar).
-	node nodeValue: (node children collect: [:ch | ch nodeValue ]).
+	"node nodeValue: (node children collect: [:ch | ch nodeValue ])."
 	"node := nil.
 	options := grammar randomOptions: id.
 	newCollection := options
@@ -92,7 +92,7 @@ GPCollectionNode >> expandGiven: grammar depth: anInteger method: methodName and
 				node := (self newNode: grammar with: anInteger)
 			        children: (indexes collect: [:i | newCollection at: i ]);
 			        yourself ].
-		node nodeValue: (node children collect: [:ch | ch nodeValue ])
+		"node nodeValue: (node children collect: [:ch | ch nodeValue ])"
 		"node := (self newNode: grammar with: anInteger)
 			        children: newCollection;
 			        yourself "].
@@ -157,6 +157,12 @@ GPCollectionNode >> newNode: grammar with: aNumber [
 	node idNumber: grammar nodeNumber;
 		depth: aNumber.
 	^ node
+]
+
+{ #category : #accessing }
+GPCollectionNode >> nodeValue [
+	nodeValue := self children collect: [:ch | ch nodeValue ].
+	^ nodeValue 
 ]
 
 { #category : #printing }

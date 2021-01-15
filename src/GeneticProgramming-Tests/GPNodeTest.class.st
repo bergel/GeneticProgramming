@@ -17,7 +17,7 @@ GPNodeTest >> grammarETF [
 		addRule: #T redirectingTo: #F;
 		addLeafRule: #F ofClass: RBLiteralNode withValues: (1 to: 10);
 		addRule: #F redirectingTo: #E.
-	configuration := GPASTConfiguration new
+	configuration := GPConfiguration new
 		                 addWeight: 8 forRule: #E;
 		                 addWeight: 5 forRule: #T;
 		                 addWeight: 4 forRule: #F;
@@ -108,6 +108,84 @@ GPNodeTest >> testCrossOver02 [
 ]
 
 { #category : #tests }
+GPNodeTest >> testCrossOver03 [
+	| i1 i2 offspring |
+	GPRandom seed: 1.
+	i1 := GPNode new id: #E; type: RBMessageNode;
+		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
+		children: (Array 
+			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 3)
+			with: (GPMessageNode new id: #Add; nodeValue: #+)
+			with: (GPCollectionNode new id: #Args; children: (Array 
+				with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 7)))).
+	i2 := GPNode new id: #F; type: RBMessageNode;
+		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
+		children: (Array 
+			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 8)
+			with: (GPMessageNode new id: #Selector; nodeValue: #odd)).
+	
+	self assert: i1 print equals: '3 + 7'.
+	self assert: i2 print equals: '8 odd'.
+	offspring := i1 crossOverWith: i2.
+	self deny: offspring print equals: '3 odd 7'.
+	self deny: offspring print equals: i1 print.
+	self assert: offspring print equals: '8 + 7'
+	"self assert: offspring print ~= i2 print."
+]
+
+{ #category : #tests }
+GPNodeTest >> testCrossOver04 [
+	| i1 i2 offspring |
+	GPRandom seed: 16344.
+	i1 := GPNode new id: #E; type: RBMessageNode;
+		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
+		children: (Array 
+			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 3)
+			with: (GPMessageNode new id: #Add; nodeValue: #+)
+			with: (GPCollectionNode new id: #Args; children: (Array 
+				with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 7)))).
+	i2 := GPNode new id: #F; type: RBMessageNode;
+		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
+		children: (Array 
+			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 8)
+			with: (GPMessageNode new id: #Selector; nodeValue: #odd)).
+	
+	self assert: i1 print equals: '3 + 7'.
+	self assert: i2 print equals: '8 odd'.
+	offspring := i1 crossOverWith: i2.
+	self deny: offspring print equals: '3 odd 7'.
+	self assert: offspring print equals: i1 print.
+	"self assert: offspring print ~= i2 print."
+]
+
+{ #category : #tests }
+GPNodeTest >> testCrossOver05 [
+	| i1 i2 offspring |
+	GPRandom seed: 163.
+	i1 := GPNode new id: #E; type: RBMessageNode;
+		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
+		children: (Array 
+			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 3)
+			with: (GPMessageNode new id: #Add; nodeValue: #+)
+			with: (GPCollectionNode new id: #Args; children: (Array 
+				with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 7)))).
+	i2 := GPNode new id: #F; type: RBMessageNode;
+		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
+		children: (Array 
+			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 8)
+			with: (GPMessageNode new id: #Add; nodeValue: #-)
+			with: (GPCollectionNode new id: #Args; children: (Array 
+				with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 9)))).
+	
+	self assert: i1 print equals: '3 + 7'.
+	self assert: i2 print equals: '8 - 9'.
+	offspring := i1 crossOverWith: i2.
+	self deny: offspring print equals: i1 print.
+	self deny: offspring print equals: i2 print.
+	self assert: offspring print equals: '3 - 7'.
+]
+
+{ #category : #tests }
 GPNodeTest >> testExpandGivenDepthMethodAnd [
 	| grammar node stack |
 	grammar := self grammarETF.
@@ -142,6 +220,7 @@ GPNodeTest >> testExpandGivenDepthMethodAndOnCollectionNode [
 { #category : #tests }
 GPNodeTest >> testMutate [
 	| c i p |
+	GPRandom seed: 1219.
 	c := GPArithConfiguration new.
 	i := c subNode children: { c number: 5 . c number: 3 }.
 	p := i print.
