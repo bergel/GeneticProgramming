@@ -4,6 +4,16 @@ Class {
 	#category : #'GeneticProgramming-Core'
 }
 
+{ #category : #'as yet unclassified' }
+GPSelectorNode >> convertToLeafNode [
+	^ GPLeafNode new 
+		id: id; 
+		type: RBLiteralNode; 
+		nodeValue: nodeValue; 
+		depth: depth; 
+		idNumber: idNumber.
+]
+
 { #category : #'collecting leaves' }
 GPSelectorNode >> expandGiven: context [
 

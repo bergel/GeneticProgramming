@@ -92,8 +92,9 @@ GPReplacementVisitor >> visitMessageNode: messageNode [
 	symbol := children second generateAST: self.
 	messageNode selector: symbol.
 	[child := children third.
+	"child type = RBBlockNode ifTrue: [ self halt ]."
 	child isCollectionNode ifFalse: [ 
-		child isSelectorNode ifTrue: [ self halt ].
+		child isSelectorNode ifTrue: [ child := child convertToLeafNode ].
 		child := GPCollectionNode transform: child ].
 	messageNode arguments: (child
 			 children collect: [ :ch | ch generateAST: self ]) ] on: SubscriptOutOfBounds do: [ messageNode arguments: OrderedCollection new ].

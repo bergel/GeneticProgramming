@@ -57,11 +57,12 @@ GPPlayConfiguration >> initializeGrammar [
 	grammar := GPContextFreeGrammar new.
 	grammar 
 		addRule: #E ofClass: RBMessageNode withSequence: #(#E #And #Block);
+		addRule: #E ofClass: RBMessageNode withSequence: #(#Variable #Satisfy #Message);
 		addRule: #E redirectingTo: #Variable;
 		addRule: #E redirectingTo: #E2;
 		addRule: #E2 ofClass: RBMessageNode withSequence: #(#Variable #Message);
-		
 		addSelectorRule: #And withValues: #(#and:);
+		addSelectorRule: #Satisfy withValues: #(#allSatisfy: #noneSatisfy:);
 		addSelectorRule: #Message withValues: #(#isNil #isCollection #isNumber #isByteString #isFloat #isNotNil);
 		addRule: #Block ofClass: RBBlockNode withSequence: #(#E);
 		addLeafRule: #Variable ofClass: RBVariableNode withValues: #('obj').

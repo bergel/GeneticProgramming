@@ -222,6 +222,12 @@ GPAbstractNode >> id: anObject [
 ]
 
 { #category : #accessing }
+GPAbstractNode >> idNumber [
+
+	^ idNumber
+]
+
+{ #category : #accessing }
 GPAbstractNode >> idNumber: aNumber [
 
 	idNumber := aNumber
