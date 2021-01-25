@@ -37,7 +37,7 @@ GPNumberPuzzleConfiguration >> distanceFromSolutionOf: individual [
 
 	""
 
-	(individual allLeaves allSatisfy: [ :n | (n type \\ 10) = firstNumber ])
+	(individual allLeaves allSatisfy: [ :n | (n nodeValue \\ 10) = firstNumber ])
 		ifTrue: [ penalty1 := 0 ]
 		ifFalse: [ penalty1 := 100 ].
 	^ result + penalty1 + penalty2

@@ -34,7 +34,8 @@ GPArithConfiguration >> newTerminal [
 	| res t |
 	t := self randomElementOf: #(1 2 3 4 5 6).
 	res := GPNode new.
-	res printBlock: [ :children :context | t asString ].
-	res evaluationBlock: [ :children :context | t ].
+	res nodeValue: t.
+	res printBlock: [ :node :context | node nodeValue asString ].
+	res evaluationBlock: [ :node :context | node nodeValue ].
 	^ res
 ]

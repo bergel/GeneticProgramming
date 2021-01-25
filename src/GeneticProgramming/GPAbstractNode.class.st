@@ -38,6 +38,11 @@ GPAbstractNode >> allLeaves: collection [
 ]
 
 { #category : #accessing }
+GPAbstractNode >> ast [
+	^ self generateAST: GPReplacementVisitor new
+]
+
+{ #category : #accessing }
 GPAbstractNode >> atIndex: anIndex [
 	^ self withAllChildren at: anIndex
 ]
@@ -80,7 +85,7 @@ GPAbstractNode >> children: someNodes [
 
 { #category : #'groups collecting' }
 GPAbstractNode >> collectOptions: options with: numbers [
-
+	"to remove"
 	| weights |
 	weights := numbers.
 	weights size < options size ifTrue: [ 
@@ -126,10 +131,11 @@ GPAbstractNode >> crossOverWith: anotherNode using: random [
 GPAbstractNode >> deepCopy [
 
 	^ self class new id: id;
-	type: type;
-	evaluationBlock: evaluationBlock;
-	printBlock: printBlock;
-	nodeValue: nodeValue deepCopy 
+		type: type;
+		depth: depth;
+		evaluationBlock: evaluationBlock;
+		printBlock: printBlock;
+		nodeValue: nodeValue deepCopy 
 ]
 
 { #category : #accessing }
@@ -145,18 +151,6 @@ GPAbstractNode >> depth: aNumber [
 { #category : #initialization }
 GPAbstractNode >> evaluate [
 	^ self evaluateUsing: nil
-]
-
-{ #category : #'public access' }
-GPAbstractNode >> evaluate: grammar [
-
-	 ^ self subclassResponsibility
-]
-
-{ #category : #'public access' }
-GPAbstractNode >> evaluate: grammar given: configuration [
-
-	 ^ self subclassResponsibility
 ]
 
 { #category : #initialization }
@@ -187,17 +181,6 @@ GPAbstractNode >> evaluationBlock: aOneArgBlock [
 ]
 
 { #category : #'collecting leaves' }
-GPAbstractNode >> expandChildrenGiven: grammar and: optionKey [
-	^ self subclassResponsibility 
-]
-
-{ #category : #'collecting leaves' }
-GPAbstractNode >> expandGiven: context [
-
-	^ self subclassResponsibility
-]
-
-{ #category : #'collecting leaves' }
 GPAbstractNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans [
 	^ self subclassResponsibility 
 ]
@@ -221,8 +204,7 @@ GPAbstractNode >> fitness: aNumber [
 GPAbstractNode >> generateAST: visitor [
 
 	| inst |
-	type ifNil: [ ^ nil ].
-	"visitor emptyStack."
+	type ifNil: [ ^ nodeValue ].
 	visitor addNode: self.
 	inst := type new.
 	inst acceptVisitor: visitor.
@@ -251,6 +233,7 @@ GPAbstractNode >> initialize [
 	super initialize.
 	children := OrderedCollection new.
 	idNumber := 0.
+	depth := 0
 	"printBlock := [ :c | 
 	              | t |
 	              t := c inject: '(' into: [ :sum :el | sum , el print ].
@@ -280,7 +263,7 @@ GPAbstractNode >> isLeafNode [
 ]
 
 { #category : #testing }
-GPAbstractNode >> isMessageNode [
+GPAbstractNode >> isSelectorNode [
 
 	^ false
 ]
@@ -298,11 +281,11 @@ GPAbstractNode >> methodDepthBlock: string [
 ]
 
 { #category : #'instance creation' }
-GPAbstractNode >> newNode: grammar [
+GPAbstractNode >> newNode: integer [
 
 	| node |
 	node := self deepCopy.
-	node idNumber: grammar nodeNumber.
+	node idNumber: integer.
 	^ node
 ]
 
@@ -320,6 +303,9 @@ GPAbstractNode >> newNode: grammar with: aNumber [
 { #category : #accessing }
 GPAbstractNode >> nodeValue [
 
+	children ifNotEmpty: [ 
+		nodeValue := [children collect: [ :child | child nodeValue ]] on: MessageNotUnderstood do: [ nil ]
+	].
 	^ nodeValue
 ]
 
@@ -368,20 +354,6 @@ GPAbstractNode >> second [
 	^ children second
 ]
 
-{ #category : #'as yet unclassified' }
-GPAbstractNode >> selectOption: grammar [
-	^ grammar randomlySelectJustOption: id
-]
-
-{ #category : #'collecting leaves' }
-GPAbstractNode >> selectedOptionNode: options given: configuration [
-
-	^ options at:
-		  (GPRandom instance randomlySelectGivenProbabilities: (self
-				    collectOptions: (1 to: options size)
-				    with: (configuration optionWeightsOf: id)))
-]
-
 { #category : #visualization }
 GPAbstractNode >> shapes [
 
@@ -421,7 +393,7 @@ GPAbstractNode >> type: aSymbol [
 GPAbstractNode >> visualize [
 	 | canvas eb |
 			  canvas := RSCanvas new.
-			  canvas addAll: (self shapes).
+			  canvas addAll: self shapes.
 			  eb := RSEdgeBuilder line
 				        color: (Color
 						         r: 0.2316715542521994

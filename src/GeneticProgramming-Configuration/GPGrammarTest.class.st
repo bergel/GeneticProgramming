@@ -58,3 +58,30 @@ GPGrammarTest >> testMutation [
 	"self assert: i2 class == GPNode."
 	self assert: i1 print ~= i2 print
 ]
+
+{ #category : #tests }
+GPGrammarTest >> testSelectOptionGiven [
+	| options weights |
+	options := (1 to: 5) asArray.
+	weights := #(10 1 1 1 1).
+	self assert: (configuration selectOption: options given: weights) equals: 1
+	
+]
+
+{ #category : #tests }
+GPGrammarTest >> testSelectValueForRule [
+	configuration forRule: #E putWeights: #(10 1 1).
+	self assert: (configuration selectValue: #(4 2 5) forRule: #E) equals: 4
+]
+
+{ #category : #tests }
+GPGrammarTest >> testSelectValueForRuleWithMoreOptionsThanWeights [
+	configuration forRule: #E putWeights: #(10).
+	self assert: (configuration selectValue: #(9 5 2 7) forRule: #E) equals: 9
+]
+
+{ #category : #tests }
+GPGrammarTest >> testSelectValueForRuleWithMoreWeightsThanOptions [
+	configuration forRule: #E putWeights: #(10 2 1 3 5).
+	self assert: (configuration selectValue: #(8 3 2) forRule: #E) equals: 8
+]

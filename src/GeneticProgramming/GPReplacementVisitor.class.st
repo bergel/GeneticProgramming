@@ -3,7 +3,6 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'lastValue',
-		'grammar',
 		'nodes'
 	],
 	#category : #'GeneticProgramming-Visitor'
@@ -12,21 +11,6 @@ Class {
 { #category : #adding }
 GPReplacementVisitor >> addNode: aNode [
 	nodes push: aNode
-]
-
-{ #category : #'as yet unclassified' }
-GPReplacementVisitor >> emptyStack [ 
-	nodes := Stack new
-]
-
-{ #category : #accessing }
-GPReplacementVisitor >> grammar [
-	^ grammar
-]
-
-{ #category : #accessing }
-GPReplacementVisitor >> grammar: aGrammar [
-	grammar := aGrammar
 ]
 
 { #category : #initialization }
@@ -50,12 +34,6 @@ GPReplacementVisitor >> numberOfArguments: string [
 			 (Character specialCharacters asArray collect: [ :c | c asString ])) 
 			ifTrue: [ number := 1 ] ].
 	^ number
-]
-
-{ #category : #selecting }
-GPReplacementVisitor >> randomlySelectOption: symbol [
-
-	^ (grammar randomlySelectOption: symbol) value
 ]
 
 { #category : #visiting }
@@ -102,8 +80,6 @@ GPReplacementVisitor >> visitLiteralNode: literal [
 	| node |
 	node := nodes pop.
 	lastValue := literal class value: node nodeValue
-		             "(self
-			              randomlySelectOption: node id)"
 ]
 
 { #category : #visiting }
@@ -117,11 +93,10 @@ GPReplacementVisitor >> visitMessageNode: messageNode [
 	messageNode selector: symbol.
 	[child := children third.
 	child isCollectionNode ifFalse: [ 
-		child isMessageNode ifTrue: [ self halt ].
+		child isSelectorNode ifTrue: [ self halt ].
 		child := GPCollectionNode transform: child ].
 	messageNode arguments: (child
-			 size: (self numberOfArguments: symbol);
-			 generateAST: self)] on: SubscriptOutOfBounds do: [ messageNode arguments: OrderedCollection new ].
+			 children collect: [ :ch | ch generateAST: self ]) ] on: SubscriptOutOfBounds do: [ messageNode arguments: OrderedCollection new ].
 	lastValue := messageNode
 ]
 

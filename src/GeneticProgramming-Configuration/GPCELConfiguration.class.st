@@ -11,7 +11,7 @@ GPCELConfiguration >> distanceFromSolutionOf: individual [
 	"
 	| l |
 	l := individual allLeaves.
-	^ (individual evaluate - 595) abs + ((l size - (l collect: #type) asSet size) * 3)
+	^ (individual evaluate - 595) abs + ((l size - (l collect: #nodeValue) asSet size) * 3)
 
 "	| l |
 	l := individual allLeaves.

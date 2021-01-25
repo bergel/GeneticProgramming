@@ -1,34 +1,34 @@
 Class {
 	#name : #GPNodeTest,
-	#superclass : #TestCase,
+	#superclass : #GPAbstractNodeTest,
 	#category : #'GeneticProgramming-Tests'
 }
 
 { #category : #'as yet unclassified' }
 GPNodeTest >> grammarETF [
+
 	| grammar configuration |
 	grammar := GPContextFreeGrammar new.
 	grammar
-		addMessageRule: #Add withValues: #( #+ #- );
+		addSelectorRule: #Add withValues: #( #+ #- );
 		addRule: #E ofClass: RBMessageNode withSequence: #( #E #Add #T );
 		addRule: #E redirectingTo: #T;
-		addMessageRule: #Mul withValues: #( #* #/ );
+		addSelectorRule: #Mul withValues: #( #* #/ );
 		addRule: #T ofClass: RBMessageNode withSequence: #( #T #Mul #F );
 		addRule: #T redirectingTo: #F;
 		addLeafRule: #F ofClass: RBLiteralNode withValues: (1 to: 10);
 		addRule: #F redirectingTo: #E.
 	configuration := GPConfiguration new
-		                 addWeight: 8 forRule: #E;
-		                 addWeight: 5 forRule: #T;
-		                 addWeight: 4 forRule: #F;
-		                 addOptionWeights: #( 8 5 ) forRule: #E;
-		                 addOptionWeights: #( 6 3 ) forRule: #T;
-		                 addOptionWeights: #( 6 4 ) forRule: #Add;
-		                 addOptionWeights: #( 6 3 ) forRule: #Mul;
-		                 addOptionWeights: #( 4 6 3 8 9 7 7 2 6 5 )
-		                 forRule: #F.
-		grammar configuration: configuration.
-		^ grammar
+		                 forRule: #E putWeight: 8;
+		                 forRule: #T putWeight: 5;
+		                 forRule: #F putWeight: 4;
+		                 forRule: #E putWeights: #( 8 5 );
+		                 forRule: #T putWeights: #( 6 3 );
+		                 forRule: #Add putWeights: #( 6 4 );
+		                 forRule: #Mul putWeights: #( 6 3 );
+		                 forRule: #F putWeights: #( 4 6 3 8 9 7 7 2 6 5 ).
+	grammar configuration: configuration.
+	^ grammar
 ]
 
 { #category : #'as yet unclassified' }
@@ -44,7 +44,7 @@ GPNodeTest >> grammarRoassal [
 		addRule: #Message
 		ofClass: RBMessageNode
 		withSequence: #( #Value #Selector );
-		addMessageRule: #Selector withValues: #( #size );
+		addSelectorRule: #Selector withValues: #( #size );
 		addRule: #Value withOptions: #( #Message #Variable );
 		addLeafRule: #Variable
 		ofClass: RBVariableNode
@@ -61,6 +61,32 @@ GPNodeTest >> setUp [
 { #category : #running }
 GPNodeTest >> tearDown [ 
 	GPRandom resetInstance
+]
+
+{ #category : #tests }
+GPNodeTest >> testAst [
+	| node ast |
+	node := GPNode new 
+		id: #F;
+		type: RBLiteralNode;
+		nodeValue: 1.
+	ast := node ast.
+	self assert: (RBParser parseExpression: '1') equals: ast
+]
+
+{ #category : #tests }
+GPNodeTest >> testAstOfMessageNode [
+	| node ast |
+	node := GPNode new 
+		id: #E;
+		type: RBMessageNode;
+		children: (OrderedCollection new
+			add: (GPNode new id: #F; type: RBLiteralNode; nodeValue: 1);
+			add: (GPNode new id: #Add; nodeValue: #+);
+			add: (GPNode new id: #F; type: RBLiteralNode; nodeValue: 34);
+			yourself).
+	ast := node ast.
+	self assert: (RBParser parseExpression: '1 + 34') equals: ast
 ]
 
 { #category : #tests }
@@ -114,15 +140,15 @@ GPNodeTest >> testCrossOver03 [
 	i1 := GPNode new id: #E; type: RBMessageNode;
 		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
 		children: (Array 
-			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 3)
-			with: (GPMessageNode new id: #Add; nodeValue: #+)
+			with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 3)
+			with: (GPNode new id: #Add; nodeValue: #+)
 			with: (GPCollectionNode new id: #Args; children: (Array 
-				with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 7)))).
+				with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 7)))).
 	i2 := GPNode new id: #F; type: RBMessageNode;
 		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
 		children: (Array 
-			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 8)
-			with: (GPMessageNode new id: #Selector; nodeValue: #odd)).
+			with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 8)
+			with: (GPNode new id: #Selector; nodeValue: #odd)).
 	
 	self assert: i1 print equals: '3 + 7'.
 	self assert: i2 print equals: '8 odd'.
@@ -140,15 +166,15 @@ GPNodeTest >> testCrossOver04 [
 	i1 := GPNode new id: #E; type: RBMessageNode;
 		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
 		children: (Array 
-			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 3)
-			with: (GPMessageNode new id: #Add; nodeValue: #+)
+			with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 3)
+			with: (GPNode new id: #Add; nodeValue: #+)
 			with: (GPCollectionNode new id: #Args; children: (Array 
-				with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 7)))).
+				with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 7)))).
 	i2 := GPNode new id: #F; type: RBMessageNode;
 		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
 		children: (Array 
-			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 8)
-			with: (GPMessageNode new id: #Selector; nodeValue: #odd)).
+			with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 8)
+			with: (GPNode new id: #Selector; nodeValue: #odd)).
 	
 	self assert: i1 print equals: '3 + 7'.
 	self assert: i2 print equals: '8 odd'.
@@ -165,17 +191,17 @@ GPNodeTest >> testCrossOver05 [
 	i1 := GPNode new id: #E; type: RBMessageNode;
 		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
 		children: (Array 
-			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 3)
-			with: (GPMessageNode new id: #Add; nodeValue: #+)
+			with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 3)
+			with: (GPNode new id: #Add; nodeValue: #+)
 			with: (GPCollectionNode new id: #Args; children: (Array 
-				with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 7)))).
+				with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 7)))).
 	i2 := GPNode new id: #F; type: RBMessageNode;
 		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
 		children: (Array 
-			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 8)
-			with: (GPMessageNode new id: #Add; nodeValue: #-)
+			with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 8)
+			with: (GPNode new id: #Add; nodeValue: #-)
 			with: (GPCollectionNode new id: #Args; children: (Array 
-				with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 9)))).
+				with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 9)))).
 	
 	self assert: i1 print equals: '3 + 7'.
 	self assert: i2 print equals: '8 - 9'.
@@ -183,6 +209,14 @@ GPNodeTest >> testCrossOver05 [
 	self deny: offspring print equals: i1 print.
 	self deny: offspring print equals: i2 print.
 	self assert: offspring print equals: '3 - 7'.
+]
+
+{ #category : #tests }
+GPNodeTest >> testDeepCopy [
+	| node c |
+	c := GPArithConfiguration new.
+	node := c subNode children: { c number: 5 . (c multNode children: { c number: 2 . c number: 3 }) }.
+	^ self testDeepCopy: node
 ]
 
 { #category : #tests }
@@ -213,7 +247,7 @@ GPNodeTest >> testExpandGivenDepthMethodAndOnCollectionNode [
 	grammar := self grammarRoassal.
 	GPRandom seed: 1.
 	node := grammar nodeOf: #Stms.
-	node := node expandGiven: grammar depth: 3 method: #grow and: Stack new.
+	node := node expandGiven: grammar depth: 4 method: #grow and: Stack new.
 	self assertCollection: node nodeValue flattened hasSameElements: #(#shapes #size)
 ]
 
@@ -253,7 +287,7 @@ GPNodeTest >> testNodeValueForComplexNode [
 	| grammar node |
 	grammar := self grammarETF.
 	GPRandom seed: 48393.
-	node := grammar expandFrom: #E.
+	node := grammar expandTreeFrom: #E.
 	self assertCollection: node nodeValue flattened hasSameElements: #(6 #* 10 #/ 8 #/ 8 #* 3 #/ 2 #* 2 #* 9).
 	
 
@@ -264,7 +298,7 @@ GPNodeTest >> testNodeValueForLeafNode [
 	| grammar node |
 	grammar := self grammarETF.
 	GPRandom seed: 12.
-	node := grammar expandFrom: #F.
+	node := grammar expandTreeFrom: #F.
 	self assert: node nodeValue equals: 6.
 	
 

@@ -3,25 +3,13 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'random',
-		'rulesWeights',
-		'optionsWeights',
 		'method',
-		'depth'
+		'depth',
+		'ruleWeights',
+		'optionWeights'
 	],
 	#category : #'GeneticProgramming-Configuration-Core'
 }
-
-{ #category : #adding }
-GPConfiguration >> addOptionWeights: numbers forRule: symbol [
-
-	 optionsWeights at: symbol put: numbers
-]
-
-{ #category : #adding }
-GPConfiguration >> addWeight: number forRule: symbol [
-
-	 rulesWeights at: symbol put: number
-]
 
 { #category : #operations }
 GPConfiguration >> createNewIndividual [
@@ -82,18 +70,30 @@ GPConfiguration >> distanceFromSolutionOf: individual [
 	self subclassResponsibility 
 ]
 
+{ #category : #adding }
+GPConfiguration >> forRule: symbol putWeight: number [
+
+	 ruleWeights at: symbol put: number
+]
+
+{ #category : #adding }
+GPConfiguration >> forRule: symbol putWeights: numbers [
+
+	 optionWeights at: symbol put: numbers
+]
+
 { #category : #initialization }
 GPConfiguration >> initialize [
 	super initialize.
 	random := GPRandom instance.
-	rulesWeights := Dictionary new.
-	optionsWeights := Dictionary new.
+	ruleWeights := Dictionary new.
+	optionWeights := Dictionary new.
 	method := #grow
 ]
 
 { #category : #accesing }
 GPConfiguration >> keysOfRuleWeights [ 
-	^ rulesWeights keys
+	^ ruleWeights keys
 ]
 
 { #category : #accessing }
@@ -138,7 +138,7 @@ GPConfiguration >> numberOfGenerations [
 { #category : #accesing }
 GPConfiguration >> optionWeightsOf: symbol [
 
-	^ optionsWeights at: symbol ifAbsent: [ #(1) ]
+	^ optionWeights at: symbol ifAbsent: [ #(1) ]
 ]
 
 { #category : #accessing }
@@ -172,11 +172,56 @@ GPConfiguration >> randomInt: anInt [
 { #category : #accessing }
 GPConfiguration >> rulesWeights [
 
-	^ rulesWeights
+	^ ruleWeights
 ]
 
 { #category : #accesing }
 GPConfiguration >> rulesWeightsOf: keys [
 
-	 ^ rulesWeights associations select: [ :assoc | keys includes: assoc key ] thenCollect: [ :assoc | assoc value ]
+	 ^ ruleWeights associations select: [ :assoc | keys includes: assoc key ] thenCollect: [ :assoc | assoc value ]
+]
+
+{ #category : #'as yet unclassified' }
+GPConfiguration >> selectOption: options given: weights [
+	| sum rndIndex |
+	sum := weights sum.
+	rndIndex := random randomNumber: sum.
+	weights doWithIndex: [ :weight :index | 
+		rndIndex <= weight ifTrue: [ ^ options at: index ].
+		rndIndex := rndIndex - weight
+	].
+	^ nil
+]
+
+{ #category : #'as yet unclassified' }
+GPConfiguration >> selectValue: options forRule: symbol [
+	options ifEmpty: [ ^ nil ].
+	^ optionWeights at: symbol 
+		ifPresent: [ :weights | | wgtSize optSize |
+			wgtSize := weights size.
+			optSize := options size.
+			wgtSize == optSize 
+				ifTrue: [ self selectOption: options given: weights ] 
+				ifFalse: [ wgtSize < optSize
+					ifTrue: [ | ws |
+						ws := weights asArray, ((1 to: optSize - wgtSize) collect: [ :n | 1 ]).
+						self selectOption: options given: ws ] 
+					ifFalse: [ self selectOption: options given: (weights copyFrom: 1 to: optSize) ] ] ]
+		ifAbsent: [ GPRandom instance randomlySelect: options ]
+]
+
+{ #category : #'as yet unclassified' }
+GPConfiguration >> shuffle: options forRule: symbol [
+	^ optionWeights at: symbol 
+		ifPresent: [ :weights | | wgtSize optSize |
+			wgtSize := weights size.
+			optSize := options size.
+			wgtSize == optSize 
+				ifTrue: [ self selectOption: options given: weights ] 
+				ifFalse: [ wgtSize < optSize
+					ifTrue: [ | ws |
+						ws := weights asArray, ((1 to: optSize - wgtSize) collect: [ :n | 1 ]).
+						self selectOption: options given: ws ] 
+					ifFalse: [ self selectOption: options given: (weights copyFrom: 1 to: optSize) ] ] ]
+		ifAbsent: [ GPRandom instance shuffleElementsOf: options ]
 ]

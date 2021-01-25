@@ -61,11 +61,11 @@ GPPlayConfiguration >> initializeGrammar [
 		addRule: #E redirectingTo: #E2;
 		addRule: #E2 ofClass: RBMessageNode withSequence: #(#Variable #Message);
 		
-		addMessageRule: #And withValues: #(#and:);
-		addMessageRule: #Message withValues: #(#isNil #isCollection #isNumber #isByteString #isFloat #isNotNil);
+		addSelectorRule: #And withValues: #(#and:);
+		addSelectorRule: #Message withValues: #(#isNil #isCollection #isNumber #isByteString #isFloat #isNotNil);
 		addRule: #Block ofClass: RBBlockNode withSequence: #(#E);
 		addLeafRule: #Variable ofClass: RBVariableNode withValues: #('obj').
-	grammar configuration: self.
+	"grammar configuration: self."
 	^ grammar
 ]
 
@@ -80,9 +80,9 @@ GPPlayConfiguration >> mutate: individual [
 		nodeToMutate := (children select: #isLeafNode) 
 			detect: [ :child | child id == source id ] 
 			ifNone: [ | msgs ids |
-				msgs := source withAllChildren select: #isMessageNode.
+				msgs := source withAllChildren select: #isSelectorNode.
 				ids := msgs collect: #id.
-				(children select: #isMessageNode) 
+				(children select: #isSelectorNode) 
 					detect: [ :ms | ids includes: ms id ]
 					ifFound: [ :ms | source := msgs at: (ids indexOf: ms id).
 						ms ]
@@ -104,12 +104,12 @@ GPPlayConfiguration >> newFunction [
 	[ found and: [ i > 10 ] ] whileFalse: [ 
 		depth := GPRandom instance randomNumber: 10.
 		method := GPRandom instance randomlySelect: #(#full #grow). "method = #full ifTrue: [ self halt ]."
-		node := grammar expandFrom: #E.
+		node := grammar expandTreeFrom: #E withDepth: depth.
 		found := node isNotNil.
 		i := i + 1. ].
 	node ifNil: [ self halt. ].
-	node evaluationBlock: [ :n :ctx | grammar generateASTFrom: n ];
-		printBlock: [ :n :ctx | (grammar generateASTFrom: n) formattedCode ].
+	node evaluationBlock: [ :n :ctx | n ast ];
+		printBlock: [ :n :ctx | n ast formattedCode ].
 	^ node
 ]
 

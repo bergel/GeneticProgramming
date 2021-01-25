@@ -105,10 +105,11 @@ GPRandom >> randomlySelectGivenProbabilities: dictionary [
 ]
 
 { #category : #enumerating }
-GPRandom >> randomlySelectOfDictionary: dictionary [
-	| assoc |
-	assoc := (self randomlySelect: dictionary associations).
-	^ assoc key -> (self randomlySelect: assoc value)
+GPRandom >> randomlySelectOfDictionary: associations [
+	^ self randomlySelect: associations
+	"| assoc |
+	assoc := (self randomlySelect: associations).
+	^ assoc key -> (self randomlySelect: assoc value)"
 ]
 
 { #category : #'instance creation' }

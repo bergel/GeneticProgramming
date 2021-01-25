@@ -1,15 +1,17 @@
 Class {
 	#name : #GPCollectionNode,
 	#superclass : #GPAbstractNode,
-	#instVars : [
-		'size'
-	],
 	#category : #'GeneticProgramming-Core'
 }
 
 { #category : #accessing }
 GPCollectionNode class >> transform: node [
 	^ self new children: (Array with: node)
+]
+
+{ #category : #accessing }
+GPCollectionNode >> ast [ 
+	^ RBSequenceNode statements: super ast
 ]
 
 { #category : #copying }
@@ -23,44 +25,13 @@ GPCollectionNode >> deepCopy [
 	^ c
 ]
 
-{ #category : #'public access' }
-GPCollectionNode >> evaluate: grammar [
-
-	^ children collect: [ :child | child evaluate: grammar]
-]
-
-{ #category : #'collecting leaves' }
-GPCollectionNode >> expand: grammar [
-
-	| options |
-	options := self getOptions: grammar.
-	self children: options
-]
-
-{ #category : #'collecting leaves' }
-GPCollectionNode >> expandGiven: grammar [
-
-	| node | 
-	node := self newNode: grammar.
-	node children: (node getOptions: grammar).
-	"node nodeValue: (node children collect: [:ch | ch nodeValue ])."
-	"node := nil.
-	options := grammar randomOptions: id.
-	newCollection := options
-		                 collect: [ :opt | 
-		                 (grammar nodeOf: opt children first) expandGiven:
-			                 grammar ]
-		                 thenReject: [ :n | n isNil ].
-	newCollection ifNotEmpty: [ 
-		node := (self newNode: grammar) children: newCollection ]."
-	^ node
-]
-
 { #category : #'collecting leaves' }
 GPCollectionNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans [
 	"^ self newNode: grammar with: anInteger"
-	| node newCollection |
+	"to remove"
+	| node newCollection size |
 	"anInteger == 1 ifTrue: [ ^ self newNode: grammar with: anInteger ]."
+	anInteger < 1 ifTrue: [ booleans push: false. ^ nil ].
 	(anInteger == 1 and: [ size == 0 ]) ifTrue: [ ^ self newNode: grammar with: anInteger ].
 	node := nil.
 	newCollection := (grammar randomOptionsOf: id)
@@ -117,37 +88,10 @@ GPCollectionNode >> generateAST: visitor [
 	^ children collect: [ :child | child generateAST: visitor ]
 ]
 
-{ #category : #'as yet unclassified' }
-GPCollectionNode >> getOptions: grammar [
-
-	| options indexes |
-	options := (grammar randomOptionsOf: id) collect: [ :node | 
-		           node children first ].
-	indexes := grammar shuffle:
-		           (self fillArrayOfSize: options size to: size).
-	^ indexes collect: [ :index | 
-		  grammar expandFrom: (options at: index) ]
-]
-
-{ #category : #initialization }
-GPCollectionNode >> initialize [
-
-	super initialize.
-	size := 0
-]
-
 { #category : #testing }
 GPCollectionNode >> isCollectionNode [
 
 	^ true
-]
-
-{ #category : #'instance creation' }
-GPCollectionNode >> newNode: grammar [
-	| node |
-	node := super newNode: grammar.
-	node size: size.
-	^ node
 ]
 
 { #category : #'instance creation' }
@@ -173,9 +117,4 @@ GPCollectionNode >> printOn: aStream [
 		child printOn: aStream.
 		aStream nextPut: Character space ].
 	aStream nextPut: $)
-]
-
-{ #category : #accessing }
-GPCollectionNode >> size: aNumber [
-	size := aNumber
 ]

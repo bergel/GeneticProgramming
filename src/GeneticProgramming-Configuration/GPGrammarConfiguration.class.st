@@ -45,10 +45,10 @@ GPGrammarConfiguration >> initializeGrammar [
 	grammar := GPContextFreeGrammar new.
 	grammar 
       addRule: #E ofClass: RBMessageNode withSequence: #( #E #AddOp #T );
-		addMessageRule: #AddOp withValues: #( #+ #-);
+		addSelectorRule: #AddOp withValues: #( #+ #-);
       addRule: #E redirectingTo: #T;
 		addRule: #T ofClass: RBMessageNode  withSequence: #( #T #MultOp #F );
-	 	addMessageRule: #MultOp withValues: #( #* #/);
+	 	addSelectorRule: #MultOp withValues: #( #* #/);
 	 	addRule: #T redirectingTo: #F;
 	 	addLeafRule: #F ofClass: RBLiteralNode withValues: (1 to: 10).
 	^ grammar
@@ -65,9 +65,9 @@ GPGrammarConfiguration >> mutate: individual [
 		nodeToMutate := (children select: #isLeafNode) 
 			detect: [ :child | child id == source id ] 
 			ifNone: [ | msgs ids |
-				msgs := source withAllChildren select: #isMessageNode.
+				msgs := source withAllChildren select: #isSelectorNode.
 				ids := msgs collect: #id.
-				(children select: #isMessageNode) 
+				(children select: #isSelectorNode) 
 					detect: [ :ms | ids includes: ms id ]
 					ifFound: [ :ms | source := msgs at: (ids indexOf: ms id).
 						ms ]
@@ -89,8 +89,8 @@ GPGrammarConfiguration >> newFunction [
 	isTerminal := node isLeafNode ]."
 	node := grammar expand"GivenMethod: (GPRandom instance randomlySelect: #(#grow #full))".
 	"ast := grammar generateASTFrom: node."
-	node evaluationBlock: [ :n :ctx | (grammar generateASTFrom: n) evaluate ];
-		printBlock: [ :n :ctx | (grammar generateASTFrom: n) formattedCode ].
+	node evaluationBlock: [ :n :ctx | n ast evaluate ];
+		printBlock: [ :n :ctx | n ast formattedCode ].
 	"node children do: [ :child | 
 		child evaluationBlock: [ :ch :ctx | ast evaluate ];
 		printBlock: [ :ch :ctx | ast formattedCode ] ].
@@ -105,13 +105,13 @@ GPGrammarConfiguration >> newFunction: symbol [
 	"isTerminal := false.
 	[ isTerminal ] whileFalse: [  node := grammar expand. 
 	isTerminal := node isLeafNode ]."
-	node := grammar expandFrom: symbol"GivenMethod: (GPRandom instance randomlySelect: #(#grow #full))".
+	node := grammar expandTreeFrom: symbol"GivenMethod: (GPRandom instance randomlySelect: #(#grow #full))".
 	"ast := grammar generateASTFrom: node."
 	node evaluationBlock: [ :n :ctx | | ast | 
-		ast := (grammar generateASTFrom: n).
+		ast := n ast.
 		[ ast evaluate ] on: MessageNotUnderstood do: [ ast ] ];
 		printBlock: [ :n :ctx | | ast | 
-		ast := (grammar generateASTFrom: n).
+		ast := n ast.
 		[ ast formattedCode ] on: MessageNotUnderstood do: [ ast printString ] ].
 	"node children do: [ :child | 
 		child evaluationBlock: [ :ch :ctx | ast evaluate ];

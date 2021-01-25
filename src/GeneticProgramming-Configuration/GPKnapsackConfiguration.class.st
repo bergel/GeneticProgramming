@@ -11,7 +11,7 @@ GPKnapsackConfiguration >> distanceFromSolutionOf: individual [
 	"
 	| l |
 	l := individual allLeaves.
-	(l collect: #type) asSet size < l size ifTrue: [ ^ 100000000 ].
+	(l collect: #nodeValue) asSet size < l size ifTrue: [ ^ 100000000 ].
 	^ (individual evaluate - 82) abs + individual allLeaves size
 ]
 
@@ -49,8 +49,8 @@ GPKnapsackConfiguration >> newTerminal [
 	| res t |
 	t := self randomElementOf: #(5 8 10 23 27 31 37 41).
 	res := GPNode new.
-	res type: t.
-	res printBlock: [ :children :context | res type asString ].
-	res evaluationBlock: [ :children :context | res type ].
+	res nodeValue: t.
+	res printBlock: [ :children :context | res nodeValue asString ].
+	res evaluationBlock: [ :children :context | res nodeValue ].
 	^ res
 ]

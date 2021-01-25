@@ -14,9 +14,9 @@ GPAbstractArithmeticConfiguration >> multNode [
 "
 	| res |
 	res := GPNode new.
-	res printBlock: [ :children :context | '(', (children first printUsing: context), ' * ', (children second printUsing: context), ')' ].
-	res evaluationBlock: [ :children :context | 
-		(children first evaluateUsing: context) * (children second evaluateUsing: context) ].
+	res printBlock: [ :node :context | '(', (node children first printUsing: context), ' * ', (node children second printUsing: context), ')' ].
+	res evaluationBlock: [ :node :context | 
+		(node children first evaluateUsing: context) * (node children second evaluateUsing: context) ].
 	^ res
 ]
 
@@ -64,9 +64,9 @@ GPAbstractArithmeticConfiguration >> newTerminalX [
 GPAbstractArithmeticConfiguration >> number: t [
 	| res |
 	res := GPNode new.
-	res type: t.
-	res printBlock: [ :children :context | t asString ].
-	res evaluationBlock: [ :children :context | t ].
+	res nodeValue: t.
+	res printBlock: [ :node :context | node nodeValue asString ].
+	res evaluationBlock: [ :node :context | node nodeValue ].
 	^ res
 ]
 
@@ -80,9 +80,9 @@ GPAbstractArithmeticConfiguration >> subNode [
 "
 	| res |
 	res := GPNode new.
-	res printBlock: [ :children :context | '(', (children first printUsing: context), ' - ', (children second printUsing: context), ')' ].
-	res evaluationBlock: [ :children :context | 
-		(children first evaluateUsing: context) - (children second evaluateUsing: context) ].
+	res printBlock: [ :node :context | '(', (node children first printUsing: context), ' - ', (node children second printUsing: context), ')' ].
+	res evaluationBlock: [ :node :context | 
+		(node children first evaluateUsing: context) - (node children second evaluateUsing: context) ].
 	^ res
 ]
 

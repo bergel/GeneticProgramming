@@ -4,41 +4,6 @@ Class {
 	#category : #'GeneticProgramming-Core'
 }
 
-{ #category : #copying }
-GPLeafNode >> deepCopy [
-	| newNode |
-	newNode := super deepCopy.
-	"newNode evaluationBlock: self evaluationBlock;
-	printBlock: self printBlock."
-	"newNode nodeValue: nodeValue deepCopy."
-	^ newNode
-]
-
-{ #category : #'public access' }
-GPLeafNode >> evaluate: grammar [
-
-	 ^ self nodeValue
-]
-
-{ #category : #'public access' }
-GPLeafNode >> evaluate: grammar given: configuration [
-	
-	^ self evaluate: grammar "(self selectedOptionNode: (grammar optionsOf: id) given: configuration) deepCopy"
-]
-
-{ #category : #'collecting leaves' }
-GPLeafNode >> expandChildrenGiven: grammar and: optionKey [
-	^ self expandGiven: grammar
-]
-
-{ #category : #'collecting leaves' }
-GPLeafNode >> expandGiven: context [
-	| node |
-	node := self newNode: context.
-	node nodeValue: (self selectOption: context).
-	^ node
-]
-
 { #category : #'collecting leaves' }
 GPLeafNode >> expandGiven: grammar depth: anInteger and: booleans [
 	| node |
@@ -52,7 +17,9 @@ GPLeafNode >> expandGiven: grammar depth: anInteger and: booleans [
 GPLeafNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans [
 	
 	"^ self expandGiven: grammar depth: anInteger and: booleans"
+	"to remove"
 	| node options  |
+	anInteger < 1 ifTrue: [ booleans push: false. ^ nil ].
 	options := grammar nodeOptionsOf: id.
 	(options isEmpty or: [ anInteger = 1 or: [ methodName = #grow ] ]) ifTrue: [ ^ self expandGiven: grammar depth: anInteger and: booleans ].
 	node := nil.
@@ -61,7 +28,7 @@ GPLeafNode >> expandGiven: grammar depth: anInteger method: methodName and: bool
 		detect: [ :option | | bool prevSize size |
 			prevSize := booleans size.
 			node := option isSymbol
-				ifTrue: [ (grammar nodeOf: option) expandGiven: grammar depth: anInteger method: methodName and: booleans ]
+				ifTrue: [ (grammar nodeOf: option) expandGiven: grammar depth: anInteger - 1 method: methodName and: booleans ]
 				ifFalse: [ nil].
 			size := booleans size.
 			bool := (self methodDepthBlock: methodName) valueWithEnoughArguments: (Array with: node with: booleans).
@@ -80,5 +47,5 @@ GPLeafNode >> isLeafNode [
 { #category : #initialization }
 GPLeafNode >> printOn: aStream [
 
-	aStream nextPutAll: id
+	aStream nextPutAll: (id ifNil: [ nodeValue asString ] ifNotNil: [ id ])
 ]
