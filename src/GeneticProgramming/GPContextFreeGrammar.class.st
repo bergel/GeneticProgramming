@@ -113,37 +113,6 @@ GPContextFreeGrammar >> addSelectorRule: symbol withValues: collection [
 ]
 
 { #category : #accessing }
-GPContextFreeGrammar >> allButMessageRuleKeys [
-	"to remove" 
-	| rules |
-	^ rules associations
-		  reject: [ :assoc | assoc value isSelectorNode ]
-		  thenCollect: [ :assoc | assoc key ]
-]
-
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> allComplexRulesKeysBut: symbols [
-	"to remove"
-	| rules |
-	^ rules associations
-		  select: [ :assoc | 
-			  (assoc value isComplexNode) and: [ 
-				  (symbols includes: assoc key) not ] ]
-		  thenCollect: [ :assoc | assoc key ]
-]
-
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> allLeavesRuleKeysBut: symbols [
-	"to remove"
-	| rules |
-	^ rules associations
-		  select: [ :assoc | 
-			  (assoc value isLeafNode) and: [ 
-				  (symbols includes: assoc key) not ] ]
-		  thenCollect: [ :assoc | assoc key ]
-]
-
-{ #category : #accessing }
 GPContextFreeGrammar >> allOptionsOf: symbol [
 	| opts nodeOpts dict |
 	opts := self optionsOf: symbol.
@@ -165,15 +134,6 @@ GPContextFreeGrammar >> collectValueForRule: symbol at: index considering: integ
 { #category : #accessing }
 GPContextFreeGrammar >> configuration: aConfiguration [
 	configuration := aConfiguration 
-]
-
-{ #category : #adding }
-GPContextFreeGrammar >> createNode: symbol ofClass: classNode type: aClass withSequence: sequence [
-
-	^ classNode new
-		  id: symbol;
-		  type: aClass;
-		  children: sequence
 ]
 
 { #category : #accessing }
@@ -328,13 +288,6 @@ GPContextFreeGrammar >> nodeNumber [
 ]
 
 { #category : #accessing }
-GPContextFreeGrammar >> nodeOf: symbol [
-	"to remove"
-	| rules |
-	^ rules at: symbol
-]
-
-{ #category : #accessing }
 GPContextFreeGrammar >> nodeOptionsOf: symbol [
 	"to remove"
 	| nodeOptions |
@@ -374,25 +327,20 @@ GPContextFreeGrammar >> randomOptionsOf: symbol [
 { #category : #selecting }
 GPContextFreeGrammar >> randomlySelectOption: collection [
 
-	configuration ifNil: [ 
-		^ GPRandom instance randomlySelect: collection].
-	self halt.
-	^ collection
-		  ifEmpty: [ 
-		  GPRandom instance randomlySelectOfDictionary: (self allOptionsOf: nil"symbol") "randomlySelect: (self optionsOf: symbol)" ]
-		  ifNotEmpty: [ 
-		  "(self optionsOf: symbol)" (self allOptionsOf: nil "symbol") associations first value at: (GPRandom instance randomlySelectGivenProbabilities: collection) ]
+	^ GPRandom instance randomlySelect: collection
 ]
 
 { #category : #selecting }
 GPContextFreeGrammar >> randomlySelectOption: assocs regarding: integer [
 
 	integer == depth ifTrue: [ | newCol |
-			newCol := assocs select: [ :ass | ass key = 'node' ].
-			^ newCol ifEmpty: [ nil ] 
+		newCol := assocs select: [ :ass | ass key = 'node' ].
+		^ newCol 
+			ifEmpty: [ nil ] 
 			ifNotEmpty: [ GPRandom instance randomlySelect: newCol ] ].
 	configuration ifNil: [ 
 		^ GPRandom instance randomlySelect: assocs ].
+	self halt.
 	^ assocs
 		  ifEmpty: [ 
 		  GPRandom instance randomlySelectOfDictionary: (self allOptionsOf: nil"symbol") "randomlySelect: (self optionsOf: symbol)" ]
@@ -420,7 +368,7 @@ GPContextFreeGrammar >> selectValueForRule: symbol at: index [
 			valueOptions := ruleOption getValueOptionsAt: index.
 			configuration 
 				ifNil: [ self randomlySelectOption: valueOptions ]
-				ifNotNil: [ configuration select: valueOptions ] ]
+				ifNotNil: [ self halt. configuration select: valueOptions ] ]
 		ifAbsent: [ nil ]
 ]
 
@@ -435,5 +383,5 @@ GPContextFreeGrammar >> shuffleOrSortOptions: collection of: symbol regarding: i
 		^ GPRandom instance  shuffleElementsOf: (collection select: [ :ass | ass key = 'node' ]) ].
 	^ configuration 
 		ifNil: [ GPRandom instance shuffleElementsOf: collection ] 
-		ifNotNil: [configuration shuffle: collection forRule: symbol  ]
+		ifNotNil: [ self halt. configuration shuffle: collection forRule: symbol  ]
 ]

@@ -225,7 +225,7 @@ GPNodeTest >> testExpandGivenDepthMethodAnd [
 	| grammar node stack |
 	grammar := self grammarETF.
 	GPRandom seed: 1.
-	node := grammar nodeOf: #E.
+	node := grammar expandTree: #E.
 	stack := Stack new.
 	node := node evaluateUsing: grammar.
 	self assert: (node allLeaves select: #isLeafNode thenCollect: #depth) asSet size equals: 1
@@ -236,7 +236,7 @@ GPNodeTest >> testExpandGivenDepthMethodAndGrow [
 	| grammar node stack |
 	grammar := self grammarETF.
 	GPRandom seed: 10.
-	node := grammar nodeOf: #E.
+	node := grammar expandTree: #E.
 	stack := Stack new.
 	"node := node expandGiven: grammar depth: 4 method: #grow and: stack."
 	self assert: (node allLeaves select: #isLeafNode thenCollect: #depth) asSet size > 1
@@ -247,7 +247,7 @@ GPNodeTest >> testExpandGivenDepthMethodAndOnCollectionNode [
 	| grammar node |
 	grammar := self grammarRoassal.
 	GPRandom seed: 1.
-	node := grammar nodeOf: #Stms.
+	node := grammar expandTree: #Stms.
 	"node := node expandGiven: grammar depth: 4 method: #grow and: Stack new."
 	self assertCollection: node nodeValue flattened hasSameElements: #(#shapes #size)
 ]

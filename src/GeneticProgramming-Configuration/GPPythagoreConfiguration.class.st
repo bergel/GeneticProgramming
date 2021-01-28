@@ -55,6 +55,12 @@ GPPythagoreConfiguration >> example [
 
 ]
 
+{ #category : #initialization }
+GPPythagoreConfiguration >> initialize [
+	super initialize.
+	random := GPRandom seed: 1
+]
+
 { #category : #'instance creation' }
 GPPythagoreConfiguration >> newTerminal [
 	"This method has to return a new function"
@@ -85,10 +91,10 @@ GPPythagoreConfiguration >> newTerminalC [
 
 { #category : #hooks }
 GPPythagoreConfiguration >> numberOfGenerations [
-	^ 20
+	^ 10
 ]
 
 { #category : #hooks }
 GPPythagoreConfiguration >> populationSize [
-	^ 10
+	^ 20
 ]

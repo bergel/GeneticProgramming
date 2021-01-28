@@ -4,7 +4,6 @@ Class {
 	#instVars : [
 		'random',
 		'method',
-		'depth',
 		'ruleWeights',
 		'optionWeights'
 	],
@@ -48,18 +47,6 @@ GPConfiguration >> createNewIndividualRoot: rootNode depth: depth [
 				rootNode addChild: f.
 				self createNewIndividualRoot: f depth: depth - 1 ]
 			ifFalse: [ rootNode addChild: self newTerminal ] ]
-]
-
-{ #category : #accessing }
-GPConfiguration >> depth [
-
-	^ depth
-]
-
-{ #category : #accessing }
-GPConfiguration >> depth: anObject [
-
-	depth := anObject
 ]
 
 { #category : #operations }

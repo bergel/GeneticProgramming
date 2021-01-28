@@ -63,7 +63,7 @@ GPPlayConfiguration >> initializeGrammar [
 		addRule: #E2 ofClass: RBMessageNode withSequence: #(#Variable #Message);
 		addSelectorRule: #And withValues: #(#and:);
 		addSelectorRule: #Satisfy withValues: #(#allSatisfy: #noneSatisfy:);
-		addSelectorRule: #Message withValues: #(#isNil #isCollection #isNumber #isByteString #isFloat #isNotNil #isLiteral);
+		addSelectorRule: #Message withValues: #(#isNil #isCollection #isNumber #isString #isFloat #isNotNil #notEmpty);
 		addRule: #Block ofClass: RBBlockNode withSequence: #(#E);
 		addLeafRule: #Variable ofClass: RBVariableNode withValues: #('obj').
 	"grammar configuration: self."
@@ -95,7 +95,7 @@ GPPlayConfiguration >> mutate: individual [
 
 { #category : #hooks }
 GPPlayConfiguration >> newFunction [ 
-	| node found i |
+	| node found i depth |
 	found := false.
 	i := 0.
 	[ found and: [ i > 10 ] ] whileFalse: [ 
