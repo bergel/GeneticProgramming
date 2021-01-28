@@ -115,7 +115,7 @@ GPConfiguration >> mutate: individual [
 	source := self newTerminal.
 	nodeToMutate evaluationBlock: source evaluationBlock.
 	nodeToMutate printBlock: source printBlock.
-	nodeToMutate type: source type.
+	nodeToMutate nodeValue: source nodeValue.
 ]
 
 { #category : #hooks }

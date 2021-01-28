@@ -27,7 +27,7 @@ GPNodeTest >> grammarETF [
 		                 forRule: #Add putWeights: #( 6 4 );
 		                 forRule: #Mul putWeights: #( 6 3 );
 		                 forRule: #F putWeights: #( 4 6 3 8 9 7 7 2 6 5 ).
-	grammar configuration: configuration.
+	"grammar configuration: configuration."
 	^ grammar
 ]
 
@@ -226,7 +226,7 @@ GPNodeTest >> testExpandGivenDepthMethodAnd [
 	GPRandom seed: 1.
 	node := grammar nodeOf: #E.
 	stack := Stack new.
-	node := node expandGiven: grammar depth: 4 method: #full and: stack.
+	node := node evaluateUsing: grammar.
 	self assert: (node allLeaves select: #isLeafNode thenCollect: #depth) asSet size equals: 1
 ]
 
@@ -237,7 +237,7 @@ GPNodeTest >> testExpandGivenDepthMethodAndGrow [
 	GPRandom seed: 10.
 	node := grammar nodeOf: #E.
 	stack := Stack new.
-	node := node expandGiven: grammar depth: 4 method: #grow and: stack.
+	"node := node expandGiven: grammar depth: 4 method: #grow and: stack."
 	self assert: (node allLeaves select: #isLeafNode thenCollect: #depth) asSet size > 1
 ]
 
@@ -247,7 +247,7 @@ GPNodeTest >> testExpandGivenDepthMethodAndOnCollectionNode [
 	grammar := self grammarRoassal.
 	GPRandom seed: 1.
 	node := grammar nodeOf: #Stms.
-	node := node expandGiven: grammar depth: 4 method: #grow and: Stack new.
+	"node := node expandGiven: grammar depth: 4 method: #grow and: Stack new."
 	self assertCollection: node nodeValue flattened hasSameElements: #(#shapes #size)
 ]
 
@@ -287,7 +287,7 @@ GPNodeTest >> testNodeValueForComplexNode [
 	| grammar node |
 	grammar := self grammarETF.
 	GPRandom seed: 48393.
-	node := grammar expandTreeFrom: #E.
+	node := grammar expandTree: #E.
 	self assertCollection: node nodeValue flattened hasSameElements: #(6 #* 10 #/ 8 #/ 8 #* 3 #/ 2 #* 2 #* 9).
 	
 
@@ -298,7 +298,7 @@ GPNodeTest >> testNodeValueForLeafNode [
 	| grammar node |
 	grammar := self grammarETF.
 	GPRandom seed: 12.
-	node := grammar expandTreeFrom: #F.
+	node := grammar expandTree: #F.
 	self assert: node nodeValue equals: 6.
 	
 
@@ -309,7 +309,7 @@ GPNodeTest >> testNodeValueForMessageNode [
 	| grammar node |
 	grammar := self grammarETF.
 	GPRandom seed: 1.
-	node := (grammar nodeOf: #Add) expandGiven: grammar depth: 1 method: #grow and: Stack new.
+	"node := (grammar nodeOf: #Add) expandGiven: grammar depth: 1 method: #grow and: Stack new."
 	self assert: node nodeValue equals: #+.
 	
 

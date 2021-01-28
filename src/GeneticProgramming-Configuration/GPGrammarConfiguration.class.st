@@ -60,19 +60,15 @@ GPGrammarConfiguration >> mutate: individual [
 	children := GPRandom instance shuffleElementsOf: (individual withAllChildren select: #isLeaf).
 	found := false.
 	i := 0.
-	[ found or: [ i > 20 ] ] whileFalse: [ 
+	[ found or: [ i > 20 ] ] whileFalse: [ | indivIds sourceIds sceChildren |
 		source := self newTerminal.
-		nodeToMutate := (children select: #isLeafNode) 
-			detect: [ :child | child id == source id ] 
-			ifNone: [ | msgs ids |
-				msgs := source withAllChildren select: #isSelectorNode.
-				ids := msgs collect: #id.
-				(children select: #isSelectorNode) 
-					detect: [ :ms | ids includes: ms id ]
-					ifFound: [ :ms | source := msgs at: (ids indexOf: ms id).
-						ms ]
-					ifNone: [ nil ] ]. 
-		found := nodeToMutate isNotNil.
+		indivIds := children collect: #id.
+		sceChildren := source withAllChildren select: #isLeaf.
+		sourceIds := sceChildren collect: #id.
+		(indivIds includesAny: sourceIds) ifTrue: [ 
+			nodeToMutate := children at: (indivIds indexOfAnyOf: sourceIds).
+			source := sceChildren at: (sourceIds indexOf: nodeToMutate id).
+			found := true ].
 		i := i + 1 ].
 	nodeToMutate ifNotNil: [ 
 		nodeToMutate evaluationBlock: source evaluationBlock.
@@ -89,8 +85,8 @@ GPGrammarConfiguration >> newFunction [
 	isTerminal := node isLeafNode ]."
 	node := grammar expand"GivenMethod: (GPRandom instance randomlySelect: #(#grow #full))".
 	"ast := grammar generateASTFrom: node."
-	node evaluationBlock: [ :n :ctx | n ast evaluate ];
-		printBlock: [ :n :ctx | n ast formattedCode ].
+	node evaluationBlock: [ :n :ctx | [n ast evaluate] on: MessageNotUnderstood do: [ n ast ] ];
+		printBlock: [ :n :ctx | [n ast formattedCode ] on: MessageNotUnderstood do: [ n ast ] ].
 	"node children do: [ :child | 
 		child evaluationBlock: [ :ch :ctx | ast evaluate ];
 		printBlock: [ :ch :ctx | ast formattedCode ] ].
@@ -105,7 +101,7 @@ GPGrammarConfiguration >> newFunction: symbol [
 	"isTerminal := false.
 	[ isTerminal ] whileFalse: [  node := grammar expand. 
 	isTerminal := node isLeafNode ]."
-	node := grammar expandTreeFrom: symbol"GivenMethod: (GPRandom instance randomlySelect: #(#grow #full))".
+	node := grammar expandTree: symbol"GivenMethod: (GPRandom instance randomlySelect: #(#grow #full))".
 	"ast := grammar generateASTFrom: node."
 	node evaluationBlock: [ :n :ctx | | ast | 
 		ast := n ast.

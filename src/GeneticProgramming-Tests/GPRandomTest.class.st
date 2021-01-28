@@ -55,7 +55,7 @@ GPRandomTest >> testRandomlySelectOfDictionary [
 		at: 'opts' put: #(1 6 3 3 3 5 2);
 		at: 'nodeOpts' put: #(6 4 6 2 2 0);
 		yourself.
-	selected := random randomlySelectOfDictionary: dictionary.
+	selected := random randomlySelectOfDictionary: dictionary associations.
 	self assert: selected equals: 'opts' -> 1
 ]
 

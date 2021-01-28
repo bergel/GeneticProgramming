@@ -53,23 +53,10 @@ GPAbstractNode >> atIndex: index put: anotherNode [
 	index < 1 ifTrue: [ ^ self ].
 	i := index.
 	i := i - 1.
-	(self children collect: #id) asSet size = 1 
-		ifFalse: [ | ind |
-			ind := 0.
-			self children detect: [ :ch | ind := ind + 1.
-				ch id == anotherNode id ] 
-			ifFound: [ :ch | self children at: ind put: anotherNode ].
-			^ self ] 
-		ifTrue: [ 
-			self children doWithIndex: [ :child :ii |
-				i = 1 ifTrue: [ "| n | 
-				n := self children at: ii.
-				n isComplexNode ifTrue: [ self children at: ii put: anotherNode ] 
-				ifFalse: [self children at: ii put: (n atIndex: i put: anotherNode )]. ^ self "
-					self children at: ii put: anotherNode.
-					^ self ].
-				child atIndex: i put: anotherNode.
-				i := i - 1. ] ].
+	self children doWithIndex: [ :child :ii |
+		i = 1 ifTrue: [  self children at: ii put: anotherNode. ^ self ].
+		child atIndex: i put: anotherNode.
+		i := i - 1. ].
 	
 ]
 
@@ -83,15 +70,16 @@ GPAbstractNode >> children: someNodes [
 	children := someNodes
 ]
 
-{ #category : #'groups collecting' }
-GPAbstractNode >> collectOptions: options with: numbers [
-	"to remove"
-	| weights |
-	weights := numbers.
-	weights size < options size ifTrue: [ 
-		weights := (1 to: options size) collect: [ :n | 1 ] ].
-	^ (options with: weights collect: [ :opt :w | opt -> w ])
-		  asOrderedDictionary
+{ #category : #operations }
+GPAbstractNode >> crossOverGiven: anotherNode and: random [
+	| ids childIds index tree |
+	ids := self withAllChildren collect: #id.
+	childIds := random shuffleElementsOf: (anotherNode withAllChildren collect: #id).
+	(ids includesAny: childIds) ifFalse: [ ^ self ].
+	index := ids indexOfAnyOf: childIds.
+	tree := self withAllChildren at: index.
+	self withAllChildren at: index put: ((anotherNode withAllChildren collect: #id) indexOf: tree id)	
+	
 ]
 
 { #category : #operations }
@@ -121,10 +109,11 @@ GPAbstractNode >> crossOverWith: anotherNode using: random [
 
 	"This method should be called with two root nodes"
 
-	^ self
-		  crossOverWith: anotherNode
-		  at: ([ random nextInteger: self numberOfNodes - 1 ] on: Error do: [ 0 ]) + 1
-		  at: ( [random nextInteger: anotherNode numberOfNodes - 1] on: Error do: [ 0 ] ) + 1
+	^ (self children collect: #id) asSet size = 1 
+		ifTrue: [ self crossOverWith: anotherNode 
+			at: ([ random nextInteger: self numberOfNodes - 1 ] on: Error do: [ 0 ]) + 1 
+			at: ( [random nextInteger: anotherNode numberOfNodes - 1] on: Error do: [ 0 ] ) + 1 ]
+		ifFalse: [ self crossOverGiven: anotherNode and: random ]
 ]
 
 { #category : #copying }
@@ -178,11 +167,6 @@ GPAbstractNode >> evaluationBlock [
 GPAbstractNode >> evaluationBlock: aOneArgBlock [
 	"Take the children as argument"
 	evaluationBlock := aOneArgBlock
-]
-
-{ #category : #'collecting leaves' }
-GPAbstractNode >> expandGiven: grammar depth: anInteger method: methodName and: booleans [
-	^ self subclassResponsibility 
 ]
 
 { #category : #accessing }
@@ -272,18 +256,6 @@ GPAbstractNode >> isLeafNode [
 GPAbstractNode >> isSelectorNode [
 
 	^ false
-]
-
-{ #category : #'as yet unclassified' }
-GPAbstractNode >> methodDepthBlock: string [
-	| block |
-	block := nil.
-	string = #full 
-		ifTrue: [ block := [ :node :bools | node isNotNil and: [ 
-				bools inject: true into: [ :b :e | e and: [ b ] ] ] ] ].
-	string = #grow ifTrue: [ block := [ :node :bools | node isNotNil and: [ 
-				bools inject: false into: [ :b :e | e or: [ b ] ] ] ] ].
-	^ block
 ]
 
 { #category : #'instance creation' }

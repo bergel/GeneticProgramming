@@ -43,16 +43,7 @@ GPContextFreeGrammar >> addRule: symbol ofClass: aClass withSequence: collection
 	optionRule 
 		addNode: (GPNode new id: symbol; type: aClass; 
 			children: collection asOrderedCollection;
-			evaluationBlock: [:n :ctx | 
-				[:nodeDepth :booleans | | children child |
-					children := OrderedCollection new.
-					collection 
-						detect: [ :id | 
-							child := self expandTree: id from: nodeDepth + 1 with: booleans.
-							children add: child.
-							child isNil ]
-						ifFound: [ nil ]
-						ifNone: [ n deepCopy depth: nodeDepth; children: children ] ] ];
+			evaluationBlock: (self evaluationBlockOfNode: collection);
 			printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ])
 ]
 
@@ -79,10 +70,10 @@ GPContextFreeGrammar >> addRule: symbol withCollectionOptions: collection ofSize
 					allOptions 
 						ifEmpty: [ nil ] 
 						ifNotEmpty: [ allOptions size < anInteger 
-							ifTrue: [ allOptions := (self shuffle: (self fillArrayOfSize: allOptions size to: anInteger )) collect: [:i | allOptions at: i ] ] ].
+							ifTrue: [ allOptions := (self shuffle: (self fillArrayOfSize: allOptions size to: anInteger )) collect: [:i | allOptions at: i ] ].
 					n deepCopy 
 						depth: nodeDepth; 
-						children: ((1 to: anInteger) collect: [ :i | ctx expandTree: (allOptions at: i) from: nodeDepth + 1 with: booleans ]) ] ];
+						children: ((1 to: anInteger) collect: [ :i | ctx expandTree: (allOptions at: i) from: nodeDepth + 1 with: booleans ]) ] ] ];
 			printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ]) 
 		withValueOptions: collection asOrderedCollection.
 ]
@@ -208,57 +199,28 @@ GPContextFreeGrammar >> dictionaryOfOptionsWithWeights: symbol [
 	^ dict
 ]
 
+{ #category : #'as yet unclassified' }
+GPContextFreeGrammar >> evaluationBlockOfNode: collection [
+	^ [ :n :ctx | 
+			[:nodeDepth :booleans | | children child | 
+				children := OrderedCollection new.
+				collection 
+					detect: [ :id | 
+						child := self expandTree: id from: nodeDepth + 1 with: booleans.
+						children add: child.
+						child isNil ]
+					ifFound: [ nil ]
+					ifNone: [ 
+						(n isNotNil and: [self methodDepthBlock valueWithPossibleArgs: (Array with: booleans)]) 
+						ifTrue: [ n deepCopy depth: nodeDepth; children: children ] 
+						ifFalse: [ nil ] ] ]
+	 ]
+]
+
 { #category : #controlling }
 GPContextFreeGrammar >> expand [
 
-	 ^ self expandTreeFrom: self selectKeyRule
-]
-
-{ #category : #controlling }
-GPContextFreeGrammar >> expandAny [
-	"to remove"
-	| rules|
-	 ^ self expandTreeFrom: (GPRandom instance randomlySelect: rules keys)
-]
-
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandFrom: axiom given: aConfiguration [
-
-	self configuration: aConfiguration.
-	^ self expandTreeFrom: axiom
-]
-
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandFrom: symbol given: depth1 method: methodName1 and: ruleKeys [
-	"to remove"
-	| rules |
-	^ rules
-		  at: symbol
-		  ifPresent: [ :node | 
-			  | resNode bools |
-			  bools := Stack new.
-			  resNode := node expandGiven: self depth: depth method: methodName and: bools.
-			  resNode
-				  ifNil: [ 
-					  ruleKeys add: symbol.
-					  self expandGiven: depth method: methodName and: ruleKeys ]
-				  ifNotNil: [ resNode ] ]
-		  ifAbsent: [ nil ]
-]
-
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandGiven: aConfiguration depth: depth method: methodName and: ruleKeys [
-
-	self configuration: aConfiguration.
-	^ self expandGiven: depth method: methodName and: ruleKeys
-]
-
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandGiven: depth method: methodName and: ruleKeys [
-
-	|axiom |
-	axiom := self selectKeyRuleGiven: depth and: ruleKeys.
-	^ self expandFrom: axiom given: depth method: methodName and: ruleKeys.
+	 ^ self expandTree: self selectKeyRuleOption
 ]
 
 { #category : #'collecting leaves' }
@@ -267,7 +229,7 @@ GPContextFreeGrammar >> expandTree: symbol [
 	found := false.
 	i := 1.
 	numbers := Set new.
-	[ found and: [ i > 20 ] ] whileFalse: [ | includes |
+	[ found or: [ i > 20 ] ] whileFalse: [ | includes |
 		includes := true.
 		[ includes ] whileTrue: [ 
 			depth := configuration 
@@ -275,7 +237,7 @@ GPContextFreeGrammar >> expandTree: symbol [
 				ifNotNil: [ configuration depth ].
 			includes := numbers includes: depth
 		 ].
-		tree := [ self expandTree: symbol from: 0 with: Stack new ]
+		tree := [ self expandTree: symbol withDepth: depth ]
 			on: Error do: [ nil ].
 		tree ifNil: [ numbers add: depth ]
 			ifNotNil: [ found := true ].
@@ -285,67 +247,41 @@ GPContextFreeGrammar >> expandTree: symbol [
 
 { #category : #'collecting leaves' }
 GPContextFreeGrammar >> expandTree: symbol from: integer with: booleans [
-	| allOptions tree prevSize |
+	| allOptions opts |
 	integer > depth ifTrue: [ ^ nil ].
 	allOptions := self shuffleOrSortOptions: (options at: symbol) allOptions of: symbol regarding: integer.
-	prevSize := booleans size.
-	"assoc := configuration 
-			ifNil: [ self randomlySelectOption: allOptions regarding: integer ] 
-			ifNotNil: [ configuration selectValue: allOptions forRule: symbol regarding: integer ]."
+	allOptions ifEmpty: [ ^ nil ].
+	opts := OrderedCollection new.
 	^ allOptions 
-		detect: [ :assoc | | bool size |
+		detect: [ :assoc | | bool size tree prevSize |
+			prevSize := booleans size.
 			tree := assoc key = 'node'
 				ifTrue: [ | node |
 					node := assoc value key.
-					[(node evaluateUsing: self) valueWithPossibleArgs: (Array with: integer with: booleans)] on: Error do: [ nil ] ]
+					(node evaluateUsing: self) valueWithPossibleArgs: (Array with: integer with: booleans) ]
 				ifFalse: [ self expandTree: assoc value from: integer + 1 with: booleans ].
-			bool := self methodDepthBlock valueWithPossibleArgs: (Array with: tree with: booleans).
+			bool := tree isNotNil and: [self methodDepthBlock valueWithPossibleArgs: (Array with: booleans)].
 			size := booleans size.
+			tree ifNotNil: [ opts add: tree ].
 			(methodName = #full and: [(size - prevSize) > 0]) ifTrue: [ 
 				1 to: (size - prevSize) do: [:n | booleans pop ] ].
 			bool ] 
-		ifFound: [ :assoc | tree ] ifNone: [ nil ]. 
+		ifFound: [ :assoc | opts last ] 
+		ifNone: [ opts ifEmpty: [ nil ] ifNotEmpty: [ booleans push: false.
+				self randomlySelectOption: opts ] ]. 
 ]
 
 { #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandTreeFrom: symbol [
-	| allOptions assoc |
-	allOptions := (options at: symbol) allOptions.
-	assoc := allOptions
-		ifEmpty: [ nil ]
-		ifNotEmpty: [ configuration 
-			ifNil: [ self randomlySelectOption: allOptions ] 
-			ifNotNil: [ configuration selectValue: allOptions forRule: symbol ] ].
-	"(symbol = #F and: [ assoc key = 'node' ]) ifTrue: [ self halt ]."
-	^ assoc key = 'node'
-		ifTrue: [ | node valueOptions |
-			node := assoc value.
-			valueOptions := node value.
-			node := node key.
-			node evaluateUsing: self ]
-		ifFalse: [ self expandTreeFrom: assoc value ]
+GPContextFreeGrammar >> expandTree: axiom given: aConfiguration [
+
+	self configuration: aConfiguration.
+	^ self expandTree: axiom
 ]
 
 { #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandTreeFrom: symbol withDepth: integer [
+GPContextFreeGrammar >> expandTree: symbol withDepth: integer [
 	depth := integer.
 	^ self expandTree: symbol from: 0 with: Stack new
-]
-
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> expandUsing: aConfiguration [
-
-	^ aConfiguration depth
-		  ifNil: [ 
-			  self
-				  expandFrom: (self selectKeyRuleGiven: aConfiguration)
-				  given: aConfiguration ]
-		  ifNotNil: [ 
-			  self
-				  expandGiven: aConfiguration
-				  depth: aConfiguration depth
-				  method: aConfiguration method
-				  and: Stack new ]
 ]
 
 { #category : #'as yet unclassified' }
@@ -372,10 +308,8 @@ GPContextFreeGrammar >> methodDepthBlock [
 	| block |
 	block := nil.
 	methodName = #full 
-		ifTrue: [ block := [ :node :bools | node isNotNil and: [ 
-				bools inject: true into: [ :b :e | e and: [ b ] ] ] ] ].
-	methodName = #grow ifTrue: [ block := [ :node :bools | node isNotNil and: [ 
-				bools inject: false into: [ :b :e | e or: [ b ] ] ] ] ].
+		ifTrue: [ block := [ :bools | bools inject: true into: [ :b :e | e and: [ b ] ] ] ].
+	methodName = #grow ifTrue: [ block := [ :bools | bools inject: false into: [ :b :e | e or: [ b ] ] ] ].
 	^ block
 ]
 
@@ -472,47 +406,11 @@ GPContextFreeGrammar >> ruleOptionOf: symbol [
 ]
 
 { #category : #selecting }
-GPContextFreeGrammar >> selectKeyRule [
+GPContextFreeGrammar >> selectKeyRuleOption [
 
-	 ^ GPRandom instance randomlySelect: self allButMessageRuleKeys
-]
-
-{ #category : #selecting }
-GPContextFreeGrammar >> selectKeyRuleGiven: aConfiguration [
-
-	^ (aConfiguration keysOfRuleWeights includesAll:
-		   self allButMessageRuleKeys)
-		  ifFalse: [ self selectKeyRule ]
-		  ifTrue: [ 
-			  GPRandom instance randomlySelectGivenProbabilities:
-				  aConfiguration rulesWeights ]
-]
-
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> selectKeyRuleGiven: depth and: ruleKeys [
-
-	| newCollection |
-	newCollection := self
-		                 selectRulesKeysGiven: depth
-		                 andAvoiding: ruleKeys.
-	newCollection ifEmpty: [ 
-		self error:
-			'AST can not be expanded with depth of: ' , depth asString ].
-	^ configuration rulesWeights
-		  ifEmpty: [ GPRandom instance randomlySelect: newCollection ]
-		  ifNotEmpty: [ 
-			  GPRandom instance randomlySelectGivenProbabilities:
-				  (newCollection
-					   with: (configuration rulesWeightsOf: newCollection)
-					   collect: [ :i :w | i -> w ]) asOrderedDictionary ]
-]
-
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> selectRulesKeysGiven: depth andAvoiding: ruleKeys [
-
-	 ^ (depth == 1
-		    ifTrue: [ self allLeavesRuleKeysBut: ruleKeys ]
-		    ifFalse: [ self allComplexRulesKeysBut: ruleKeys ])
+	 ^ configuration 
+			ifNil: [ self randomlySelectOption: options keys ] 
+			ifNotNil: [ self halt ]
 ]
 
 { #category : #adding }
