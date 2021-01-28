@@ -37,15 +37,6 @@ GPCollectionNode >> isCollectionNode [
 	^ true
 ]
 
-{ #category : #'instance creation' }
-GPCollectionNode >> newNode: grammar with: aNumber [
-	| node |
-	node := self newNode: grammar.
-	node idNumber: grammar nodeNumber;
-		depth: aNumber.
-	^ node
-]
-
 { #category : #accessing }
 GPCollectionNode >> nodeValue [
 	nodeValue := self children collect: [:ch | ch nodeValue ].
