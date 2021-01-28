@@ -164,23 +164,24 @@ GPNodeTest >> testCrossOver04 [
 	| i1 i2 offspring |
 	GPRandom seed: 16344.
 	i1 := GPNode new id: #E; type: RBMessageNode;
-		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
+		printBlock: [:n :ctx | n ast formattedCode ];
 		children: (Array 
-			with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 3)
-			with: (GPNode new id: #Add; nodeValue: #+)
+			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 3)
+			with: (GPSelectorNode new id: #Add; nodeValue: #+)
 			with: (GPCollectionNode new id: #Args; children: (Array 
-				with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 7)))).
+				with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 7)))).
 	i2 := GPNode new id: #F; type: RBMessageNode;
-		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
+		printBlock: [:n :ctx | n ast formattedCode ];
 		children: (Array 
-			with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 8)
-			with: (GPNode new id: #Selector; nodeValue: #odd)).
+			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 8)
+			with: (GPSelectorNode new id: #Selector; nodeValue: #odd)).
 	
 	self assert: i1 print equals: '3 + 7'.
 	self assert: i2 print equals: '8 odd'.
 	offspring := i1 crossOverWith: i2.
 	self deny: offspring print equals: '3 odd 7'.
-	self assert: offspring print equals: i1 print.
+	self deny: offspring print equals: i1 print.
+	self assert: offspring print equals: '8 + 7'
 	"self assert: offspring print ~= i2 print."
 ]
 
@@ -189,26 +190,26 @@ GPNodeTest >> testCrossOver05 [
 	| i1 i2 offspring |
 	GPRandom seed: 163.
 	i1 := GPNode new id: #E; type: RBMessageNode;
-		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
+		printBlock: [:n :ctx | n ast formattedCode ];
 		children: (Array 
-			with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 3)
-			with: (GPNode new id: #Add; nodeValue: #+)
+			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 3)
+			with: (GPSelectorNode new id: #Add; nodeValue: #+)
 			with: (GPCollectionNode new id: #Args; children: (Array 
-				with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 7)))).
+				with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 7)))).
 	i2 := GPNode new id: #F; type: RBMessageNode;
-		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
+		printBlock: [:n :ctx | n ast formattedCode ];
 		children: (Array 
-			with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 8)
-			with: (GPNode new id: #Add; nodeValue: #-)
+			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 8)
+			with: (GPSelectorNode new id: #Add; nodeValue: #-)
 			with: (GPCollectionNode new id: #Args; children: (Array 
-				with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 9)))).
+				with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 9)))).
 	
 	self assert: i1 print equals: '3 + 7'.
 	self assert: i2 print equals: '8 - 9'.
 	offspring := i1 crossOverWith: i2.
 	self deny: offspring print equals: i1 print.
 	self deny: offspring print equals: i2 print.
-	self assert: offspring print equals: '3 - 7'.
+	self assert: offspring print equals: '8 + 7'.
 ]
 
 { #category : #tests }

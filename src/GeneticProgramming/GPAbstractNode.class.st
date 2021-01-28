@@ -72,13 +72,18 @@ GPAbstractNode >> children: someNodes [
 
 { #category : #operations }
 GPAbstractNode >> crossOverGiven: anotherNode and: random [
-	| ids childIds index tree |
-	ids := self withAllChildren collect: #id.
-	childIds := random shuffleElementsOf: (anotherNode withAllChildren collect: #id).
-	(ids includesAny: childIds) ifFalse: [ ^ self ].
-	index := ids indexOfAnyOf: childIds.
-	tree := self withAllChildren at: index.
-	self withAllChildren at: index put: ((anotherNode withAllChildren collect: #id) indexOf: tree id)	
+	| copy ids childIds childNodes |
+	copy := self deepCopy.
+	ids := copy children collect: #id.
+	childNodes := anotherNode withAllChildren.
+	childIds := random shuffleElementsOf: (childNodes collect: #id).
+	(ids includesAny: childIds) 
+		ifFalse: [ copy children do: [ :child | child crossOverGiven: anotherNode and: random ] ]
+		ifTrue: [ | index tree |
+			index := ids indexOfAnyOf: childIds.
+			tree := copy children at: index.
+			copy children at: index put: (childNodes at: ((childNodes collect: #id) indexOf: tree id)) deepCopy ]	.
+	^ copy
 	
 ]
 
@@ -86,13 +91,13 @@ GPAbstractNode >> crossOverGiven: anotherNode and: random [
 GPAbstractNode >> crossOverWith: anotherNode [
 
 	"This method should be called with two root nodes"
-
-	^ self
+	"^ self
 		  crossOverWith: anotherNode
 		  at: (GPRandom instance randomNumber: self numberOfNodes - 1) + 1
 		  at:
 			  (GPRandom instance randomNumber: anotherNode numberOfNodes - 1)
-				   + 1
+				   + 1"
+	^ self crossOverWith: anotherNode using: GPRandom instance
 ]
 
 { #category : #operations }
@@ -111,8 +116,8 @@ GPAbstractNode >> crossOverWith: anotherNode using: random [
 
 	^ (self children collect: #id) asSet size = 1 
 		ifTrue: [ self crossOverWith: anotherNode 
-			at: ([ random nextInteger: self numberOfNodes - 1 ] on: Error do: [ 0 ]) + 1 
-			at: ( [random nextInteger: anotherNode numberOfNodes - 1] on: Error do: [ 0 ] ) + 1 ]
+			at: ([ (random randomNumber: self numberOfNodes - 1) ] on: Error do: [ 0 ]) + 1
+			at: ( [random randomNumber: anotherNode numberOfNodes - 1] on: Error do: [ 0 ] ) + 1 ]
 		ifFalse: [ self crossOverGiven: anotherNode and: random ]
 ]
 

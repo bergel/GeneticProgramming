@@ -22,8 +22,8 @@ GPCollectionNodeTest >> testAst [
 GPCollectionNodeTest >> testDeepCopy [
 	^ self testDeepCopy: (GPCollectionNode new id: #Args; 
 		children: (OrderedCollection new 
-			add: (GPNode new id: #F; nodeValue: 5; printBlock: [:n :ctx | n nodeValue asString ]);
-			add: (GPNode new id: #Mess; nodeValue: #div; printBlock: [:n :ctx | n nodeValue]);
+			add: (GPLeafNode new id: #F; nodeValue: 5; printBlock: [:n :ctx | n nodeValue asString ]);
+			add: (GPSelectorNode new id: #Mess; nodeValue: #div; printBlock: [:n :ctx | n nodeValue]);
 			add: (GPNode new id: #E); yourself );
 		printBlock: [:n :ctx | n nodeValue asString])
 ]
