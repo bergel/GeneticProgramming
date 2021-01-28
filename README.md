@@ -111,5 +111,5 @@ ast := tree ast.
 Simply perform:
 
 ```Smalltalk
-GPRandom instance seed: 10.
+GPRandom seed: 10.
 ```
