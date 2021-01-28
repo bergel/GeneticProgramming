@@ -23,5 +23,5 @@ BaselineOfGeneticProgramming >> baseline: spec [
 			package: 'GeneticProgramming-Visualization' with: [ spec requires: #('Roassal3') ].
 		spec 
 			group: 'default' with: #('GeneticProgramming-Examples' 'GeneticProgramming-Tests' 'GeneticProgramming-Configuration' );
-			group: 'all' with: #( 'GeneticProgramming-Tests' 'GeneticProgramming-Visualization' ) ]
+			group: 'all' with: #( 'GeneticProgramming-Tests' 'GeneticProgramming-Visualization' 'GeneticProgramming-Configuration' ) ]
 ]
