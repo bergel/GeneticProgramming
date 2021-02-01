@@ -10,8 +10,7 @@ GPSelectorNode >> convertToLeafNode [
 		id: id; 
 		type: RBLiteralNode; 
 		nodeValue: nodeValue; 
-		depth: depth; 
-		idNumber: idNumber.
+		depth: depth
 ]
 
 { #category : #translating }

@@ -35,8 +35,8 @@ GPEngine >> createNewGeneration [
 	| i1 i2 newInd newPopulation |
 	(self distanceFromSolutionOf: self pickBestIndividual) = 0 ifTrue: [ 
 		^ self ].
-	newPopulation := OrderedCollection new.
-	population size timesRepeat: [ 
+	newPopulation := self eliteOfPopulation.
+	(population size - newPopulation size) timesRepeat: [ 
 		(configuration randomInt: 100) < 90
 			ifTrue: [ 
 				i1 := self tournament.
@@ -90,6 +90,13 @@ GPEngine >> distanceFromSolutionOf: individual [
 	^ configuration distanceFromSolutionOf: individual
 ]
 
+{ #category : #'as yet unclassified' }
+GPEngine >> eliteOfPopulation [ 
+	^ OrderedCollection new 
+		add: self pickBestIndividual deepCopy;
+		yourself 
+]
+
 { #category : #hooks }
 GPEngine >> execute [
 	"
@@ -101,7 +108,7 @@ GPEngine >> execute [
 	 
 	| log |
 	self createInitialPopulation.
-	1 to: configuration numberOfGenerations do: [ :gen | 
+	(1 to: configuration numberOfGenerations) do: [ :gen | 
 		self createNewGeneration.
 		log := GPLog new.
 		log generation: gen.
@@ -110,7 +117,7 @@ GPEngine >> execute [
 		logs add: log. 
 
 		self fitnessOfBestIndividual = 0
-			ifTrue: [ ^ self ] ]
+			ifTrue: [ ^ self ] ] displayingProgress: [:gen |  'Evolving - Generation', gen printString ]
 ]
 
 { #category : #accessing }
@@ -133,7 +140,7 @@ GPEngine >> initialize [
 GPEngine >> mutation [
 	"Return an element, picked randomly from the population, that has been mutated"
 	| ind |
-	ind := (self randomElementOf: population) deepCopy.
+	ind := "(self randomElementOf: population)" self tournament deepCopy.
 	configuration mutate: ind.
 	^ ind
 ]
@@ -226,7 +233,7 @@ GPEngine >> tournament [
 	| fitness best |
 	fitness := SmallInteger maxVal.
 	best := nil.
-	5 timesRepeat: [ 
+	7 timesRepeat: [ 
 		| competitor i |
 		competitor := configuration randomElementOf: population.
 		i := self distanceFromSolutionOf: competitor.

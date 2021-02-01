@@ -59,8 +59,7 @@ GPPlayConfiguration >> initializeGrammar [
 		addRule: #E ofClass: RBMessageNode withSequence: #(#E #And #Block);
 		addRule: #E ofClass: RBMessageNode withSequence: #(#Variable #Satisfy #Message);
 		addRule: #E redirectingTo: #Variable;
-		addRule: #E redirectingTo: #E2;
-		addRule: #E2 ofClass: RBMessageNode withSequence: #(#Variable #Message);
+		addRule: #E ofClass: RBMessageNode withSequence: #(#Variable #Message);
 		addSelectorRule: #And withValues: #(#and:);
 		addSelectorRule: #Satisfy withValues: #(#allSatisfy: #noneSatisfy:);
 		addSelectorRule: #Message withValues: #(#isNil #isCollection #isNumber #isString #isFloat #isNotNil #notEmpty);
@@ -72,25 +71,19 @@ GPPlayConfiguration >> initializeGrammar [
 
 { #category : #operations }
 GPPlayConfiguration >> mutate: individual [
-	| found i source children nodeToMutate |
+	| source children nodeToMutate indivIds sourceIds sceChildren |
 	children := GPRandom instance shuffleElementsOf: (individual withAllChildren select: #isLeaf).
-	found := false.
-	i := 0.
-	[ found or: [ i > 20 ] ] whileFalse: [ | indivIds sourceIds sceChildren |
-		source := self newTerminal.
-		indivIds := children collect: #id.
-		sceChildren := source withAllChildren select: #isLeaf.
-		sourceIds := sceChildren collect: #id.
-		(indivIds includesAny: sourceIds) ifTrue: [ 
-			nodeToMutate := children at: (indivIds indexOfAnyOf: sourceIds).
-			source := sceChildren at: (sourceIds indexOf: nodeToMutate id).
-			found := true ].
-		i := i + 1 ].
-	nodeToMutate ifNotNil: [ 
-		nodeToMutate evaluationBlock: source evaluationBlock.
-		nodeToMutate printBlock: source printBlock.
-		nodeToMutate type: source type.
-		nodeToMutate nodeValue: source nodeValue ]
+	source := self newTerminal.
+	indivIds := children collect: #id.
+	sceChildren := source withAllChildren select: #isLeaf.
+	sourceIds := sceChildren collect: #id.
+	(indivIds includesAny: sourceIds) ifFalse: [ ^ self ].
+	nodeToMutate := children at: (indivIds indexOfAnyOf: sourceIds).
+	source := sceChildren at: (sourceIds indexOf: nodeToMutate id).
+	nodeToMutate evaluationBlock: source evaluationBlock.
+	nodeToMutate printBlock: source printBlock.
+	nodeToMutate type: source type.
+	nodeToMutate nodeValue: source nodeValue
 ]
 
 { #category : #hooks }
@@ -113,6 +106,11 @@ GPPlayConfiguration >> newFunction [
 { #category : #hooks }
 GPPlayConfiguration >> newTerminal [
 	^ self newFunction 
+]
+
+{ #category : #hooks }
+GPPlayConfiguration >> numberOfGenerations [
+	^ 20
 ]
 
 { #category : #accessing }

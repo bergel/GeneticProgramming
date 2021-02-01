@@ -2,7 +2,6 @@ Class {
 	#name : #GPContextFreeGrammar,
 	#superclass : #Object,
 	#instVars : [
-		'nodeNumber',
 		'configuration',
 		'options',
 		'depth',
@@ -255,11 +254,7 @@ GPContextFreeGrammar >> fillArrayOfSize: size1 to: size2 [
 { #category : #initialization }
 GPContextFreeGrammar >> initialize [
 
-	"rules := Dictionary new.
-	options := Dictionary new."
-	"nodeOptions := Dictionary new."
 	options := Dictionary new.
-	nodeNumber := 0.
 	methodName := #grow
 ]
 
@@ -279,12 +274,6 @@ GPContextFreeGrammar >> methodName: string [
 		methodName := string	
 	]
 	
-]
-
-{ #category : #accessing }
-GPContextFreeGrammar >> nodeNumber [
-	nodeNumber := nodeNumber + 1.
-	^ nodeNumber
 ]
 
 { #category : #accessing }

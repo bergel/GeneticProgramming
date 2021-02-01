@@ -8,7 +8,6 @@ Class {
 		'evaluationBlock',
 		'printBlock',
 		'depth',
-		'idNumber',
 		'fitness',
 		'nodeValue'
 	],
@@ -75,7 +74,7 @@ GPAbstractNode >> crossOverGiven: anotherNode and: random [
 	| copy ids childIds childNodes |
 	copy := self deepCopy.
 	ids := copy children collect: #id.
-	childNodes := anotherNode withAllChildren.
+	childNodes := anotherNode children.
 	childIds := random shuffleElementsOf: (childNodes collect: #id).
 	(ids includesAny: childIds) 
 		ifFalse: [ copy children do: [ :child | child crossOverGiven: anotherNode and: random ] ]
@@ -129,7 +128,7 @@ GPAbstractNode >> deepCopy [
 		depth: depth;
 		evaluationBlock: evaluationBlock;
 		printBlock: printBlock;
-		nodeValue: nodeValue deepCopy 
+		nodeValue: nodeValue deepCopy
 ]
 
 { #category : #accessing }
@@ -210,29 +209,12 @@ GPAbstractNode >> id: anObject [
 	id := anObject
 ]
 
-{ #category : #accessing }
-GPAbstractNode >> idNumber [
-
-	^ idNumber
-]
-
-{ #category : #accessing }
-GPAbstractNode >> idNumber: aNumber [
-
-	idNumber := aNumber
-]
-
 { #category : #initialization }
 GPAbstractNode >> initialize [
 
 	super initialize.
 	children := OrderedCollection new.
-	idNumber := 0.
 	depth := 0
-	"printBlock := [ :c | 
-	              | t |
-	              t := c inject: '(' into: [ :sum :el | sum , el print ].
-	              t , ')' ]"
 ]
 
 { #category : #testing }

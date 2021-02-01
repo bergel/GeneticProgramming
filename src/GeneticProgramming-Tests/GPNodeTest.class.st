@@ -155,32 +155,7 @@ GPNodeTest >> testCrossOver03 [
 	offspring := i1 crossOverWith: i2.
 	self deny: offspring print equals: '3 odd 7'.
 	self deny: offspring print equals: i1 print.
-	self assert: offspring print equals: '8 + 7'
-	"self assert: offspring print ~= i2 print."
-]
-
-{ #category : #tests }
-GPNodeTest >> testCrossOver04 [
-	| i1 i2 offspring |
-	GPRandom seed: 16344.
-	i1 := GPNode new id: #E; type: RBMessageNode;
-		printBlock: [:n :ctx | n ast formattedCode ];
-		children: (Array 
-			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 3)
-			with: (GPSelectorNode new id: #Add; nodeValue: #+)
-			with: (GPCollectionNode new id: #Args; children: (Array 
-				with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 7)))).
-	i2 := GPNode new id: #F; type: RBMessageNode;
-		printBlock: [:n :ctx | n ast formattedCode ];
-		children: (Array 
-			with: (GPLeafNode new id: #Number; type: RBLiteralNode; nodeValue: 8)
-			with: (GPSelectorNode new id: #Selector; nodeValue: #odd)).
-	
-	self assert: i1 print equals: '3 + 7'.
-	self assert: i2 print equals: '8 odd'.
-	offspring := i1 crossOverWith: i2.
-	self deny: offspring print equals: '3 odd 7'.
-	self deny: offspring print equals: i1 print.
+	self deny: offspring print equals: i2 print.
 	self assert: offspring print equals: '8 + 7'
 	"self assert: offspring print ~= i2 print."
 ]
@@ -280,6 +255,65 @@ GPNodeTest >> testMutate2 [
 		i print
 		 ].
 	self assert: p asSet size > 1
+	 
+]
+
+{ #category : #tests }
+GPNodeTest >> testMutate3 [
+	| c i p |
+	c := GPPlayConfiguration new.
+	GPRandom seed: 1.
+	i := GPLeafNode new 
+		id: #Variable; 
+		type: RBVariableNode; 
+		nodeValue: 'obj1'; 
+		evaluationBlock: [ :n :ctx | n ast ];
+		printBlock: [ :n :ctx | n ast formattedCode ].
+		
+	"i1 := GPNode new id: #E; type: RBMessageNode;
+		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
+		children: (Array 
+			with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 3)
+			with: (GPNode new id: #Add; nodeValue: #+)
+			with: (GPCollectionNode new id: #Args; children: (Array 
+				with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 7)))).
+	i2 := GPNode new id: #F; type: RBMessageNode;
+		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
+		children: (Array 
+			with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 8)
+			with: (GPNode new id: #Selector; nodeValue: #odd))."
+	self assert: i evaluate equals: (RBParser parseExpression: 'obj1').
+	self assert: i print equals: 'obj1'.
+	"self assert: i evaluate equals: 594."
+	p := (1 to: 20) collect: [ :n | 
+		c mutate: i.
+		i print
+		 ].
+	self assert: p asSet size equals: 1.
+	 
+]
+
+{ #category : #tests }
+GPNodeTest >> testMutate4 [
+	| c i p |
+	c := GPPlayConfiguration new.
+	GPRandom seed: 1.
+	i := GPNode new id: #E; 
+		type: RBMessageNode;
+		children:  (Array 
+			with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj1')
+			with: (GPSelectorNode new id: #Satisfy; nodeValue: #noneSatisfy:)
+			with: (GPSelectorNode new id: #Message; nodeValue: #isNil));
+		printBlock: [:n :ctx | n ast formattedCode ];
+		evaluationBlock: [:n :ctx | n ast ].
+	self assert: i evaluate equals: (RBParser parseExpression: 'obj1 noneSatisfy: #isNil').
+	self assert: i print equals: 'obj1 noneSatisfy: #isNil'.
+	"self assert: i evaluate equals: 594."
+	p := (1 to: 20) collect: [ :n | 
+		c mutate: i.
+		i print
+		 ].
+	self assert: p asSet size > 1.
 	 
 ]
 

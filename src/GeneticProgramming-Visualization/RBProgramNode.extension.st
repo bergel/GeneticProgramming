@@ -14,21 +14,7 @@ RBProgramNode >> gtInspectorCanvasIn: composite [
 	^ composite roassal3
 		  title: [ 'AST Node' ];
 		  initializeCanvas: [ 
-			  | canvas eb |
-			  canvas := RSCanvas new.
-			  canvas addAll: self shapesOfNodes.
-			  eb := RSEdgeBuilder line
-				        color: (Color
-						         r: 0.2316715542521994
-						         g: 0.5141739980449658
-						         b: 0.7409579667644184);
-				        canvas: canvas;
-				        connectFrom: #parent.
-			  canvas edges pushBack.
-			  RSTreeLayout new
-				  verticalGap: 10;
-				  on: canvas nodes.
-			  canvas @ RSCanvasController ]
+			  self visualize ]
 ]
 
 { #category : #'*GeneticProgramming-Visualization' }
@@ -93,4 +79,24 @@ RBProgramNode >> shapesOfNodes [
 			   shapes: (group collect: #yourself);
 			   padding: 10;
 			   yourself ]) asOrderedCollection
+]
+
+{ #category : #'*GeneticProgramming-Visualization' }
+RBProgramNode >> visualize [
+	| canvas eb |
+			  canvas := RSCanvas new.
+			  canvas addAll: self shapesOfNodes.
+			  eb := RSEdgeBuilder line
+				        color: (Color
+						         r: 0.2316715542521994
+						         g: 0.5141739980449658
+						         b: 0.7409579667644184);
+				        canvas: canvas;
+				        connectFrom: #parent.
+			  canvas edges pushBack.
+			  RSTreeLayout new
+				  verticalGap: 10;
+				  on: canvas nodes.
+			  canvas @ RSCanvasController.
+	^ canvas
 ]
