@@ -20,7 +20,7 @@ GPPlayConfiguration >> distanceFromSolutionOf: individual [
 	p := GPPlay new.
 	p assertionGP: [ :obj | individual evaluateWith: { 'obj' -> obj } asDictionary ].
 	t := GPPlayTest buildSuite run.
-	individual fitness: t runCount - t passedCount.
+	individual fitness: t runCount + t failureCount + t errorCount - t passedCount.
 	^ individual fitness
 ]
 
@@ -58,11 +58,11 @@ GPPlayConfiguration >> initializeGrammar [
 	grammar 
 		addRule: #E ofClass: RBMessageNode withSequence: #(#E #And #Block);
 		addRule: #E ofClass: RBMessageNode withSequence: #(#Variable #Satisfy #Message);
-		addRule: #E redirectingTo: #Variable;
+		"addRule: #E redirectingTo: #Variable;"
 		addRule: #E ofClass: RBMessageNode withSequence: #(#Variable #Message);
 		addSelectorRule: #And withValues: #(#and:);
 		addSelectorRule: #Satisfy withValues: #(#allSatisfy: #noneSatisfy:);
-		addSelectorRule: #Message withValues: #(#isNil #isCollection #isNumber #isString #isFloat #isNotNil #notEmpty);
+		addSelectorRule: #Message withValues: #(#isNil #isCollection #isNumber #isString #isFloat #notNil #notEmpty);
 		addRule: #Block ofClass: RBBlockNode withSequence: #(#E);
 		addLeafRule: #Variable ofClass: RBVariableNode withValues: #('obj').
 	"grammar configuration: self."
@@ -72,10 +72,10 @@ GPPlayConfiguration >> initializeGrammar [
 { #category : #operations }
 GPPlayConfiguration >> mutate: individual [
 	| source children nodeToMutate indivIds sourceIds sceChildren |
-	children := GPRandom instance shuffleElementsOf: (individual withAllChildren select: #isLeaf).
+	children := GPRandom instance shuffleElementsOf: (individual withAllChildren allButFirst "select: #isLeaf").
 	source := self newTerminal.
 	indivIds := children collect: #id.
-	sceChildren := source withAllChildren select: #isLeaf.
+	sceChildren := source withAllChildren "select: #isLeaf".
 	sourceIds := sceChildren collect: #id.
 	(indivIds includesAny: sourceIds) ifFalse: [ ^ self ].
 	nodeToMutate := children at: (indivIds indexOfAnyOf: sourceIds).
@@ -83,6 +83,7 @@ GPPlayConfiguration >> mutate: individual [
 	nodeToMutate evaluationBlock: source evaluationBlock.
 	nodeToMutate printBlock: source printBlock.
 	nodeToMutate type: source type.
+	nodeToMutate children: source children.
 	nodeToMutate nodeValue: source nodeValue
 ]
 
@@ -91,9 +92,9 @@ GPPlayConfiguration >> newFunction [
 	| node found i depth |
 	found := false.
 	i := 0.
-	[ found and: [ i > 10 ] ] whileFalse: [ 
-		depth := GPRandom instance randomNumber: 5.
-		grammar methodName: (GPRandom instance randomlySelect: #(#full #grow)). "method = #full ifTrue: [ self halt ]."
+	[ found and: [ i > 5 ] ] whileFalse: [ 
+		depth := GPRandom instance randomNumber: 10.
+		grammar methodName: (GPRandom instance randomlySelect: #(#full #grow)).
 		node := grammar expandTree: #E withDepth: depth.
 		found := node isNotNil.
 		i := i + 1. ].

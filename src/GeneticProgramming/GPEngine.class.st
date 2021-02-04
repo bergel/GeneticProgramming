@@ -35,14 +35,20 @@ GPEngine >> createNewGeneration [
 	| i1 i2 newInd newPopulation |
 	(self distanceFromSolutionOf: self pickBestIndividual) = 0 ifTrue: [ 
 		^ self ].
-	newPopulation := self eliteOfPopulation.
-	(population size - newPopulation size) timesRepeat: [ 
-		(configuration randomInt: 100) < 90
+	newPopulation := OrderedCollection new. "self eliteOfPopulation."
+	population size - newPopulation size timesRepeat: [ 
+		| number |
+		number := configuration randomInt: 100.
+		"(configuration randomInt: 100) < 90"
+		number <= 90
 			ifTrue: [ 
 				i1 := self tournament.
 				i2 := self tournament.
 				newInd := i1 crossOverWith: i2 using: configuration random ]
-			ifFalse: [ newInd := self mutation ].
+			ifFalse: [ 
+				newInd := number <= 95
+					          ifTrue: [ self mutation ]
+					          ifFalse: [ self tournament deepCopy ] ].
 		newPopulation add: newInd ].
 	population := newPopulation
 ]
@@ -108,7 +114,7 @@ GPEngine >> execute [
 	 
 	| log |
 	self createInitialPopulation.
-	(1 to: configuration numberOfGenerations) do: [ :gen | 
+	(1 to: configuration numberOfGenerations) do: [ :gen |
 		self createNewGeneration.
 		log := GPLog new.
 		log generation: gen.
@@ -117,7 +123,7 @@ GPEngine >> execute [
 		logs add: log. 
 
 		self fitnessOfBestIndividual = 0
-			ifTrue: [ ^ self ] ] displayingProgress: [:gen |  'Evolving - Generation', gen printString ]
+			ifTrue: [ ^ self ] ] displayingProgress: [:gen |  'Evolving - Generation ', gen printString ]
 ]
 
 { #category : #accessing }
@@ -140,7 +146,7 @@ GPEngine >> initialize [
 GPEngine >> mutation [
 	"Return an element, picked randomly from the population, that has been mutated"
 	| ind |
-	ind := "(self randomElementOf: population)" self tournament deepCopy.
+	ind := (self randomElementOf: population) "self tournament" deepCopy.
 	configuration mutate: ind.
 	^ ind
 ]
@@ -233,7 +239,7 @@ GPEngine >> tournament [
 	| fitness best |
 	fitness := SmallInteger maxVal.
 	best := nil.
-	7 timesRepeat: [ 
+	5 timesRepeat: [ 
 		| competitor i |
 		competitor := configuration randomElementOf: population.
 		i := self distanceFromSolutionOf: competitor.

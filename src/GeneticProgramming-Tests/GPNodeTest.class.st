@@ -157,7 +157,32 @@ GPNodeTest >> testCrossOver03 [
 	self deny: offspring print equals: i1 print.
 	self deny: offspring print equals: i2 print.
 	self assert: offspring print equals: '8 + 7'
-	"self assert: offspring print ~= i2 print."
+]
+
+{ #category : #tests }
+GPNodeTest >> testCrossOver04 [
+	| i1 i2 offspring |
+	GPRandom seed: 163.
+	i1 := GPNode new id: #E; type: RBMessageNode;
+		printBlock: [:n :ctx | n ast formattedCode ];
+		evaluationBlock: [ :n :ctx | n ast ];
+		children: (Array 
+			with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+			with: (GPSelectorNode new id: #Satisfy; nodeValue: #allSatisfy:)
+			with: (GPSelectorNode new id: #Message; nodeValue: #isCollection)).
+	i2 := GPNode new id: #E; type: RBMessageNode;
+		printBlock: [:n :ctx | n ast formattedCode ];
+		evaluationBlock: [ :n :ctx | n ast ];
+		children: (Array 
+			with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj1')
+			with: (GPSelectorNode new id: #Message; nodeValue: #isNotNil)).
+	
+	self assert: i1 print equals: 'obj allSatisfy: #isCollection'.
+	self assert: i2 print equals: 'obj1 isNotNil'.
+	offspring := i1 crossOverWith: i2.
+	self deny: offspring print equals: i1 print.
+	self deny: offspring print equals: i2 print.
+	self assertCollection: (Array with: offspring print) includesAny: #('obj allSatisfy: #isNotNil' 'obj1 allSatisfy: #isNotNil' 'obj1 allSatisfy: #isCollection').
 ]
 
 { #category : #tests }
@@ -184,7 +209,123 @@ GPNodeTest >> testCrossOver05 [
 	offspring := i1 crossOverWith: i2.
 	self deny: offspring print equals: i1 print.
 	self deny: offspring print equals: i2 print.
-	self assert: offspring print equals: '8 + 7'.
+	self assert: offspring print equals: '3 + 9'.
+]
+
+{ #category : #tests }
+GPNodeTest >> testCrossOver06 [
+	| i1 i2 offspring |
+	GPRandom seed: 1.
+	i1 := GPNode new id: #E; 
+		type: RBMessageNode;
+		children:  (Array 
+			with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+			with: (GPSelectorNode new id: #Satisfy; nodeValue: #noneSatisfy:)
+			with: (GPSelectorNode new id: #Message; nodeValue: #isNumber)).
+	i2 := GPNode new id: #E; 
+		type: RBMessageNode;
+		children:  (Array 
+			with: (GPNode new id: #E; type: RBMessageNode; 
+				children: (Array 
+					with: (GPNode new id: #E; type: RBMessageNode; 
+						children: (Array 
+							with: (GPNode new id: #E; type: RBMessageNode; 
+								children: (Array 
+									with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+									with: (GPSelectorNode new id: #Message; nodeValue: #isString)))
+							with: (GPSelectorNode new id: #And; nodeValue: #and:)
+							with: (GPNode new id: #Block; type: RBBlockNode; 
+								children: (Array 
+									with: (GPNode new id: #E; type: RBMessageNode;
+										children: (Array 
+											with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+											with: (GPSelectorNode new id: #Message; nodeValue: #notNil)))))))
+					with: (GPSelectorNode new id: #And; nodeValue: #and: )
+					with: (GPNode new id: #Block; type: RBBlockNode;
+						children: (Array 
+							with: (GPNode new id: #E; type: RBMessageNode;
+								children: (Array 
+									with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+									with: (GPSelectorNode new id: #Message; nodeValue: #isFloat ) ))))))
+			with: (GPSelectorNode new id: #And; nodeValue: #and:)
+			with: (GPNode new id: #Block; type: RBBlockNode; 
+				children: (Array 
+					with: (GPNode new id: #E; type: RBMessageNode;
+					children: (Array 
+						with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+						with: (GPSelectorNode new id: #Satisfy; nodeValue: #allSatisfy:)
+						with: (GPSelectorNode new id: #Message; nodeValue: #isString)))))).
+	self assert: i1 ast formattedCode equals: 'obj noneSatisfy: #isNumber'.
+	self assert: i2 ast formattedCode equals: '((obj isString and: [ obj notNil ]) and: [ obj isFloat ]) and: [ 
+	obj allSatisfy: #isString ]'.
+	offspring := i1 crossOverWith: i2.
+	self deny: offspring ast formattedCode equals: i1 ast formattedCode.
+	self deny: offspring ast formattedCode equals: i2 ast formattedCode.
+	self assert: offspring ast formattedCode equals: 'obj allSatisfy: #isNumber'.
+]
+
+{ #category : #tests }
+GPNodeTest >> testCrossOver07 [
+	| i1 i2 offspring |
+	GPRandom seed: 1.
+	i1 := GPNode new id: #E; 
+		type: RBMessageNode;
+		children:  (Array 
+			with: (GPNode new id: #E; type: RBMessageNode; 
+				children: (Array 
+					with: (GPNode new id: #E; type: RBMessageNode; 
+						children: (Array 
+							with: (GPNode new id: #E; type: RBMessageNode; 
+								children: (Array 
+									with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+									with: (GPSelectorNode new id: #Message; nodeValue: #isString));
+								printBlock: [:n :ctx | n ast formattedCode ])
+							with: (GPSelectorNode new id: #And; nodeValue: #and:)
+							with: (GPNode new id: #Block; type: RBBlockNode; 
+								children: (Array 
+									with: (GPNode new id: #E; type: RBMessageNode;
+										children: (Array 
+											with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+											with: (GPSelectorNode new id: #Message; nodeValue: #notNil));
+										printBlock: [:n :ctx | n ast formattedCode ]));
+								printBlock: [:n :ctx | n ast formattedCode ]));
+						printBlock: [:n :ctx | n ast formattedCode ])
+					with: (GPSelectorNode new id: #And; nodeValue: #and: )
+					with: (GPNode new id: #Block; type: RBBlockNode;
+						children: (Array 
+							with: (GPNode new id: #E; type: RBMessageNode;
+								children: (Array 
+									with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+									with: (GPSelectorNode new id: #Message; nodeValue: #isFloat ));
+								printBlock: [:n :ctx | n ast formattedCode ]));
+						printBlock: [:n :ctx | n ast formattedCode ]));
+				printBlock: [:n :ctx | n ast formattedCode ])
+			with: (GPSelectorNode new id: #And; nodeValue: #and:)
+			with: (GPNode new id: #Block; type: RBBlockNode; 
+				children: (Array 
+					with: (GPNode new id: #E; type: RBMessageNode;
+					children: (Array 
+						with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+						with: (GPSelectorNode new id: #Satisfy; nodeValue: #allSatisfy:)
+						with: (GPSelectorNode new id: #Message; nodeValue: #isString));
+					printBlock: [:n :ctx | n ast formattedCode ]));
+				printBlock: [:n :ctx | n ast formattedCode ]));
+		printBlock: [:n :ctx | n ast formattedCode ].
+	i2 := GPNode new id: #E; 
+		type: RBMessageNode;
+		children:  (Array 
+			with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+			with: (GPSelectorNode new id: #Satisfy; nodeValue: #noneSatisfy:)
+			with: (GPSelectorNode new id: #Message; nodeValue: #isNumber));
+		printBlock: [:n :ctx | n ast formattedCode ].
+	self assert: i1 print equals: '((obj isString and: [ obj notNil ]) and: [ obj isFloat ]) and: [ 
+	obj allSatisfy: #isString ]'.
+	self assert: i2 print equals: 'obj noneSatisfy: #isNumber'.
+	offspring := i1 crossOverWith: i2.
+	self deny: offspring print equals: i1 print.
+	self deny: offspring print equals: i2 print.
+	self assert: offspring print equals: '((obj isNumber and: [ obj notNil ]) and: [ obj isFloat ]) and: [ 
+	obj allSatisfy: #isString ]'.
 ]
 
 { #category : #tests }
@@ -269,22 +410,8 @@ GPNodeTest >> testMutate3 [
 		nodeValue: 'obj1'; 
 		evaluationBlock: [ :n :ctx | n ast ];
 		printBlock: [ :n :ctx | n ast formattedCode ].
-		
-	"i1 := GPNode new id: #E; type: RBMessageNode;
-		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
-		children: (Array 
-			with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 3)
-			with: (GPNode new id: #Add; nodeValue: #+)
-			with: (GPCollectionNode new id: #Args; children: (Array 
-				with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 7)))).
-	i2 := GPNode new id: #F; type: RBMessageNode;
-		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
-		children: (Array 
-			with: (GPNode new id: #Number; type: RBLiteralNode; nodeValue: 8)
-			with: (GPNode new id: #Selector; nodeValue: #odd))."
 	self assert: i evaluate equals: (RBParser parseExpression: 'obj1').
 	self assert: i print equals: 'obj1'.
-	"self assert: i evaluate equals: 594."
 	p := (1 to: 20) collect: [ :n | 
 		c mutate: i.
 		i print
@@ -308,11 +435,97 @@ GPNodeTest >> testMutate4 [
 		evaluationBlock: [:n :ctx | n ast ].
 	self assert: i evaluate equals: (RBParser parseExpression: 'obj1 noneSatisfy: #isNil').
 	self assert: i print equals: 'obj1 noneSatisfy: #isNil'.
-	"self assert: i evaluate equals: 594."
 	p := (1 to: 20) collect: [ :n | 
 		c mutate: i.
-		i print
-		 ].
+		i print ].
+	self assert: p asSet size > 1.
+	 
+]
+
+{ #category : #tests }
+GPNodeTest >> testMutate5 [
+	| c i p |
+	c := GPPlayConfiguration new.
+	GPRandom seed: 1.
+	i := GPNode new id: #E; 
+		type: RBMessageNode;
+		children:  (Array 
+			with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj1')
+			with: (GPSelectorNode new id: #And; nodeValue: #and:)
+			with: (GPNode new id: #Block; type: RBBlockNode; 
+				children: (Array with: (GPNode new id: #E;
+					type: RBMessageNode;
+					children: (Array with:
+						(GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj1')
+						with: (GPSelectorNode new id: #Message; nodeValue: #isCollection));
+					evaluationBlock: [:n :ctx | n ast ];
+					printBlock: [:n :ctx | n ast formattedCode ]));
+				evaluationBlock: [:n :ctx | n ast ];
+				printBlock: [:n :ctx | n ast formattedCode ]));
+		printBlock: [:n :ctx | n ast formattedCode ];
+		evaluationBlock: [:n :ctx | n ast ].
+	self assert: i evaluate equals: (RBParser parseExpression: 'obj1 and: [ obj1 isCollection ]').
+	self assert: i print equals: 'obj1 and: [ obj1 isCollection ]'.
+	p := (1 to: 20) collect: [ :n | 
+		c mutate: i.
+		i print ].
+	self assert: p asSet size > 1.
+	 
+]
+
+{ #category : #tests }
+GPNodeTest >> testMutate6 [
+	| c i p |
+	c := GPPlayConfiguration new.
+	GPRandom seed: 1.
+	i := GPNode new id: #E; 
+		type: RBMessageNode;
+		children:  (Array 
+			with: (GPNode new id: #E; type: RBMessageNode; 
+				children: (Array 
+					with: (GPNode new id: #E; type: RBMessageNode; 
+						children: (Array 
+							with: (GPNode new id: #E; type: RBMessageNode; 
+								children: (Array 
+									with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+									with: (GPSelectorNode new id: #Message; nodeValue: #isString));
+								printBlock: [:n :ctx | n ast formattedCode ])
+							with: (GPSelectorNode new id: #And; nodeValue: #and:)
+							with: (GPNode new id: #Block; type: RBBlockNode; 
+								children: (Array 
+									with: (GPNode new id: #E; type: RBMessageNode;
+										children: (Array 
+											with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+											with: (GPSelectorNode new id: #Message; nodeValue: #notNil));
+										printBlock: [:n :ctx | n ast formattedCode ]));
+								printBlock: [:n :ctx | n ast formattedCode ]));
+						printBlock: [:n :ctx | n ast formattedCode ])
+					with: (GPSelectorNode new id: #And; nodeValue: #and: )
+					with: (GPNode new id: #Block; type: RBBlockNode;
+						children: (Array 
+							with: (GPNode new id: #E; type: RBMessageNode;
+								children: (Array 
+									with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+									with: (GPSelectorNode new id: #Message; nodeValue: #isFloat ));
+								printBlock: [:n :ctx | n ast formattedCode ]));
+						printBlock: [:n :ctx | n ast formattedCode ]));
+				printBlock: [:n :ctx | n ast formattedCode ])
+			with: (GPSelectorNode new id: #And; nodeValue: #and:)
+			with: (GPNode new id: #Block; type: RBBlockNode; 
+				children: (Array 
+					with: (GPNode new id: #E; type: RBMessageNode;
+					children: (Array 
+						with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+						with: (GPSelectorNode new id: #Satisfy; nodeValue: #allSatisfy:)
+						with: (GPSelectorNode new id: #Message; nodeValue: #isString));
+					printBlock: [:n :ctx | n ast formattedCode ]));
+				printBlock: [:n :ctx | n ast formattedCode ]));
+		printBlock: [:n :ctx | n ast formattedCode ].
+	self assert: i print equals: '((obj isString and: [ obj notNil ]) and: [ obj isFloat ]) and: [ 
+	obj allSatisfy: #isString ]'.
+	p := (1 to: 20) collect: [ :n | 
+		c mutate: i.
+		i print ].
 	self assert: p asSet size > 1.
 	 
 ]

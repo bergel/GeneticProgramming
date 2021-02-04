@@ -74,12 +74,19 @@ GPAbstractNode >> crossOverGiven: anotherNode and: random [
 	| copy ids childIds childNodes |
 	copy := self deepCopy.
 	ids := copy children collect: #id.
-	childNodes := anotherNode children.
+	childNodes := anotherNode withAllChildren allButFirst.
 	childIds := random shuffleElementsOf: (childNodes collect: #id).
 	(ids includesAny: childIds) 
-		ifFalse: [ copy children do: [ :child | child crossOverGiven: anotherNode and: random ] ]
+		ifFalse: [ | newChild index | 
+			index := 0.
+			copy children 
+				detect: [ :child |
+					index := index + 1.
+					newChild := child crossOverGiven: anotherNode and: random.
+					child print ~= newChild print ]
+				ifFound: [ :child | copy children at: index put: newChild ] ]
 		ifTrue: [ | index tree |
-			index := ids indexOfAnyOf: childIds.
+			index := ids indexOf: (childIds at: (childIds indexOfAnyOf: ids)).
 			tree := copy children at: index.
 			copy children at: index put: (childNodes at: ((childNodes collect: #id) indexOf: tree id)) deepCopy ]	.
 	^ copy
@@ -114,7 +121,7 @@ GPAbstractNode >> crossOverWith: anotherNode using: random [
 	"This method should be called with two root nodes"
 
 	^ (self children collect: #id) asSet size = 1 
-		ifTrue: [ self crossOverWith: anotherNode 
+		ifTrue: [ self halt. self crossOverWith: anotherNode 
 			at: ([ (random randomNumber: self numberOfNodes - 1) ] on: Error do: [ 0 ]) + 1
 			at: ( [random randomNumber: anotherNode numberOfNodes - 1] on: Error do: [ 0 ] ) + 1 ]
 		ifFalse: [ self crossOverGiven: anotherNode and: random ]
