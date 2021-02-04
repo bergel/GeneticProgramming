@@ -23,7 +23,7 @@ To install the version with visualization type:
 Metacello new
  baseline:'GeneticProgramming';
 repository: 'github://bergel/GeneticProgramming:grammar/src';
-load: #('All').
+load: #('all').
 ```
 
 ## Example 
