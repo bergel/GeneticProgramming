@@ -71,25 +71,46 @@ GPAbstractNode >> children: someNodes [
 
 { #category : #operations }
 GPAbstractNode >> crossOverGiven: anotherNode and: random [
-	| copy ids childIds childNodes |
+	| copy ids childIds childNodes indexes shuffledIds |
 	copy := self deepCopy.
 	ids := copy children collect: #id.
 	childNodes := anotherNode withAllChildren allButFirst.
-	childIds := random shuffleElementsOf: (childNodes collect: #id).
-	(ids includesAny: childIds) 
-		ifFalse: [ | newChild index | 
+	childIds := childNodes collect: #id.
+	shuffledIds := random shuffleElementsOf: ids copy.
+	shuffledIds 
+		detect: [ :nodeId | 
+			indexes := random shuffleElementsOf: (self indexesOf: nodeId on: childIds).
+			indexes notEmpty ] 
+		ifFound: [ :nodeId | copy children at: (ids indexOf: nodeId) put: (childNodes at: indexes first) deepCopy.
+			^ copy ] 
+		ifNone: [ | c | 
+			copy children 
+				detect: [ :child |
+					c := child crossOverGiven: anotherNode and: random.
+					c notNil ]
+				ifFound: [ :child | copy children at: (ids indexOf: child id) put: c.
+					^ copy ] ].
+	^ nil
+		"(ids includesAny: childIds) 
+		ifTrue: [ | index newNode node |
+			index := ids indexOf: (childIds at: (childIds indexOfAnyOf: ids)).
+			node := copy children at: index.
+			newNode := childNodes at: ((childNodes collect: #id) indexOf: node id).
+			copy children at: index put: (childNodes at: ((childNodes collect: #id) indexOf: ""tree"" id)) deepCopy ]	.
+		true ifFalse: [ | newChild index | 
 			index := 0.
 			copy children 
 				detect: [ :child |
 					index := index + 1.
 					newChild := child crossOverGiven: anotherNode and: random.
-					child print ~= newChild print ]
-				ifFound: [ :child | copy children at: index put: newChild ] ]
+					child print ~= newChild print ""and: [ newChild children size = child children size ]"" ]
+				ifFound: [ :child | copy children at: index put: newChild 
+					] ]
 		ifTrue: [ | index tree |
 			index := ids indexOf: (childIds at: (childIds indexOfAnyOf: ids)).
 			tree := copy children at: index.
 			copy children at: index put: (childNodes at: ((childNodes collect: #id) indexOf: tree id)) deepCopy ]	.
-	^ copy
+	^ copy"
 	
 ]
 
@@ -214,6 +235,15 @@ GPAbstractNode >> id [
 { #category : #accessing }
 GPAbstractNode >> id: anObject [
 	id := anObject
+]
+
+{ #category : #operations }
+GPAbstractNode >> indexesOf: nodeId on: childIds [
+	| indexes |
+	indexes := OrderedCollection new.
+	childIds doWithIndex: [ :childId :index | 
+		childId == nodeId ifTrue: [ indexes add: index ] ].
+	^ indexes 
 ]
 
 { #category : #initialization }

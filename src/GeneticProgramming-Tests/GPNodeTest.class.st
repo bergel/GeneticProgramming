@@ -329,6 +329,70 @@ GPNodeTest >> testCrossOver07 [
 ]
 
 { #category : #tests }
+GPNodeTest >> testCrossOver08 [
+	| i1 i2 offspring |
+	GPRandom seed: 1.
+	i1 := GPNode new id: #E; 
+		type: RBMessageNode;
+		children:  (Array 
+			with: (GPNode new id: #E; type: RBMessageNode; 
+				children: (Array 
+					with: (GPNode new id: #E; type: RBMessageNode; 
+						children: (Array 
+							with: (GPNode new id: #E; type: RBMessageNode; 
+								children: (Array 
+									with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+									with: (GPSelectorNode new id: #Message; nodeValue: #isString));
+								printBlock: [:n :ctx | n ast formattedCode ])
+							with: (GPSelectorNode new id: #And; nodeValue: #and:)
+							with: (GPNode new id: #Block; type: RBBlockNode; 
+								children: (Array 
+									with: (GPNode new id: #E; type: RBMessageNode;
+										children: (Array 
+											with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+											with: (GPSelectorNode new id: #Message; nodeValue: #notNil));
+										printBlock: [:n :ctx | n ast formattedCode ]));
+								printBlock: [:n :ctx | n ast formattedCode ]));
+						printBlock: [:n :ctx | n ast formattedCode ])
+					with: (GPSelectorNode new id: #And; nodeValue: #and: )
+					with: (GPNode new id: #Block; type: RBBlockNode;
+						children: (Array 
+							with: (GPNode new id: #E; type: RBMessageNode;
+								children: (Array 
+									with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+									with: (GPSelectorNode new id: #Message; nodeValue: #isFloat ));
+								printBlock: [:n :ctx | n ast formattedCode ]));
+						printBlock: [:n :ctx | n ast formattedCode ]));
+				printBlock: [:n :ctx | n ast formattedCode ])
+			with: (GPSelectorNode new id: #And; nodeValue: #and:)
+			with: (GPNode new id: #Block; type: RBBlockNode; 
+				children: (Array 
+					with: (GPNode new id: #E; type: RBMessageNode;
+					children: (Array 
+						with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+						with: (GPSelectorNode new id: #Satisfy; nodeValue: #allSatisfy:)
+						with: (GPSelectorNode new id: #Message; nodeValue: #isString));
+					printBlock: [:n :ctx | n ast formattedCode ]));
+				printBlock: [:n :ctx | n ast formattedCode ]));
+		printBlock: [:n :ctx | n ast formattedCode ].
+	i2 := GPNode new id: #E; 
+		type: RBMessageNode;
+		children:  (Array 
+			with: (GPLeafNode new id: #Variable; type: RBVariableNode; nodeValue: 'obj')
+			with: (GPSelectorNode new id: #Satisfy; nodeValue: #noneSatisfy:)
+			with: (GPSelectorNode new id: #Message; nodeValue: #isNumber));
+		printBlock: [:n :ctx | n ast formattedCode ].
+	self assert: i1 print equals: '((obj isString and: [ obj notNil ]) and: [ obj isFloat ]) and: [ 
+	obj allSatisfy: #isString ]'.
+	self assert: i2 print equals: 'obj noneSatisfy: #isNumber'.
+	offspring := i1 crossOverWith: i2.
+	self deny: offspring print equals: i1 print.
+	self deny: offspring print equals: i2 print.
+	self assert: offspring print equals: '((obj isString and: [ obj notNil ]) and: [ obj isFloat ]) and: [ 
+	obj noneSatisfy: #isNumber ]'.
+]
+
+{ #category : #tests }
 GPNodeTest >> testDeepCopy [
 	| node c |
 	c := GPArithConfiguration new.

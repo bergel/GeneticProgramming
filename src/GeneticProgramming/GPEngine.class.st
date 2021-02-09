@@ -45,10 +45,10 @@ GPEngine >> createNewGeneration [
 				i1 := self tournament.
 				i2 := self tournament.
 				newInd := i1 crossOverWith: i2 using: configuration random ]
-			ifFalse: [ 
-				newInd := number <= 95
-					          ifTrue: [ self mutation ]
-					          ifFalse: [ self tournament deepCopy ] ].
+			ifFalse: [newInd := self tournament deepCopy ].
+		number := configuration randomInt: 100.
+		number <= 30
+				ifTrue: [ configuration mutate: newInd ].
 		newPopulation add: newInd ].
 	population := newPopulation
 ]
@@ -120,10 +120,16 @@ GPEngine >> execute [
 		log generation: gen.
 		log bestFitnessValue: self fitnessOfBestIndividual.
 		log worstFitnessValue: self fitnessOfWorstIndividual.
+		log averageFitness: self fitnessOfAverageIndividual.
 		logs add: log. 
 
 		self fitnessOfBestIndividual = 0
 			ifTrue: [ ^ self ] ] displayingProgress: [:gen |  'Evolving - Generation ', gen printString ]
+]
+
+{ #category : #accessing }
+GPEngine >> fitnessOfAverageIndividual [
+	^ self distanceFromSolutionOf: self pickAverageIndividual
 ]
 
 { #category : #accessing }
@@ -177,6 +183,11 @@ GPEngine >> numberOfDifferentIndividuals [
 { #category : #'as yet unclassified' }
 GPEngine >> numberOfDifferentIndividualsIn: setOfIndividuals [
 	^ (setOfIndividuals collect: [ :i | i print ]) asSet size
+]
+
+{ #category : #'as yet unclassified' }
+GPEngine >> pickAverageIndividual [
+	^ self rankedIndividuals at: population size // 2
 ]
 
 { #category : #'as yet unclassified' }

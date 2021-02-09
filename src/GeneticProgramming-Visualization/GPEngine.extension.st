@@ -19,6 +19,10 @@ GPEngine >> visualize [
 	d color: Color red.
 	d y: {logs first worstFitnessValue + 0.01},(logs collect: #worstFitnessValue).
 	c addPlot: d.
+	d := RSLinePlot new.
+	d color: Color green.
+	d y: {logs first averageFitness + 0.01},(logs collect: #averageFitness).
+	c addPlot: d.
 	c title: 'Fitness'.
 	c addDecoration: RSVerticalTick new.
 	c addDecoration: RSHorizontalTick new.
