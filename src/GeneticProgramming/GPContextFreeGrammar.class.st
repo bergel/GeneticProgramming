@@ -111,17 +111,6 @@ GPContextFreeGrammar >> addSelectorRule: symbol withValues: collection [
 		withValueOptions: collection asOrderedCollection 
 ]
 
-{ #category : #accessing }
-GPContextFreeGrammar >> allOptionsOf: symbol [
-	| opts nodeOpts dict |
-	opts := self optionsOf: symbol.
-	nodeOpts := self nodeOptionsOf: symbol.
-	dict := Dictionary new.
-	opts ifNotEmpty: [	dict at: 'options' put: opts ].
-	nodeOpts ifNotEmpty: [ dict at: 'nodeOptions' put: nodeOpts ].
-	^ dict
-]
-
 { #category : #adding }
 GPContextFreeGrammar >> collectValueForRule: symbol at: index considering: integer [
 	^ options at: symbol 	
@@ -145,19 +134,6 @@ GPContextFreeGrammar >> depth: integer [
 	depth := integer
 ]
 
-{ #category : #'collecting leaves' }
-GPContextFreeGrammar >> dictionaryOfOptionsWithWeights: symbol [
-
-	| dict indexOpts weights |
-	dict := Dictionary new.
-	indexOpts := 1 to: "(self optionsOf: symbol)" ((self allOptionsOf: symbol) flatCollect: #value) size.
-	weights := configuration optionWeightsOf: symbol.
-	indexOpts size == weights size ifTrue: [ 
-		dict := (indexOpts with: weights collect: [ :i :w | i -> w ])
-			        asOrderedDictionary ].
-	^ dict
-]
-
 { #category : #'as yet unclassified' }
 GPContextFreeGrammar >> evaluationBlockOfNode: collection [
 	^ [ :n :ctx | 
@@ -165,12 +141,12 @@ GPContextFreeGrammar >> evaluationBlockOfNode: collection [
 				children := OrderedCollection new.
 				collection 
 					detect: [ :id | 
-						child := self expandTree: id from: nodeDepth + 1 with: booleans.
+						child := ctx expandTree: id from: nodeDepth + 1 with: booleans.
 						children add: child.
 						child isNil ]
 					ifFound: [ nil ]
 					ifNone: [ 
-						(n isNotNil and: [self methodDepthBlock valueWithPossibleArgs: (Array with: booleans)]) 
+						(n isNotNil and: [ctx methodDepthBlock valueWithPossibleArgs: (Array with: booleans)]) 
 						ifTrue: [ n deepCopy depth: nodeDepth; children: children ] 
 						ifFalse: [ nil ] ] ]
 	 ]
@@ -182,6 +158,12 @@ GPContextFreeGrammar >> expand [
 	 ^ self expandTree: self selectKeyRuleOption
 ]
 
+{ #category : #controlling }
+GPContextFreeGrammar >> expandGiven: aConfiguration [
+	configuration := aConfiguration.
+	 ^ self expand
+]
+
 { #category : #'collecting leaves' }
 GPContextFreeGrammar >> expandTree: symbol [
 	| found i tree numbers |
@@ -190,17 +172,17 @@ GPContextFreeGrammar >> expandTree: symbol [
 	numbers := Set new.
 	[ found or: [ i > 20 ] ] whileFalse: [ | includes |
 		includes := true.
-		[ includes ] whileTrue: [ 
+		[ includes and: [ i <= 20 ] ] whileTrue: [ 
 			depth := configuration 
 				ifNil: [ self randomlySelectOption: (1 to: 20) ] 
 				ifNotNil: [ configuration depth ].
-			includes := numbers includes: depth
+			includes := numbers includes: depth.
+			i := i + 1
 		 ].
 		tree := [ self expandTree: symbol withDepth: depth ]
 			on: Error do: [ nil ].
 		tree ifNil: [ numbers add: depth ]
-			ifNotNil: [ found := true ].
-		i := i + 1 ].
+			ifNotNil: [ found := true ] ].
 	^ tree
 ]
 
@@ -277,64 +259,15 @@ GPContextFreeGrammar >> methodName: string [
 ]
 
 { #category : #accessing }
-GPContextFreeGrammar >> nodeOptionsOf: symbol [
-	"to remove"
-	| nodeOptions |
-	 ^ nodeOptions at: symbol ifAbsent: [ #() ]
-]
-
-{ #category : #accessing }
 GPContextFreeGrammar >> optionsOf: symbol [
 
 	 ^ options at: symbol ifAbsent: [ #() ]
-]
-
-{ #category : #'as yet unclassified' }
-GPContextFreeGrammar >> randomOptions: symbol [
-
-	^ self shuffle: (
-		(self shuffle: (self allOptionsOf: symbol) associations) flatCollect: #value) "(self optionsOf: symbol)"
-]
-
-{ #category : #'as yet unclassified' }
-GPContextFreeGrammar >> randomOptionsOf: symbol [
-
-	^ (configuration isNil or: [ (self dictionaryOfOptionsWithWeights: symbol) isEmpty ])
-		ifTrue: [ self randomOptions: symbol ] 
-		ifFalse: [ | col opts set result | 
-			opts := (self allOptionsOf: symbol) associations flatCollect: #value.
-			col := GPRandom instance shuffledCollectionOf: (self dictionaryOfOptionsWithWeights: symbol).
-			set := Set new.
-			result := OrderedCollection new.
-			col do: [ :i | (set includes: i) 
-				ifFalse: [ set add: i.
-					result add: (opts at: i) ] ].
-			result
-		]
 ]
 
 { #category : #selecting }
 GPContextFreeGrammar >> randomlySelectOption: collection [
 
 	^ GPRandom instance randomlySelect: collection
-]
-
-{ #category : #selecting }
-GPContextFreeGrammar >> randomlySelectOption: assocs regarding: integer [
-
-	integer == depth ifTrue: [ | newCol |
-		newCol := assocs select: [ :ass | ass key = 'node' ].
-		^ newCol 
-			ifEmpty: [ nil ] 
-			ifNotEmpty: [ GPRandom instance randomlySelect: newCol ] ].
-	configuration ifNil: [ 
-		^ GPRandom instance randomlySelect: assocs ].
-	self halt.
-	^ assocs
-		  ifEmpty: [ 
-		  GPRandom instance randomlySelectOfDictionary: (self allOptionsOf: nil"symbol") "randomlySelect: (self optionsOf: symbol)" ]
-		  ifNotEmpty: [ 
-		  "(self optionsOf: symbol)" (self allOptionsOf: nil "symbol") associations first value at: (GPRandom instance randomlySelectGivenProbabilities: assocs) ]
 ]
 
 { #category : #'as yet unclassified' }
@@ -347,7 +280,7 @@ GPContextFreeGrammar >> selectKeyRuleOption [
 
 	 ^ configuration 
 			ifNil: [ self randomlySelectOption: options keys ] 
-			ifNotNil: [ self halt ]
+			ifNotNil: [ configuration selectRuleKey: options keys ]
 ]
 
 { #category : #adding }
@@ -357,7 +290,7 @@ GPContextFreeGrammar >> selectValueForRule: symbol at: index [
 			valueOptions := ruleOption getValueOptionsAt: index.
 			configuration 
 				ifNil: [ self randomlySelectOption: valueOptions ]
-				ifNotNil: [ self halt. configuration select: valueOptions ] ]
+				ifNotNil: [ configuration selectValue: valueOptions forRule: symbol ] ]
 		ifAbsent: [ nil ]
 ]
 
@@ -370,7 +303,8 @@ GPContextFreeGrammar >> shuffle: collection [
 GPContextFreeGrammar >> shuffleOrSortOptions: collection of: symbol regarding: integer [
 	integer == depth ifTrue: [
 		^ GPRandom instance  shuffleElementsOf: (collection select: [ :ass | ass key = 'node' ]) ].
-	^ configuration 
+	^ GPRandom instance shuffleElementsOf: collection
+	"^ configuration 
 		ifNil: [ GPRandom instance shuffleElementsOf: collection ] 
-		ifNotNil: [ self halt. configuration shuffle: collection forRule: symbol  ]
+		ifNotNil: [ configuration shuffle: collection forRule: symbol ]"
 ]

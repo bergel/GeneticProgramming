@@ -27,7 +27,35 @@ GPNodeTest >> grammarETF [
 		                 forRule: #Add putWeights: #( 6 4 );
 		                 forRule: #Mul putWeights: #( 6 3 );
 		                 forRule: #F putWeights: #( 4 6 3 8 9 7 7 2 6 5 ).
-	"grammar configuration: configuration."
+	grammar configuration: configuration.
+	^ grammar
+]
+
+{ #category : #'as yet unclassified' }
+GPNodeTest >> grammarETF2 [
+
+	| grammar configuration |
+	grammar := GPContextFreeGrammar new.
+	grammar
+		addSelectorRule: #Add withValues: #( #+ #- );
+		addRule: #E ofClass: RBMessageNode withSequence: #( #E #Add #E );
+		addRule: #E redirectingTo: #T;
+		addSelectorRule: #Mul withValues: #( #* #/ );
+		addRule: #T ofClass: RBMessageNode withSequence: #( #T #Mul #T );
+		addRule: #T redirectingTo: #F;
+		addLeafRule: #F ofClass: RBLiteralNode withValues: (1 to: 10);
+		addRule: #F redirectingTo: #E.
+	configuration := GPConfiguration new
+		                 forRule: #E putWeight: 8;
+		                 forRule: #T putWeight: 5;
+		                 forRule: #F putWeight: 4;
+		                 forRule: #E putWeights: #( 8 5 );
+		                 forRule: #T putWeights: #( 6 3 );
+		                 forRule: #Add putWeights: #( 6 4 );
+		                 forRule: #Mul putWeights: #( 6 3 );
+		                 forRule: #F putWeights: #( 4 6 3 8 9 7 7 2 6 5 );
+							  depth: 10.
+	grammar configuration: configuration.
 	^ grammar
 ]
 
@@ -209,7 +237,7 @@ GPNodeTest >> testCrossOver05 [
 	offspring := i1 crossOverWith: i2.
 	self deny: offspring print equals: i1 print.
 	self deny: offspring print equals: i2 print.
-	self assert: offspring print equals: '3 + 9'.
+	self assert: offspring print equals: '3 - 7'.
 ]
 
 { #category : #tests }
@@ -388,8 +416,8 @@ GPNodeTest >> testCrossOver08 [
 	offspring := i1 crossOverWith: i2.
 	self deny: offspring print equals: i1 print.
 	self deny: offspring print equals: i2 print.
-	self assert: offspring print equals: '((obj isString and: [ obj notNil ]) and: [ obj isFloat ]) and: [ 
-	obj noneSatisfy: #isNumber ]'.
+	self assert: offspring print equals: '((obj isNumber and: [ obj notNil ]) and: [ obj isFloat ]) and: [ 
+	obj allSatisfy: #isString ]'.
 ]
 
 { #category : #tests }
@@ -402,13 +430,13 @@ GPNodeTest >> testDeepCopy [
 
 { #category : #tests }
 GPNodeTest >> testExpandGivenDepthMethodAnd [
-	| grammar node stack |
-	grammar := self grammarETF.
+	| grammar node |
+	grammar := self grammarETF2.
+	grammar methodName: #full.
 	GPRandom seed: 1.
 	node := grammar expandTree: #E.
-	stack := Stack new.
-	node := node evaluateUsing: grammar.
-	self assert: (node allLeaves select: #isLeafNode thenCollect: #depth) asSet size equals: 1
+	self assert: (node allLeaves select: #isLeafNode thenCollect: #depth) asSet size equals: 1.
+	self assertCollection: (node allLeaves select: #isLeafNode thenCollect: #depth) asSet equals: (Set new add: 10; yourself)
 ]
 
 { #category : #tests }
@@ -600,7 +628,7 @@ GPNodeTest >> testNodeValueForComplexNode [
 	grammar := self grammarETF.
 	GPRandom seed: 48393.
 	node := grammar expandTree: #E.
-	self assertCollection: node nodeValue flattened hasSameElements: #(6 #* 10 #/ 8 #/ 8 #* 3 #/ 2 #* 2 #* 9).
+	self assertCollection: node nodeValue flattened hasSameElements: #(6 #* 8).
 	
 
 ]
@@ -609,7 +637,7 @@ GPNodeTest >> testNodeValueForComplexNode [
 GPNodeTest >> testNodeValueForLeafNode [
 	| grammar node |
 	grammar := self grammarETF.
-	GPRandom seed: 12.
+	GPRandom seed: 3.
 	node := grammar expandTree: #F.
 	self assert: node nodeValue equals: 6.
 	
@@ -621,8 +649,8 @@ GPNodeTest >> testNodeValueForMessageNode [
 	| grammar node |
 	grammar := self grammarETF.
 	GPRandom seed: 1.
-	"node := (grammar nodeOf: #Add) expandGiven: grammar depth: 1 method: #grow and: Stack new."
-	self assert: node nodeValue equals: #+.
+	node := grammar expandTree: #Add.
+	self assert: node nodeValue equals: #-.
 	
 
 ]

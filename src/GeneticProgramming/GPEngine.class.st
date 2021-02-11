@@ -35,7 +35,7 @@ GPEngine >> createNewGeneration [
 	| i1 i2 newInd newPopulation |
 	(self distanceFromSolutionOf: self pickBestIndividual) = 0 ifTrue: [ 
 		^ self ].
-	newPopulation := OrderedCollection new. "self eliteOfPopulation."
+	newPopulation := "OrderedCollection new." self eliteOfPopulation.
 	population size - newPopulation size timesRepeat: [ 
 		| number |
 		number := configuration randomInt: 100.
@@ -44,7 +44,8 @@ GPEngine >> createNewGeneration [
 			ifTrue: [ 
 				i1 := self tournament.
 				i2 := self tournament.
-				newInd := i1 crossOverWith: i2 using: configuration random ]
+				newInd := i1 crossOverWith: i2 using: configuration random.
+				newInd ifNil: [ newInd := i1 deepCopy ] ]
 			ifFalse: [newInd := self tournament deepCopy ].
 		number := configuration randomInt: 100.
 		number <= 30

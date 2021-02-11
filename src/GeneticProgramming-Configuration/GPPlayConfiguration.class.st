@@ -111,10 +111,10 @@ GPPlayConfiguration >> newTerminal [
 
 { #category : #hooks }
 GPPlayConfiguration >> numberOfGenerations [
-	^ 20
+	^ 25
 ]
 
 { #category : #accessing }
 GPPlayConfiguration >> populationSize [ 
-	^ 50
+	^ 100
 ]

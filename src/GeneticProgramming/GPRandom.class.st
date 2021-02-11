@@ -104,14 +104,6 @@ GPRandom >> randomlySelectGivenProbabilities: dictionary [
 		  "((self collectionOfProbabilities: dictionary) shuffleBy: random)"
 ]
 
-{ #category : #enumerating }
-GPRandom >> randomlySelectOfDictionary: associations [
-	^ self randomlySelect: associations
-	"| assoc |
-	assoc := (self randomlySelect: associations).
-	^ assoc key -> (self randomlySelect: assoc value)"
-]
-
 { #category : #'instance creation' }
 GPRandom >> seed: number [
 	random seed: number 

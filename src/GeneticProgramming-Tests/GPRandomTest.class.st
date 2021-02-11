@@ -47,19 +47,6 @@ GPRandomTest >> testRandomlySelectGivenProbabilities [
 ]
 
 { #category : #tests }
-GPRandomTest >> testRandomlySelectOfDictionary [
-
-	| random dictionary selected |
-	random := GPRandom seed: 1.
-	dictionary := Dictionary new 
-		at: 'opts' put: #(1 6 3 3 3 5 2);
-		at: 'nodeOpts' put: #(6 4 6 2 2 0);
-		yourself.
-	selected := random randomlySelectOfDictionary: dictionary associations.
-	self assert: selected equals: 'opts' -> 1
-]
-
-{ #category : #tests }
 GPRandomTest >> testShuffleElementsOf [
 
 	| random collection shuffledCollection |
