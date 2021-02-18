@@ -10,6 +10,23 @@ GPGrammarTest >> configurationClass [
 ]
 
 { #category : #tests }
+GPGrammarTest >> testAllLeaves [
+	| i |
+	20 timesRepeat: [ 
+		i := configuration createNewIndividual.
+		"self deny: i isLeaf."
+		self assert: (i allLeaves allSatisfy: #isLeaf) ].
+]
+
+{ #category : #tests }
+GPGrammarTest >> testIsLeaf [	
+	"20 timesRepeat: [ 
+		self deny: configuration createNewIndividual allLeaves isLeaf ].
+	20 timesRepeat: [ 
+		self assert: configuration newTerminal isLeaf ]."
+]
+
+{ #category : #tests }
 GPGrammarTest >> testMutate [
 	| i1 i2 |
 	"engine createInitialPopulation.
@@ -84,4 +101,15 @@ GPGrammarTest >> testSelectValueForRuleWithMoreOptionsThanWeights [
 GPGrammarTest >> testSelectValueForRuleWithMoreWeightsThanOptions [
 	configuration forRule: #E putWeights: #(10 2 1 3 5).
 	self assert: (configuration selectValue: #(8 3 2) forRule: #E) equals: 8
+]
+
+{ #category : #tests }
+GPGrammarTest >> testTournament [
+	| i1 i2 |
+	engine createInitialPopulation.
+	i1 := engine tournament.
+	self assert: (i1 isKindOf: GPAbstractNode).
+	i2 := engine tournament.
+	self assert: (i2 isKindOf: GPAbstractNode).
+	self assert: i1 print ~= i2 print
 ]

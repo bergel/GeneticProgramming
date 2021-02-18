@@ -96,5 +96,5 @@ GPPythagoreConfiguration >> numberOfGenerations [
 
 { #category : #hooks }
 GPPythagoreConfiguration >> populationSize [
-	^ 20
+	^ 40
 ]

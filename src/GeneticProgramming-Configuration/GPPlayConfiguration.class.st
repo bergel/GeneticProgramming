@@ -9,9 +9,7 @@ Class {
 
 { #category : #operations }
 GPPlayConfiguration >> createNewIndividual [	
-	| rootNode |
-	rootNode := self newFunction.
-	^ rootNode
+	^ self newFunction
 ]
 
 { #category : #operations }
