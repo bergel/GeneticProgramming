@@ -87,16 +87,16 @@ GPPlayConfiguration >> mutate: individual [
 
 { #category : #hooks }
 GPPlayConfiguration >> newFunction [ 
-	| node found i depth |
+	| node found i |
 	found := false.
 	i := 0.
-	[ found and: [ i > 5 ] ] whileFalse: [ 
+	[ found or: [ i > 5 ] ] whileFalse: [ 
 		depth := GPRandom instance randomNumber: 10.
 		grammar methodName: (GPRandom instance randomlySelect: #(#full #grow)).
 		node := grammar expandTree: #E withDepth: depth.
 		found := node isNotNil.
 		i := i + 1. ].
-	node ifNil: [ self halt. ].
+	self assert: node notNil.
 	node evaluationBlock: [ :n :ctx | n ast ];
 		printBlock: [ :n :ctx | n ast formattedCode ].
 	^ node

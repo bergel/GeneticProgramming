@@ -115,16 +115,17 @@ GPEngine >> execute [
 	 
 	| log |
 	self createInitialPopulation.
-	(1 to: configuration numberOfGenerations) do: [ :gen |
+	(1 to: configuration numberOfGenerations) do: [ :gen | | rInds |
 		self createNewGeneration.
+		rInds := self rankedIndividuals.
 		log := GPLog new.
 		log generation: gen.
-		log bestFitnessValue: self fitnessOfBestIndividual.
-		log worstFitnessValue: self fitnessOfWorstIndividual.
-		log averageFitness: self fitnessOfAverageIndividual.
+		log bestFitnessValue: rInds first value.
+		log worstFitnessValue: rInds last value.
+		log averageFitness: (rInds at: population size // 2) value.
 		logs add: log. 
 
-		self fitnessOfBestIndividual = 0
+		"self fitnessOfBestIndividual"rInds first value = 0
 			ifTrue: [ ^ self ] ] displayingProgress: [:gen |  'Evolving - Generation ', gen printString ]
 ]
 
@@ -188,12 +189,12 @@ GPEngine >> numberOfDifferentIndividualsIn: setOfIndividuals [
 
 { #category : #'as yet unclassified' }
 GPEngine >> pickAverageIndividual [
-	^ self rankedIndividuals at: population size // 2
+	^ (self rankedIndividuals at: population size // 2) key
 ]
 
 { #category : #'as yet unclassified' }
 GPEngine >> pickBestIndividual [
-	^ self rankedIndividuals first
+	^ self rankedIndividuals first key
 ]
 
 { #category : #'as yet unclassified' }
@@ -204,7 +205,7 @@ GPEngine >> pickFitIndividuals [
 
 { #category : #'as yet unclassified' }
 GPEngine >> pickWorstIndividual [
-	^ self rankedIndividuals last
+	^ self rankedIndividuals last key
 ]
 
 { #category : #accessing }
@@ -225,11 +226,13 @@ GPEngine >> randomElementOf: aCollection [
 { #category : #'as yet unclassified' }
 GPEngine >> rankedIndividuals [
 	"return the list of individuals, sorted as the best match in front"
-	| d as |
+	^ (population collect: [ :i | i -> (self distanceFromSolutionOf: i) abs ]) 
+		asSortedCollection: [ :i1 :i2 | i1 value < i2 value ]
+	"| d as |
 	d := Dictionary new.
 	population do: [ :i | d at: i put: (self distanceFromSolutionOf: i) abs].
-	as := (d associations asSortedCollection: [ :a1 :a2 | a1 value < a2 value ]).
-	^ as collect: #key
+	as := d associations asSortedCollection: [ :a1 :a2 | a1 value < a2 value ].
+	^ as collect: #key"
 
 ]
 
