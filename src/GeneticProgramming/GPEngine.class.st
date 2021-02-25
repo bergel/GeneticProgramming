@@ -122,7 +122,7 @@ GPEngine >> execute [
 		log generation: gen.
 		log bestFitnessValue: rInds first value.
 		log worstFitnessValue: rInds last value.
-		log averageFitness: (rInds at: population size // 2) value.
+		log averageFitness: (rInds collect: #value) sum / rInds size.
 		logs add: log. 
 
 		"self fitnessOfBestIndividual"rInds first value = 0
