@@ -59,9 +59,8 @@ GPAssertConfiguration >> addVariableRule: symbol withValues: collection [
 { #category : #'as yet unclassified' }
 GPAssertConfiguration >> buildGrammar [
 	self assert: targetClass notNil.
-	self assert: targetSelectors notEmpty.
 	builder := GPAssertionGrammarBuilder new.
-	grammar := builder buildAssertionGrammar: targetClass of: targetSelectors.
+	grammar := builder buildAssertionGrammar: targetClass of: self targetSelectors.
 	grammar configuration: self
 	
 ]
@@ -105,7 +104,8 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 { #category : #initialization }
 GPAssertConfiguration >> initialize [ 
 	super initialize.
-	options := OrderedCollection new
+	options := OrderedCollection new.
+	targetSelectors := OrderedCollection new
 ]
 
 { #category : #'as yet unclassified' }
@@ -149,7 +149,7 @@ GPAssertConfiguration >> newFunction [
 	i := 0.
 	grammar := self updateGrammar.
 	[ found or: [ i > 100 ] ] whileFalse: [ 
-		depth ifNil: [ depth := GPRandom instance randomNumber: 10 ].
+		depth ifNil: [ depth := GPRandom instance randomNumber: 15 ].
 		grammar 
 			methodName: (GPRandom instance randomlySelect: #(#full #grow));
 			configuration: self.
