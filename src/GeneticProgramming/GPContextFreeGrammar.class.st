@@ -35,6 +35,36 @@ GPContextFreeGrammar >> addLeafRule: symbol withValues: collection [
 ]
 
 { #category : #adding }
+GPContextFreeGrammar >> addOptions: collection forCollectionOptionsBeginWith: symbol [
+	options associations 
+		select: [ :assoc |
+		(assoc key beginsWith: symbol) and: [ (assoc key copyFrom: symbol size + 1 to: assoc key size) isAllDigits ] ]
+		thenDo: [ :assoc | assoc value addValueOptions: collection at: 1 ]
+]
+
+{ #category : #adding }
+GPContextFreeGrammar >> addOptions: collection forLeafRule: symbol [
+	| opt |
+	opt := self ruleOptionOf: symbol.
+	self assert: opt notNil.
+	opt addValueOptions: collection at: 1
+]
+
+{ #category : #adding }
+GPContextFreeGrammar >> addOptions: collection forSelectorRule: symbol [
+	self addOrReplaceSelectorRule: symbol withValues: collection
+]
+
+{ #category : #adding }
+GPContextFreeGrammar >> addOrReplaceSelectorRule: symbol withValues: collection [
+	| opt |
+	opt := self ruleOptionOf: symbol.
+	opt
+		ifNil: [ self addSelectorRule: symbol withValues: collection ]
+		ifNotNil: [ opt addValueOptions: collection at: 1 ]
+]
+
+{ #category : #adding }
 GPContextFreeGrammar >> addRule: symbol ofClass: aClass withSequence: collection [
 	| optionRule |
 	self addRuleOptionIfNecessary: symbol.
@@ -115,13 +145,24 @@ GPContextFreeGrammar >> addSelectorRule: symbol withValues: collection [
 GPContextFreeGrammar >> collectValueForRule: symbol at: index considering: integer [
 	^ options at: symbol 	
 		ifPresent: [ :ruleOption |
-			self shuffleOrSortOptions: (ruleOption getValueOptionsAt: index) of: symbol regarding: integer ]
+			"self shuffleOrSortOptions: (ruleOption getValueOptionsAt: index) of: symbol regarding: integer"
+			self shuffle: (ruleOption getValueOptionsAt: index) ]
 		ifAbsent: [ nil ]
 ]
 
 { #category : #accessing }
 GPContextFreeGrammar >> configuration: aConfiguration [
 	configuration := aConfiguration 
+]
+
+{ #category : #adding }
+GPContextFreeGrammar >> createOrReplaceLeafRule: symbol ofClass: aClass withValues: collection [
+	| opt |
+	opt := self ruleOptionOf: symbol.
+	opt 
+		ifNil: [ self addLeafRule: symbol ofClass: aClass withValues: collection deepCopy ]
+		ifNotNil: [ opt replaceValueOptions: collection deepCopy at: 1 ]
+	
 ]
 
 { #category : #accessing }
@@ -256,12 +297,6 @@ GPContextFreeGrammar >> methodName: string [
 		methodName := string	
 	]
 	
-]
-
-{ #category : #accessing }
-GPContextFreeGrammar >> optionsOf: symbol [
-
-	 ^ options at: symbol ifAbsent: [ #() ]
 ]
 
 { #category : #selecting }

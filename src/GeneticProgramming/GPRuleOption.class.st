@@ -27,6 +27,12 @@ GPRuleOption >> addNodeOption: anObject [
 	indexes add: 'nodeOption' -> nodeOptions size.
 ]
 
+{ #category : #accessing }
+GPRuleOption >> addValueOptions: collection at: index [
+	(self getValueOptionsAt: index)
+		addAll: collection
+]
+
 { #category : #'as yet unclassified' }
 GPRuleOption >> allOptions [
 	^ indexes collect: [ :assoc | 
@@ -79,6 +85,12 @@ GPRuleOption >> nodeOptions [
 { #category : #accessing }
 GPRuleOption >> nodes [ 
 	^ nodes
+]
+
+{ #category : #accessing }
+GPRuleOption >> replaceValueOptions: collection at: index [
+	(self getValueOptionsAt: index) removeAll;
+		addAll: collection
 ]
 
 { #category : #accessing }

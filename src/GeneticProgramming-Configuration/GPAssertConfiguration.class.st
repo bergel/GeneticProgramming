@@ -4,20 +4,65 @@ Class {
 	#instVars : [
 		'targetClass',
 		'testClass',
-		'targetSelectors',
-		'grammars',
 		'targetSelector',
 		'originalMethod',
-		'options'
+		'options',
+		'grammar',
+		'targetSelectors',
+		'builder'
 	],
 	#category : #'GeneticProgramming-Configuration-GPAssert'
 }
 
+{ #category : #adding }
+GPAssertConfiguration >> addOptionArgs: symbols [
+	grammar ifNil: [ self buildGrammar ].
+	grammar addOptions: symbols forCollectionOptionsBeginWith: #Args
+]
+
+{ #category : #adding }
+GPAssertConfiguration >> addOptionClasses: classNames [
+	grammar ifNil: [ self buildGrammar ].
+	grammar addOptions: classNames forLeafRule: #Class
+]
+
+{ #category : #adding }
+GPAssertConfiguration >> addOptionSelectors: selectors [
+	grammar ifNil: [ self buildGrammar ].
+	(selectors groupedBy: #numArgs) 
+		associationsDo: [ :assoc | 
+			grammar addOrReplaceSelectorRule: 
+				(assoc key = 0 
+					ifTrue: [ #Message ] 
+					ifFalse: [ #Message, assoc key asString ] ) withValues: assoc value ]
+]
+
+{ #category : #adding }
+GPAssertConfiguration >> addTargetVariable [ 
+	| vals |
+	self assert: grammar notNil.
+	self assert: targetSelector notNil.
+	self assert: builder notNil.
+	vals := builder argumentsOf: targetSelector.
+	self assert: (vals notNil and: [ vals notEmpty ]).
+	grammar createOrReplaceLeafRule: #Variable ofClass: RBVariableNode withValues: vals
+]
+
+{ #category : #adding }
+GPAssertConfiguration >> addVariableRule: symbol withValues: collection [
+	grammar ifNil: [ self buildGrammar ].
+	self assert: (grammar ruleOptionOf: symbol) isNil.
+	self assert: (collection isCollection and: [ collection notEmpty ]).
+	grammar addLeafRule: symbol ofClass: RBVariableNode withValues: collection
+]
+
 { #category : #'as yet unclassified' }
-GPAssertConfiguration >> buildGrammar: selector [
+GPAssertConfiguration >> buildGrammar [
 	self assert: targetClass notNil.
-	^ (GPAssertionGrammarBuilder buildAssertionGrammar: targetClass of: selector)
-		configuration: self
+	self assert: targetSelectors notEmpty.
+	builder := GPAssertionGrammarBuilder new.
+	grammar := builder buildAssertionGrammar: targetClass of: targetSelectors.
+	grammar configuration: self
 	
 ]
 
@@ -60,8 +105,6 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 { #category : #initialization }
 GPAssertConfiguration >> initialize [ 
 	super initialize.
-	grammars := Dictionary new.
-	targetSelectors := OrderedCollection new.
 	options := OrderedCollection new
 ]
 
@@ -101,14 +144,11 @@ GPAssertConfiguration >> mutate: individual [
 
 { #category : #hooks }
 GPAssertConfiguration >> newFunction [ 
-	| node found i grammar |
-	self assert: targetSelectors notEmpty.
+	| node found i |
 	found := false.
 	i := 0.
-	targetSelector ifNil: [ targetSelector := random randomlySelect: targetSelectors ].
-	grammars at: targetSelector ifAbsentPut: [ self buildGrammar: targetSelector ].
-	grammar := grammars at: targetSelector.
-	[ found or: [ i > 10 ] ] whileFalse: [ 
+	grammar := self updateGrammar.
+	[ found or: [ i > 100 ] ] whileFalse: [ 
 		depth ifNil: [ depth := GPRandom instance randomNumber: 10 ].
 		grammar 
 			methodName: (GPRandom instance randomlySelect: #(#full #grow));
@@ -134,8 +174,7 @@ GPAssertConfiguration >> numberOfGenerations [
 
 { #category : #accessing }
 GPAssertConfiguration >> options [
-	options ifEmpty: [ 
-		^ { nil . 42 . 'hello' . 0 . 1.2 . #(). -4. 0. '' } ].
+	self assert: options notEmpty.
 	^ options
 ]
 
@@ -151,6 +190,11 @@ GPAssertConfiguration >> populationSize [
 ]
 
 { #category : #accessing }
+GPAssertConfiguration >> targetClass [
+	^ targetClass
+]
+
+{ #category : #accessing }
 GPAssertConfiguration >> targetClass: aClass [
 	targetClass := aClass
 ]
@@ -161,8 +205,23 @@ GPAssertConfiguration >> targetSelector: aSelector [
 ]
 
 { #category : #accessing }
-GPAssertConfiguration >> targetSelectors: selectors [
-	targetSelectors := selectors 
+GPAssertConfiguration >> targetSelectors [
+	self assert: targetClass notNil.
+	targetSelectors ifEmpty: [ 
+		targetSelectors := targetClass methods 
+			collect: #selector 
+			thenSelect: [ :s | s numArgs > 0 ] ].
+	^ targetSelectors
+]
+
+{ #category : #accessing }
+GPAssertConfiguration >> targetSelectors: collection [
+	targetSelectors := collection 
+]
+
+{ #category : #accessing }
+GPAssertConfiguration >> testClass [
+	^ testClass
 ]
 
 { #category : #accessing }
@@ -176,4 +235,12 @@ GPAssertConfiguration >> uninstall [
 	self assert: targetSelector notNil.
 	self assert: originalMethod notNil.
 	targetClass methodDict at: targetSelector put: originalMethod 
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertConfiguration >> updateGrammar [
+	grammar ifNil: [ self buildGrammar ].
+	self addTargetVariable.
+	^ grammar
+	
 ]

@@ -90,7 +90,7 @@ GPPlayConfiguration >> newFunction [
 	| node found i |
 	found := false.
 	i := 0.
-	[ found or: [ i > 5 ] ] whileFalse: [ 
+	[ found or: [ i > 30 ] ] whileFalse: [ 
 		depth := GPRandom instance randomNumber: 10.
 		grammar methodName: (GPRandom instance randomlySelect: #(#full #grow)).
 		node := grammar expandTree: #E withDepth: depth.
