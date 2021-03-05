@@ -9,7 +9,8 @@ Class {
 		'options',
 		'grammar',
 		'targetSelectors',
-		'builder'
+		'builder',
+		'index'
 	],
 	#category : #'GeneticProgramming-Configuration-GPAssert'
 }
@@ -45,7 +46,8 @@ GPAssertConfiguration >> addTargetVariable [
 	self assert: builder notNil.
 	vals := builder argumentsOf: targetSelector.
 	self assert: (vals notNil and: [ vals notEmpty ]).
-	grammar createOrReplaceLeafRule: #Variable ofClass: RBVariableNode withValues: vals
+	self assert: index <= vals size.
+	grammar createOrReplaceLeafRule: #Variable ofClass: RBVariableNode withValues: (Array with: (vals at: index))
 ]
 
 { #category : #adding }
@@ -59,7 +61,6 @@ GPAssertConfiguration >> addVariableRule: symbol withValues: collection [
 { #category : #'as yet unclassified' }
 GPAssertConfiguration >> buildGrammar [
 	self assert: targetClass notNil.
-	builder := GPAssertionGrammarBuilder new.
 	grammar := builder buildAssertionGrammar: targetClass of: self targetSelectors.
 	grammar configuration: self
 	
@@ -68,7 +69,7 @@ GPAssertConfiguration >> buildGrammar [
 { #category : #accessing }
 GPAssertConfiguration >> countErrors [
 
-	^ ((1 to: 20) collect: [ :n | | obj args |
+	^ ((1 to: 30) collect: [ :n | | obj args |
 		obj := targetClass new.
 		args := (1 to: targetSelector numArgs) collect: [ :a | 
 		        random randomlySelect: self options ].
@@ -76,9 +77,10 @@ GPAssertConfiguration >> countErrors [
 			0 ]
 			on: Error
 			do: [ :ex | 
-			ex class == AssertionFailure
+				1
+			"ex class == AssertionFailure
 				     ifTrue: [ 0 ]
-				     ifFalse: [ 1 ] ] ]) min
+				     ifFalse: [ 1 ]" ] ]) min
 ]
 
 { #category : #operations }
@@ -94,6 +96,7 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 	[ self injectIntoMethod: individual ] on: Error do: [ 
 		self uninstall.
 	].
+	"f := 0."
 	f := self countErrors.
 	t := testClass buildSuite run.
 	individual fitness: f + t runCount + t failureCount + t errorCount - t passedCount.
@@ -101,9 +104,16 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 	^ individual fitness
 ]
 
+{ #category : #accessing }
+GPAssertConfiguration >> index: number [
+	self assert: (number isNumber and: [ number > 0 ]).
+	index := number
+]
+
 { #category : #initialization }
 GPAssertConfiguration >> initialize [ 
 	super initialize.
+	builder := GPAssertionGrammarBuilder new.
 	options := OrderedCollection new.
 	targetSelectors := OrderedCollection new
 ]
@@ -169,7 +179,7 @@ GPAssertConfiguration >> newTerminal [
 
 { #category : #hooks }
 GPAssertConfiguration >> numberOfGenerations [ 
-	^ 20
+	^ 30
 ]
 
 { #category : #accessing }
@@ -186,7 +196,7 @@ GPAssertConfiguration >> options: collection [
 
 { #category : #accessing }
 GPAssertConfiguration >> populationSize [ 
-	^ 30
+	^ 100
 ]
 
 { #category : #accessing }

@@ -29,7 +29,7 @@ GPAssertionGrammarBuilder >> buildAssertionGrammar [
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Method #AndOr #Block);
 		addSelectorRule: #Assert withValues: #(#assert:);
 		"addSelectorRule: #Assert2 withValues: #(#assert:equals:);"
-		addSelectorRule: #Message withValues: #(#isString #isCollection #notNil #isSymbol #isEmpty #notEmpty #isNil);
+		addSelectorRule: #Message withValues: #(#isString #isCollection #isSymbol #isEmpty #notEmpty #isNil);
 		addSelectorRule: #Message1 withValues: #(#isKindOf: #isMemberOf:);
 		addSelectorRule: #AndOr withValues: #(#and: );
 		addRule: #Args1 withCollectionOptions: #(#Class) ofSize: 1;

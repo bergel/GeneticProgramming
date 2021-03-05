@@ -44,12 +44,13 @@ GPAssertion >> for: symbol putDepth: number [
 ]
 
 { #category : #'as yet unclassified' }
-GPAssertion >> getBestIndividualGiven: aSelector [
+GPAssertion >> getBestIndividualGiven: aSelector given: index [
 	| engine |
 	engine := GPEngine new.
 	configuration 
 		targetSelector: aSelector;
-		options: self options.
+		options: self options;
+		index: index.
 	"configuration := GPAssertConfiguration new
 		targetClass: targetClass;
 		testClass: testClass;
@@ -70,7 +71,8 @@ GPAssertion >> individuals [
 { #category : #initialization }
 GPAssertion >> initialize [
 	dictDepth := Dictionary new.
-	configuration := GPAssertConfiguration new
+	configuration := GPAssertConfiguration new.
+	options := OrderedCollection new
 ]
 
 { #category : #'as yet unclassified' }
@@ -102,7 +104,9 @@ GPAssertion >> run [
 	self assert: configuration targetClass notNil.
 	individuals := Dictionary 
 		newFromAssociations: (configuration targetSelectors 
-			collect: [ :tSelector | tSelector -> (self getBestIndividualGiven: tSelector)])
+			collect: [ :tSelector | 
+				tSelector -> ((1 to: tSelector numArgs) collect: [:n | 
+					 (self getBestIndividualGiven: tSelector given: n) ])])
 ]
 
 { #category : #accessing }
