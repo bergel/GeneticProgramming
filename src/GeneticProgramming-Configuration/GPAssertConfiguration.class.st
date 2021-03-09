@@ -46,8 +46,8 @@ GPAssertConfiguration >> addTargetVariable [
 	self assert: builder notNil.
 	vals := builder argumentsOf: targetSelector.
 	self assert: (vals notNil and: [ vals notEmpty ]).
-	self assert: index <= vals size.
-	grammar createOrReplaceLeafRule: #Variable ofClass: RBVariableNode withValues: (Array with: (vals at: index))
+	"self assert: index <= vals size."
+	grammar createOrReplaceLeafRule: #Variable ofClass: RBVariableNode withValues: vals "(Array with: (vals at: index))"
 ]
 
 { #category : #adding }
@@ -66,23 +66,6 @@ GPAssertConfiguration >> buildGrammar [
 	
 ]
 
-{ #category : #accessing }
-GPAssertConfiguration >> countErrors [
-
-	^ ((1 to: 30) collect: [ :n | | obj args |
-		obj := targetClass new.
-		args := (1 to: targetSelector numArgs) collect: [ :a | 
-		        random randomlySelect: self options ].
-	 	[ obj perform: targetSelector withArguments: args.
-			0 ]
-			on: Error
-			do: [ :ex | 
-				1
-			"ex class == AssertionFailure
-				     ifTrue: [ 0 ]
-				     ifFalse: [ 1 ]" ] ]) min
-]
-
 { #category : #operations }
 GPAssertConfiguration >> createNewIndividual [	
 	^ self newFunction
@@ -90,16 +73,14 @@ GPAssertConfiguration >> createNewIndividual [
 
 { #category : #operations }
 GPAssertConfiguration >> distanceFromSolutionOf: individual [
-	| t f |
+	| t |
 	self assert: targetClass notNil.
 	self assert: testClass notNil.
 	[ self injectIntoMethod: individual ] on: Error do: [ 
 		self uninstall.
 	].
-	"f := 0."
-	f := self countErrors.
 	t := testClass buildSuite run.
-	individual fitness: f + t runCount + t failureCount + t errorCount - t passedCount.
+	individual fitness: t runCount + t failureCount + t errorCount - t passedCount.
 	self uninstall.
 	^ individual fitness
 ]
@@ -124,7 +105,7 @@ GPAssertConfiguration >> injectIntoMethod: individual [
 	self assert: targetSelector notNil.
 	self assert: targetClass notNil.
 	aBehavior := targetClass instanceSide.
-	originalMethod := "targetClass methodNamed: targetSelector." aBehavior methodDict at: targetSelector.
+	originalMethod := "targetClass methodNamed: targetSelector." aBehavior compiledMethodAt: targetSelector.
 	rbMethodNode := RBParser
 		parseMethod: originalMethod sourceCode.
 	rbMethodNode body addNodeFirst: individual ast.
@@ -179,7 +160,7 @@ GPAssertConfiguration >> newTerminal [
 
 { #category : #hooks }
 GPAssertConfiguration >> numberOfGenerations [ 
-	^ 30
+	^ 25
 ]
 
 { #category : #accessing }
@@ -196,7 +177,7 @@ GPAssertConfiguration >> options: collection [
 
 { #category : #accessing }
 GPAssertConfiguration >> populationSize [ 
-	^ 100
+	^ 50
 ]
 
 { #category : #accessing }
