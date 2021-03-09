@@ -68,7 +68,7 @@ GPAssertion >> calculateErrorMetric: tSelector [
 		ifNotEmpty: [ contexts collect: [ :ctx | self countErrors: tSelector given: ctx ] ].
 	metrics at: 'numErrors'
 		ifAbsentPut: [ Dictionary new ].
-	(metrics at: 'numErrors') at: tSelector put: val
+	(metrics at: 'numErrors') at: tSelector put: val min
 ]
 
 { #category : #'as yet unclassified' }
@@ -89,6 +89,11 @@ GPAssertion >> countErrors: targetSelector given: object [
 			on: Error
 			do: [ :ex | 1 ])
 	]
+]
+
+{ #category : #accessing }
+GPAssertion >> filename [
+	^ (configuration targetClass name, '.csv') asFileReference 
 ]
 
 { #category : #'as yet unclassified' }
@@ -209,4 +214,27 @@ GPAssertion >> testClass: aClass [
 GPAssertion >> uninstallOf: originalMethod [
 	self assert: configuration targetClass notNil.
 	configuration targetClass methodDict at: originalMethod selector put: originalMethod 
+]
+
+{ #category : #writing }
+GPAssertion >> writeOnCsv [
+	| data  |
+	self assert: individuals notEmpty.
+	self assert: metrics notEmpty.
+	data := (configuration targetSelectors collect: [ :s | | best |
+		best := (individuals at: s) pickBestIndividual.
+		OrderedCollection new 
+			add: configuration targetClass;
+			add: s;
+			add: ((metrics at: 'numErrors') at: s);
+			add: ((metrics at: 'numCalls') at: s);
+			add: best print;
+			add: best fitness;
+			yourself	]).
+	self filename writeStreamDo: [ :stream |
+		(NeoCSVWriter on: stream)
+			nextPut: #(Class Method Errors Calls Result Fitness);
+			nextPutAll: data;
+			flush
+	]
 ]
