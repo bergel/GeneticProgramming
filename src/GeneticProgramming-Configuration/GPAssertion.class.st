@@ -77,6 +77,13 @@ GPAssertion >> calculateMetrics: tSelector [
 	self calculateCallsMetric: tSelector 
 ]
 
+{ #category : #accessing }
+GPAssertion >> contexts: collection [
+	self assert: (collection isCollection and: [ collection notEmpty ]).
+	contexts := collection.
+	configuration contexts: collection 
+]
+
 { #category : #'as yet unclassified' }
 GPAssertion >> countErrors: targetSelector given: object [
 	| rm |
@@ -173,7 +180,8 @@ GPAssertion >> options [
 { #category : #'as yet unclassified' }
 GPAssertion >> options: collection [
 	self assert: collection isCollection.
-	options := collection
+	options := collection.
+	configuration options: collection  
 	 
 ]
 

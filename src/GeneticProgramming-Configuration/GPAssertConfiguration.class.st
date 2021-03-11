@@ -10,7 +10,8 @@ Class {
 		'grammar',
 		'targetSelectors',
 		'builder',
-		'index'
+		'index',
+		'contexts'
 	],
 	#category : #'GeneticProgramming-Configuration-GPAssert'
 }
@@ -66,6 +67,32 @@ GPAssertConfiguration >> buildGrammar [
 	
 ]
 
+{ #category : #'as yet unclassified' }
+GPAssertConfiguration >> countErrors [
+	self assert: targetClass notNil.
+	self assert: targetSelector notNil.
+	^ contexts 
+		ifEmpty: [ self countErrorsGiven: targetClass new ] 
+		ifNotEmpty: [ (contexts collect: [ :ctx | 
+				self countErrorsGiven: ctx ]) min ]
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertConfiguration >> countErrorsGiven: ctx [
+	| rm |
+	rm := GPRandom instance.
+	^ (1 to: 30) inject: 0 into: [ :sum :num | | args |
+		args := (1 to: targetSelector numArgs) collect: [ :a | 
+		        rm randomlySelect: self options ].
+		sum + ([ ctx perform: targetSelector withArguments: args.
+			0 ]
+			on: Error
+			do: [ :e | e class == AssertionFailure 
+				ifTrue: [ 0 ] 
+				ifFalse: [ 1 ] ])
+	]
+]
+
 { #category : #operations }
 GPAssertConfiguration >> createNewIndividual [	
 	^ self newFunction
@@ -73,14 +100,16 @@ GPAssertConfiguration >> createNewIndividual [
 
 { #category : #operations }
 GPAssertConfiguration >> distanceFromSolutionOf: individual [
-	| t |
+	| t f |
 	self assert: targetClass notNil.
 	self assert: testClass notNil.
 	[ self injectIntoMethod: individual ] on: Error do: [ 
 		self uninstall.
 	].
+	f := self countErrors.
 	t := testClass buildSuite run.
-	individual fitness: t runCount + t failureCount + t errorCount - t passedCount.
+	individual fitness: f + t failureCount + t errorCount.
+	"llamadas aleatorias que provocan error y no lanzan AssertionFailure"
 	self uninstall.
 	^ individual fitness
 ]
@@ -96,7 +125,8 @@ GPAssertConfiguration >> initialize [
 	super initialize.
 	builder := GPAssertionGrammarBuilder new.
 	options := OrderedCollection new.
-	targetSelectors := OrderedCollection new
+	targetSelectors := OrderedCollection new.
+	contexts := OrderedCollection new
 ]
 
 { #category : #'as yet unclassified' }
