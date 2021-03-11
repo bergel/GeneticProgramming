@@ -85,7 +85,7 @@ GPAssertConfiguration >> countErrorsGiven: ctx [
 		args := (1 to: targetSelector numArgs) collect: [ :a | 
 		        rm randomlySelect: self options ].
 		sum + ([ ctx perform: targetSelector withArguments: args.
-			0 ]
+			1 ]
 			on: Error
 			do: [ :e | e class == AssertionFailure 
 				ifTrue: [ 0 ] 
@@ -229,9 +229,8 @@ GPAssertConfiguration >> targetSelector: aSelector [
 GPAssertConfiguration >> targetSelectors [
 	self assert: targetClass notNil.
 	targetSelectors ifEmpty: [ 
-		targetSelectors := targetClass methods 
-			collect: #selector 
-			thenSelect: [ :s | s numArgs > 0 ] ].
+		targetSelectors := targetClass selectors 
+			select: [ :s | s numArgs > 0 ] ].
 	^ targetSelectors
 ]
 
