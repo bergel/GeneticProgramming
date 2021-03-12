@@ -33,8 +33,9 @@ GPEngine >> createNewGeneration [
 	"check if problem solved"
 
 	| i1 i2 newInd newPopulation |
-	(self distanceFromSolutionOf: self pickBestIndividual) = 0 ifTrue: [ 
-		^ self ].
+	self pickBestIndividual fitness = 0 ifTrue: [ ^ self ].
+	"(self distanceFromSolutionOf: self pickBestIndividual) = 0 ifTrue: [ 
+		^ self ]."
 	newPopulation := "OrderedCollection new." self eliteOfPopulation.
 	population size - newPopulation size timesRepeat: [ 
 		| number |
@@ -115,6 +116,7 @@ GPEngine >> execute [
 	 
 	| log |
 	self createInitialPopulation.
+	self rankedIndividuals.
 	(1 to: configuration numberOfGenerations) do: [ :gen | | rInds |
 		self createNewGeneration.
 		rInds := self rankedIndividuals.
@@ -189,12 +191,14 @@ GPEngine >> numberOfDifferentIndividualsIn: setOfIndividuals [
 
 { #category : #'as yet unclassified' }
 GPEngine >> pickAverageIndividual [
-	^ (self rankedIndividuals at: population size // 2) key
+	"^ (self rankedIndividuals at: population size // 2) key"
+	^ (self sortedIndividuals at: population size // 2) key
 ]
 
 { #category : #'as yet unclassified' }
 GPEngine >> pickBestIndividual [
-	^ self rankedIndividuals first key
+	"^ self rankedIndividuals first key"
+	^ self sortedIndividuals first key
 ]
 
 { #category : #'as yet unclassified' }
@@ -205,7 +209,8 @@ GPEngine >> pickFitIndividuals [
 
 { #category : #'as yet unclassified' }
 GPEngine >> pickWorstIndividual [
-	^ self rankedIndividuals last key
+	"^ self rankedIndividuals last key"
+	^ self sortedIndividuals last key
 ]
 
 { #category : #accessing }
@@ -245,6 +250,14 @@ GPEngine >> ratioOfDifferentIndividualsIn: setOfIndividuals [
 GPEngine >> returnTopIndividuals: ratio [
 	"return the list of individuals that are considered as fit"
 	^ self rankedIndividuals copyFrom: 1 to: (population size * ratio) asInteger
+
+]
+
+{ #category : #'as yet unclassified' }
+GPEngine >> sortedIndividuals [
+	"return the list of individuals, sorted as the best match in front"
+	^ (population collect: [ :i | i -> i fitness abs ]) 
+		asSortedCollection: [ :i1 :i2 | i1 value < i2 value ]
 
 ]
 

@@ -109,7 +109,6 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 	f := self countErrors.
 	t := testClass buildSuite run.
 	individual fitness: f + t failureCount + t errorCount.
-	"llamadas aleatorias que provocan error y no lanzan AssertionFailure"
 	self uninstall.
 	^ individual fitness
 ]
