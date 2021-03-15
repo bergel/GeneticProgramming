@@ -270,10 +270,12 @@ GPEngine >> tournament [
 	5 timesRepeat: [ 
 		| competitor i |
 		competitor := configuration randomElementOf: population.
-		i := self distanceFromSolutionOf: competitor.
+		i := competitor fitness.
+		"i := self distanceFromSolutionOf: competitor."
 		i < fitness ifTrue: [ 
 			best := competitor.
-			fitness := self distanceFromSolutionOf: competitor ]
+			fitness := competitor fitness.
+			"fitness := self distanceFromSolutionOf: competitor" ]
 	].
 	^ best
 ]
