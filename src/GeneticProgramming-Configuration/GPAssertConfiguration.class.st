@@ -90,7 +90,7 @@ GPAssertConfiguration >> countErrorsGiven: ctx [
 		args := (1 to: targetSelector numArgs) collect: [ :a | 
 		        rm randomlySelect: self options ].
 		sum + ([ ctx perform: targetSelector withArguments: args.
-			1 ]
+			0 ]
 			on: Error
 			do: [ :e | e class == AssertionFailure 
 				ifTrue: [ 0 ] 
@@ -152,10 +152,10 @@ GPAssertConfiguration >> injectIntoMethod: individual [
 { #category : #operations }
 GPAssertConfiguration >> mutate: individual [
 	| source children nodeToMutate indivIds sourceIds sceChildren |
-	children := GPRandom instance shuffleElementsOf: (individual withAllChildren allButFirst "select: #isLeaf").
+	children := GPRandom instance shuffleElementsOf: (individual withAllChildren allButFirst: 3 "select: #isLeaf").
 	source := self newTerminal.
 	indivIds := children collect: #id.
-	sceChildren := source withAllChildren "select: #isLeaf".
+	sceChildren := source withAllChildren allButFirst: 3 "select: #isLeaf".
 	sourceIds := sceChildren collect: #id.
 	(indivIds includesAny: sourceIds) ifFalse: [ ^ self ].
 	nodeToMutate := children at: (indivIds indexOfAnyOf: sourceIds).
