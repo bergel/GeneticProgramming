@@ -47,7 +47,7 @@ GPCounter >> occurrencesDictionary [
 	^ occurrences 
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #testing }
 GPCounter >> occurrencesOf: tSelector [
 	^ occurrences at: tSelector 
 		ifAbsent: [ 0 ] 

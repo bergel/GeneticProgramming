@@ -160,7 +160,7 @@ GPAssertion >> injectInto: tSelector given: originalMethod [
 	configuration targetClass compile: rbMethodNode printString notifying: nil.
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 GPAssertion >> options [
 	options ifEmpty: [ 
 		options := OrderedCollection new
@@ -177,7 +177,7 @@ GPAssertion >> options [
 	 
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 GPAssertion >> options: collection [
 	self assert: collection isCollection.
 	options := collection.

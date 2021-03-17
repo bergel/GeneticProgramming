@@ -67,6 +67,11 @@ GPAssertConfiguration >> buildGrammar [
 	
 ]
 
+{ #category : #accessing }
+GPAssertConfiguration >> contexts: collection [
+	contexts := collection
+]
+
 { #category : #'as yet unclassified' }
 GPAssertConfiguration >> countErrors [
 	self assert: targetClass notNil.
