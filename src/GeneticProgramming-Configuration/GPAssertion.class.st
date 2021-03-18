@@ -229,19 +229,21 @@ GPAssertion >> writeOnCsv [
 	| data  |
 	self assert: individuals notEmpty.
 	self assert: metrics notEmpty.
-	data := (configuration targetSelectors collect: [ :s | | best |
-		best := (individuals at: s) pickBestIndividual.
+	data := (configuration targetSelectors collect: [ :s | | best e |
+		e := individuals at: s.
+		best := e pickBestIndividual.
 		OrderedCollection new 
 			add: configuration targetClass;
 			add: s;
 			add: ((metrics at: 'numErrors') at: s);
 			add: ((metrics at: 'numCalls') at: s);
 			add: best print;
+			add: e logs first bestFitnessValue;
 			add: best fitness;
 			yourself	]).
 	self filename writeStreamDo: [ :stream |
 		(NeoCSVWriter on: stream)
-			nextPut: #(Class Method Errors Calls Result Fitness);
+			nextPut: #(Class Method Errors Calls Result FstFitness LstFitness);
 			nextPutAll: data;
 			flush
 	]

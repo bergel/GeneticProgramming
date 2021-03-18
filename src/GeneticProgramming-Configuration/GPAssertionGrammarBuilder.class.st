@@ -23,20 +23,19 @@ GPAssertionGrammarBuilder >> buildAssertionGrammar [
 	grammar := GPContextFreeGrammar new.
 	grammar 
 		addRule: #Assertion ofClass: RBMessageNode withSequence: #(#Self #Assert #Method);
-		"addRule: #Assertion ofClass: RBMessageNode withSequence: #(#Self #Assert2 #Method);"
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Message);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Message1 #Args1);
+		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Satisfy #Message);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Method #AndOr #Block);
 		addSelectorRule: #Assert withValues: #(#assert:);
-		"addSelectorRule: #Assert2 withValues: #(#assert:equals:);"
 		addSelectorRule: #Message withValues: #(#isString #isCollection #isSymbol #isEmpty #notEmpty #isNil);
 		addSelectorRule: #Message1 withValues: #(#isKindOf: #isMemberOf:);
-		addSelectorRule: #AndOr withValues: #(#and: );
+		addSelectorRule: #Satisfy withValues: #(#allSatisfy: #noneSatisfy: #anySatisfy:);
+		addSelectorRule: #AndOr withValues: #(#and:);
 		addRule: #Args1 withCollectionOptions: #(#Class) ofSize: 1;
 		addRule: #Block ofClass: RBBlockNode withSequence: #(#Method);
 		addLeafRule: #Self ofClass: RBVariableNode withValues: #('self');
-		"addLeafRule: #Variable ofClass: RBVariableNode withValues: argNames;"
-		addLeafRule: #Class ofClass: RBVariableNode  withValues: (Array "with: #RSCanvas" with: #ByteString " with: #Dictionary with: #RSShape") .
+		addLeafRule: #Class ofClass: RBVariableNode  withValues: (Array with: #ByteString) .
 	^ grammar
 ]
 

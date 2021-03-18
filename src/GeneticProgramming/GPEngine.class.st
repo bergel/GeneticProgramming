@@ -152,6 +152,11 @@ GPEngine >> initialize [
 	logs := OrderedCollection new
 ]
 
+{ #category : #accessing }
+GPEngine >> logs [
+	^ logs
+]
+
 { #category : #evolution }
 GPEngine >> mutation [
 	"Return an element, picked randomly from the population, that has been mutated"
