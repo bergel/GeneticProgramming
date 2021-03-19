@@ -18,8 +18,15 @@ GPAssertionGrammarBuilder >> argumentsOf: symbol [
 ]
 
 { #category : #'as yet unclassified' }
-GPAssertionGrammarBuilder >> buildAssertionGrammar [
+GPAssertionGrammarBuilder >> buildAssertionGrammar: aClass of: targetSelectors [
+	self collectArguments: aClass given: targetSelectors.
+	^ self buildAssertionGrammarGiven: aClass
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertionGrammarBuilder >> buildAssertionGrammarGiven: tgClass [
 	| grammar |
+	self assert: tgClass isClass.
 	grammar := GPContextFreeGrammar new.
 	grammar 
 		addRule: #Assertion ofClass: RBMessageNode withSequence: #(#Self #Assert #Method);
@@ -27,22 +34,19 @@ GPAssertionGrammarBuilder >> buildAssertionGrammar [
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Message1 #Args1);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Satisfy #Message);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Method #AndOr #Block);
+		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Comparison #InstanceVar);
 		addSelectorRule: #Assert withValues: #(#assert:);
-		addSelectorRule: #Message withValues: #(#isString #isCollection #isSymbol #isEmpty #notEmpty #isNil);
+		addSelectorRule: #Message withValues: #(#isString #isInteger #isFloat #isNumber #isFinite #isCharacter #isCollection #isArray #isSymbol #isColor #isBlock #isEmpty #notEmpty #isNil #notNil #positive #negative );
 		addSelectorRule: #Message1 withValues: #(#isKindOf: #isMemberOf:);
 		addSelectorRule: #Satisfy withValues: #(#allSatisfy: #noneSatisfy: #anySatisfy:);
 		addSelectorRule: #AndOr withValues: #(#and:);
+		addSelectorRule: #Comparison withValues: #(#= #== #> #< #~=);
 		addRule: #Args1 withCollectionOptions: #(#Class) ofSize: 1;
 		addRule: #Block ofClass: RBBlockNode withSequence: #(#Method);
 		addLeafRule: #Self ofClass: RBVariableNode withValues: #('self');
-		addLeafRule: #Class ofClass: RBVariableNode  withValues: (Array with: #ByteString) .
+		addLeafRule: #Class ofClass: RBVariableNode  withValues: #(#ByteString #Point #Character #Symbol #SmallInteger #Number #SmallFloat64 #Collection #Array #BlockClosure #Dictionary #Set #OrderedCollection);
+		addLeafRule: #InstanceVar ofClass: RBVariableNode withValues: (self instanceVarsOf: tgClass).
 	^ grammar
-]
-
-{ #category : #'as yet unclassified' }
-GPAssertionGrammarBuilder >> buildAssertionGrammar: aClass of: targetSelectors [
-	self collectArguments: aClass given: targetSelectors.
-	^ self buildAssertionGrammar
 ]
 
 { #category : #'as yet unclassified' }
@@ -56,4 +60,9 @@ GPAssertionGrammarBuilder >> collectArguments: aClass given: targetSelectors [
 { #category : #initialization }
 GPAssertionGrammarBuilder >> initialize [
 	arguments := Dictionary new
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertionGrammarBuilder >> instanceVarsOf: tgClass [
+	^ tgClass instanceVariables collect: #name
 ]
