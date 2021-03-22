@@ -28,6 +28,13 @@ GPRuleOption >> addNodeOption: anObject [
 ]
 
 { #category : #accessing }
+GPRuleOption >> addToValueOptions: collection at: index [
+	| col |
+	col := (self getValueOptionsAt: index).
+	col addAll: (collection reject: [ :el | col includes: el ]).
+]
+
+{ #category : #accessing }
 GPRuleOption >> addValueOptions: collection at: index [
 	(self getValueOptionsAt: index)
 		addAll: collection

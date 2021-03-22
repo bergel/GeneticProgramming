@@ -47,7 +47,7 @@ GPContextFreeGrammar >> addOptions: collection forLeafRule: symbol [
 	| opt |
 	opt := self ruleOptionOf: symbol.
 	self assert: opt notNil.
-	opt addValueOptions: collection at: 1
+	opt addToValueOptions: collection at: 1
 ]
 
 { #category : #adding }

@@ -24,8 +24,10 @@ GPAssertConfiguration >> addOptionArgs: symbols [
 
 { #category : #adding }
 GPAssertConfiguration >> addOptionClasses: classNames [
+	| clsNames |
 	grammar ifNil: [ self buildGrammar ].
-	grammar addOptions: classNames forLeafRule: #Class
+	clsNames := classNames intersection: classNames.
+	grammar addOptions: clsNames forLeafRule: #Class
 ]
 
 { #category : #adding }
