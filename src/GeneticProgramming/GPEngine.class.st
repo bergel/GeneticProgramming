@@ -113,22 +113,27 @@ GPEngine >> execute [
 	e configuration: GPAritConfiguration new.
 	e execute.
 	"
-	 
 	| log |
 	self createInitialPopulation.
+	(population allSatisfy: #notNil) ifFalse: [ ^ self ].
 	self rankedIndividuals.
-	(1 to: configuration numberOfGenerations) do: [ :gen | | rInds |
-		self createNewGeneration.
-		rInds := self rankedIndividuals.
-		log := GPLog new.
-		log generation: gen.
-		log bestFitnessValue: rInds first value.
-		log worstFitnessValue: rInds last value.
-		log averageFitness: (rInds collect: #value) sum / rInds size.
-		logs add: log. 
+	(1 to: configuration numberOfGenerations)
+		do: [ :gen | 
+			| rInds |
+			self createNewGeneration.
+			(population allSatisfy: #notNil) ifFalse: [ ^ self ].
+			rInds := self rankedIndividuals.
+			log := GPLog new.
+			log generation: gen.
+			log bestFitnessValue: rInds first value.
+			log worstFitnessValue: rInds last value.
+			log averageFitness: (rInds collect: #value) sum / rInds size.
+			logs add: log.
 
-		"self fitnessOfBestIndividual"rInds first value = 0
-			ifTrue: [ ^ self ] ] displayingProgress: [:gen |  'Evolving - Generation ', gen printString ]
+			"self fitnessOfBestIndividual"
+			rInds first value = 0 ifTrue: [ ^ self ] ]
+		displayingProgress: [ :gen | 
+		'Evolving - Generation ' , gen printString ]
 ]
 
 { #category : #accessing }

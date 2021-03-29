@@ -25,6 +25,7 @@ GPAssertConfiguration >> addOptionArgs: symbols [
 { #category : #adding }
 GPAssertConfiguration >> addOptionClasses: classNames [
 	| clsNames |
+	classNames ifEmpty: [ ^ self ].
 	grammar ifNil: [ self buildGrammar ].
 	clsNames := classNames intersection: classNames.
 	grammar addOptions: clsNames forLeafRule: #Class
@@ -32,6 +33,7 @@ GPAssertConfiguration >> addOptionClasses: classNames [
 
 { #category : #adding }
 GPAssertConfiguration >> addOptionSelectors: selectors [
+	selectors ifEmpty: [ ^ self ].
 	grammar ifNil: [ self buildGrammar ].
 	(selectors groupedBy: #numArgs) 
 		associationsDo: [ :assoc | 
@@ -79,9 +81,9 @@ GPAssertConfiguration >> countErrors [
 	self assert: targetClass notNil.
 	self assert: targetSelector notNil.
 	^ contexts 
-		ifEmpty: [ self countErrorsGiven: targetClass new ] 
-		ifNotEmpty: [ (contexts collect: [ :ctx | 
-				self countErrorsGiven: ctx ]) min ]
+		ifEmpty: [ [ self countErrorsGiven: targetClass new ] on: Error do: [ 0 ] ] 
+		ifNotEmpty: [ [(contexts collect: [ :ctx | 
+				self countErrorsGiven: ctx ]) min] on: Error do: [ 0 ] ]
 ]
 
 { #category : #'as yet unclassified' }
@@ -115,7 +117,7 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 	].
 	f := self countErrors.
 	t := testClass buildSuite run.
-	individual fitness: f + t failureCount + t errorCount.
+	individual fitness: f + ((t failureCount + t errorCount) * 3).
 	self uninstall.
 	^ individual fitness
 ]
@@ -183,9 +185,10 @@ GPAssertConfiguration >> newFunction [
 		node := grammar expandTree: #Assertion.
 		found := node isNotNil.
 		i := i + 1. ].
-	self assert: node notNil.
-	node evaluationBlock: [ :n :ctx | n ast ];
-		printBlock: [ :n :ctx | n ast formattedCode ].
+	"self assert: node notNil."
+	node ifNotNil: [
+		node evaluationBlock: [ :n :ctx | n ast ];
+			printBlock: [ :n :ctx | n ast formattedCode ] ].
 	^ node
 ]
 
@@ -213,7 +216,7 @@ GPAssertConfiguration >> options: collection [
 
 { #category : #accessing }
 GPAssertConfiguration >> populationSize [ 
-	^ 40
+	^ 20
 ]
 
 { #category : #accessing }

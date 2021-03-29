@@ -7,10 +7,31 @@ Class {
 		'options',
 		'configuration',
 		'metrics',
-		'contexts'
+		'contexts',
+		'packageRegexs',
+		'optionsDict',
+		'directoryName',
+		'results',
+		'nameFileResult'
 	],
 	#category : #'GeneticProgramming-Configuration-GPAssert'
 }
+
+{ #category : #adding }
+GPAssertion >> addDataOfNameSelectors: dictionary given: node [
+	| selectorNodes dict |
+	selectorNodes := node withAllChildren select: [ :ch | 
+				ch class = GPSelectorNode and: [ ch id ~= #Assert ] ].
+	dict := selectorNodes groupedBy: #id.
+	dict associationsDo: [ :assoc | | val |
+		val := dictionary at: assoc key ifAbsent: [ 0 ].
+		dictionary at: assoc key	put: val + assoc value size
+	].
+	dict at: #Satisfy ifPresent: [ :val | | messageVal |
+		messageVal := dictionary at: #Message ifAbsent: [ 0 ].
+		dictionary at: #Message put: messageVal - val	size
+	]
+]
 
 { #category : #adding }
 GPAssertion >> addOptionArgs: collection [
@@ -19,12 +40,14 @@ GPAssertion >> addOptionArgs: collection [
 
 { #category : #adding }
 GPAssertion >> addOptionClasses: classNames [
-	configuration addOptionClasses: classNames
+	"configuration addOptionClasses: classNames."
+	optionsDict at: #class put: classNames
 ]
 
 { #category : #adding }
 GPAssertion >> addOptionSelectors: selectors [
-	configuration addOptionSelectors: selectors
+	"configuration addOptionSelectors: selectors."
+	optionsDict at: #selector put: selectors
 ]
 
 { #category : #adding }
@@ -64,7 +87,7 @@ GPAssertion >> calculateErrorMetric: tSelector [
 	self assert: configuration targetClass notNil.
 	tC := configuration targetClass.
 	val := contexts 
-		ifEmpty: [ OrderedCollection new add: (self countErrors: tSelector given: tC new); yourself ] 
+		ifEmpty: [ OrderedCollection new add: ([(self countErrors: tSelector given: tC new)] on: Error do: [ 0 ]); yourself] 
 		ifNotEmpty: [ contexts collect: [ :ctx | self countErrors: tSelector given: ctx ] ].
 	metrics at: 'numErrors'
 		ifAbsentPut: [ Dictionary new ].
@@ -99,8 +122,21 @@ GPAssertion >> countErrors: targetSelector given: object [
 ]
 
 { #category : #accessing }
+GPAssertion >> directoryName: string [
+	self assert: (string isString and: [ string notEmpty ]).
+	directoryName := string
+]
+
+{ #category : #accessing }
 GPAssertion >> filename [
-	^ (configuration targetClass name, '.csv') asFileReference 
+	(directoryName notNil and: [directoryName notEmpty ])
+		ifTrue: [ | directory ref |
+			directory := FileSystem disk workingDirectory.
+			ref := directory / directoryName.
+			ref ensureCreateDirectory
+		].
+	^ ((directoryName ifNil: [ '' ] ifNotNil: [ directoryName ifEmpty: [ directoryName ] ifNotEmpty: [ directoryName, '/' ] ]) , 
+		configuration targetClass name, '.csv') asFileReference 
 ]
 
 { #category : #'as yet unclassified' }
@@ -148,7 +184,12 @@ GPAssertion >> initialize [
 	configuration := GPAssertConfiguration new.
 	options := OrderedCollection new.
 	metrics := Dictionary new.
-	contexts := OrderedCollection new
+	contexts := OrderedCollection new.
+	packageRegexs := OrderedCollection new.
+	optionsDict := Dictionary new.
+	directoryName := ''.
+	results := OrderedCollection new.
+	nameFileResult := 'result'
 ]
 
 { #category : #'as yet unclassified' }
@@ -158,6 +199,17 @@ GPAssertion >> injectInto: tSelector given: originalMethod [
 		parseMethod: originalMethod sourceCode.
 	rbMethodNode body addNodeFirst: (RBParser parseExpression: 'GPCounter addOccurrence: ''', tSelector, '''').
 	configuration targetClass compile: rbMethodNode printString notifying: nil.
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertion >> nameResultFile [ 
+	^ (nameFileResult, '.csv') asFileReference 
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertion >> nameResultFile: string [
+	self assert: (string isString and: [ string notEmpty ]).
+	nameFileResult := string
 ]
 
 { #category : #accessing }
@@ -188,7 +240,12 @@ GPAssertion >> options: collection [
 { #category : #running }
 GPAssertion >> run [
 	self assert: configuration targetClass notNil.
-	self assert: configuration targetSelectors notEmpty.
+	configuration 
+		addOptionClasses: (optionsDict at: #class ifAbsent: [#()]);
+		addOptionSelectors: (optionsDict at: #selector ifAbsent: [#()]).
+	configuration targetSelectors ifEmpty: [ 
+		individuals := Dictionary new.
+		^ self ].
 	GPCounter reset.
 	individuals := Dictionary 
 		newFromAssociations: (configuration targetSelectors 
@@ -196,13 +253,88 @@ GPAssertion >> run [
 				self calculateMetrics: tSelector.
 				tSelector -> (self getBestIndividualGiven: tSelector)
 				"tSelector -> ((1 to: tSelector numArgs) collect: [:n | 
-					 (self getBestIndividualGiven: tSelector given: n) ])"])
+					 (self getBestIndividualGiven: tSelector given: n) ])"]).
+	self summaryOfEvolutionData
+]
+
+{ #category : #running }
+GPAssertion >> runAllClasses [
+
+	| cls |
+	self assert: packageRegexs notEmpty.
+	cls := packageRegexs flatCollect: [ :regex | 
+		           self selectCandidateClasses: regex ].
+	cls do: [ :cl | 
+		configuration := GPAssertConfiguration new.
+		self targetClass: cl.
+		self testClass: (self class environment at: cl name , 'Test').
+		self options: options.
+		(optionsDict at: #class ifAbsent: [#()]) ifNotEmpty: [ self addOptionClasses: (optionsDict at: #class)].
+		(optionsDict at: #selector ifAbsent: [ #() ] ) ifNotEmpty: [ self addOptionSelectors: (optionsDict at: #selector) ].
+		self run.
+		individuals ifNotEmpty: [ self writeOnCsv ] ]
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertion >> selectCandidateClasses: regex [
+	| classes packages names |
+	packages := RPackageOrganizer default packages select: [:p | regex match: p name asString ].
+	classes := packages 
+					inject: #() 
+					into: [:sum :el | sum, (el classes reject: #isTrait) asOrderedCollection ].
+	names := classes collect: #name thenSelect: [:n | n endsWith: 'Test'].
+	^ (classes reject: [ :c | c name endsWith: 'Test' ]) 
+		select: [ :c | names includes: c name, 'Test' ].
+						
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertion >> summaryOfEvolutionData [
+	| col nCalledMets nSuccMets nEvolMets nSuccEvolMets dictMessages |
+	col := OrderedCollection new
+		add: configuration targetClass name;
+		add: configuration targetSelectors size;
+		yourself.
+	dictMessages := Dictionary new.
+	nCalledMets := nSuccMets := nEvolMets := nSuccEvolMets := 0.
+	individuals associationsDo: [ :assoc | 
+		((metrics at: 'numCalls') at: assoc key) > 0 ifTrue: [ | bestFitness bestIndiv |
+			nCalledMets := nCalledMets + 1.
+			(assoc value population isEmpty or: [ assoc value population allSatisfy: #isNil ])
+				ifFalse: [ 
+					bestFitness := assoc value logs first bestFitnessValue.
+					bestIndiv := assoc value pickBestIndividual. 
+					bestIndiv fitness == 0 ifTrue: [ nSuccMets := nSuccMets + 1 ].
+					bestFitness > bestIndiv fitness ifTrue: [ 
+						nEvolMets := nEvolMets + 1.
+						bestIndiv fitness == 0 ifTrue: [ nSuccEvolMets := nSuccEvolMets + 1 ] ].
+					self addDataOfNameSelectors: dictMessages given: bestIndiv ]
+		]
+	].
+	col 
+		add: nCalledMets;
+		add: nSuccMets; 
+		add: nCalledMets - nSuccMets; 
+		add: nEvolMets; 
+		add: nSuccEvolMets;
+		add: (dictMessages at: #Message ifAbsent: [ 0 ]);
+		add: (dictMessages at: #Message1 ifAbsent: [ 0 ]);
+		add: (dictMessages at: #Satisfy ifAbsent: [ 0 ]);
+		add: (dictMessages at: #Comparison ifAbsent: [ 0 ]);
+		add: (dictMessages at: #And ifAbsent: [ 0 ]).
+	results add: col
 ]
 
 { #category : #accessing }
 GPAssertion >> targetClass: aClass [
 	self assert: aClass notNil.
 	configuration targetClass: aClass 
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertion >> targetPackageRegexs: collection [
+	self assert: (collection isCollection and: [ collection notEmpty ]).
+	packageRegexs := collection
 ]
 
 { #category : #accessing }
@@ -231,7 +363,7 @@ GPAssertion >> writeOnCsv [
 	self assert: metrics notEmpty.
 	data := (configuration targetSelectors collect: [ :s | | best e |
 		e := individuals at: s.
-		best := e pickBestIndividual.
+		[ best := e pickBestIndividual.
 		OrderedCollection new 
 			add: configuration targetClass;
 			add: s;
@@ -240,11 +372,24 @@ GPAssertion >> writeOnCsv [
 			add: best print;
 			add: e logs first bestFitnessValue;
 			add: best fitness;
-			yourself	]).
-	self filename writeStreamDo: [ :stream |
-		(NeoCSVWriter on: stream)
-			nextPut: #(Class Method Errors Calls Result FstFitness LstFitness);
-			nextPutAll: data;
-			flush
+			yourself ] on: Error do: [ nil ]] thenSelect: [:d | d notNil ]).
+	
+	data ifNotEmpty: [ 
+		self filename writeStreamDo: [ :stream |
+			(NeoCSVWriter on: stream)
+				nextPut: #(Class Method Errors Calls Result FstFitness LstFitness);
+				nextPutAll: data;
+				flush ] 
+	]
+]
+
+{ #category : #writing }
+GPAssertion >> writeResults [
+	results ifNotEmpty: [ 
+		self nameResultFile writeStreamDo: [ :stream |
+			(NeoCSVWriter on: stream)
+				nextPut: #(Class Methods CalledMethods MethodsWithFitnessZero MethodsWithFitnessGreaterThanZero MethodsWithEvolution MethodsWithSuccessEvolution Message Message1 Satisfy Comparison And);
+				nextPutAll: results;
+				flush ] 
 	]
 ]

@@ -25,27 +25,30 @@ GPAssertionGrammarBuilder >> buildAssertionGrammar: aClass of: targetSelectors [
 
 { #category : #'as yet unclassified' }
 GPAssertionGrammarBuilder >> buildAssertionGrammarGiven: tgClass [
-	| grammar |
+	| grammar instVars |
 	self assert: tgClass isClass.
 	grammar := GPContextFreeGrammar new.
+	instVars := self instanceVarsOf: tgClass.
 	grammar 
 		addRule: #Assertion ofClass: RBMessageNode withSequence: #(#Self #Assert #Method);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Message);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Message1 #Args1);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Satisfy #Message);
-		addRule: #Method ofClass: RBMessageNode withSequence: #(#Method #AndOr #Block);
-		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Comparison #InstanceVar);
+		addRule: #Method ofClass: RBMessageNode withSequence: #(#Method #And #Block);
 		addSelectorRule: #Assert withValues: #(#assert:);
-		addSelectorRule: #Message withValues: #(#isString #isInteger #isFloat #isNumber #isFinite #isCharacter #isCollection #isArray #isSymbol #isColor #isBlock #isEmpty #notEmpty #isNil #notNil #positive #negative );
+		addSelectorRule: #Message withValues: #(#isString #isInteger #isFloat #isNumber #isFinite #isCharacter #isCollection #isArray #isSymbol #isColor #isBlock #isEmpty #notEmpty #isNil #notNil #positive #negative #isPoint);
 		addSelectorRule: #Message1 withValues: #(#isKindOf: #isMemberOf:);
 		addSelectorRule: #Satisfy withValues: #(#allSatisfy: #noneSatisfy: #anySatisfy:);
-		addSelectorRule: #AndOr withValues: #(#and:);
+		addSelectorRule: #And withValues: #(#and:);
 		addSelectorRule: #Comparison withValues: #(#= #== #> #<);
 		addRule: #Args1 withCollectionOptions: #(#Class) ofSize: 1;
 		addRule: #Block ofClass: RBBlockNode withSequence: #(#Method);
 		addLeafRule: #Self ofClass: RBVariableNode withValues: #('self');
-		addLeafRule: #Class ofClass: RBVariableNode  withValues: #(#ByteString #Point #Character #Symbol #SmallInteger #Number #SmallFloat64 #Collection #Array #BlockClosure #Dictionary #Set #OrderedCollection);
-		addLeafRule: #InstanceVar ofClass: RBVariableNode withValues: (self instanceVarsOf: tgClass).
+		addLeafRule: #Class ofClass: RBVariableNode  withValues: #(#ByteString #Point #Character #Symbol #SmallInteger #Number #SmallFloat64 #Boolean #Collection #Array #BlockClosure #Dictionary #Set #OrderedCollection).
+	instVars ifNotEmpty: [ 
+		grammar 
+			addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Comparison #InstanceVar);
+			addLeafRule: #InstanceVar ofClass: RBVariableNode withValues: instVars ].
 	^ grammar
 ]
 
