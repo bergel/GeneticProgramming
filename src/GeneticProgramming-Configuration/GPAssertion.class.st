@@ -18,6 +18,12 @@ Class {
 }
 
 { #category : #adding }
+GPAssertion >> addAutomaticallyOptions [
+	self addOptionClasses: (Array with: configuration targetClass name).
+	self addOptionSelectors: (self collectTestingSelectors: (Array with: configuration targetClass)).
+]
+
+{ #category : #adding }
 GPAssertion >> addDataOfNameSelectors: dictionary given: node [
 	| selectorNodes dict |
 	selectorNodes := node withAllChildren select: [ :ch | 
@@ -41,13 +47,19 @@ GPAssertion >> addOptionArgs: collection [
 { #category : #adding }
 GPAssertion >> addOptionClasses: classNames [
 	"configuration addOptionClasses: classNames."
-	optionsDict at: #class put: classNames
+	self assert: classNames isCollection.
+	classNames ifNotEmpty: [ 
+		optionsDict at: #class put: classNames
+	]
 ]
 
 { #category : #adding }
 GPAssertion >> addOptionSelectors: selectors [
 	"configuration addOptionSelectors: selectors."
-	optionsDict at: #selector put: selectors
+	self assert: selectors isCollection.
+	selectors ifNotEmpty: [ 
+		optionsDict at: #selector put: selectors
+	]
 ]
 
 { #category : #adding }
@@ -82,22 +94,29 @@ GPAssertion >> calculateCallsMetric: tSelector [
 ]
 
 { #category : #'as yet unclassified' }
-GPAssertion >> calculateErrorMetric: tSelector [
+GPAssertion >> calculateErrorMetric: tSelector given: protocol [
 	| tC val |
 	self assert: configuration targetClass notNil.
 	tC := configuration targetClass.
 	val := contexts 
-		ifEmpty: [ OrderedCollection new add: ([(self countErrors: tSelector given: tC new)] on: Error do: [ 0 ]); yourself] 
-		ifNotEmpty: [ contexts collect: [ :ctx | self countErrors: tSelector given: ctx ] ].
+		ifEmpty: [ OrderedCollection new add: ([(self countErrors: tSelector given: protocol and: tC new)] on: Error do: [ 0 ]); yourself] 
+		ifNotEmpty: [ contexts collect: [ :ctx | self countErrors: tSelector given: protocol and: ctx ] ].
 	metrics at: 'numErrors'
 		ifAbsentPut: [ Dictionary new ].
 	(metrics at: 'numErrors') at: tSelector put: val min
 ]
 
 { #category : #'as yet unclassified' }
-GPAssertion >> calculateMetrics: tSelector [
-	self calculateErrorMetric: tSelector.
+GPAssertion >> calculateMetrics: tSelector given: protocol [
+	self calculateErrorMetric: tSelector given: protocol.
 	self calculateCallsMetric: tSelector 
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertion >> collectTestingSelectors: classes [
+	^ (classes flatCollect: [ :cls | 
+		(cls methodsInProtocol: #testing) collect: #selector ])
+	select: [ :s | s numArgs == 0 ]
 ]
 
 { #category : #accessing }
@@ -108,17 +127,27 @@ GPAssertion >> contexts: collection [
 ]
 
 { #category : #'as yet unclassified' }
-GPAssertion >> countErrors: targetSelector given: object [
-	| rm |
+GPAssertion >> countErrors: targetSelector given: protocol and: object [
+	| rm opts newOpts res i size |
+	opts := self options.
+	size := opts size.
+	newOpts := OrderedCollection new.
 	rm := GPRandom instance.
-	^ (1 to: 30) inject: 0 into: [ :sum :num | | args |
-		args := (1 to: targetSelector numArgs) collect: [ :a | 
-		        rm randomlySelect: self options ].
-		sum + ([ object perform: targetSelector withArguments: args.
-			0 ]
+	res := i := 0.
+	[ i < 10 and: [ res < 30 ] ] whileTrue: [ 
+		i := i + 1.
+		res := (1 to: 30) inject: 0 into: [ :sum :num | | args |
+			args := (1 to: targetSelector numArgs) collect: [ :a | 
+		        rm randomlySelect: opts ].
+			sum + ([ object perform: targetSelector withArguments: args.
+				protocol = #accesing ifTrue: [ newOpts addAll: args ].
+				0 ]
 			on: Error
-			do: [ :ex | 1 ])
-	]
+			do: [ :ex | newOpts addAll: args.
+				1 ]) ].
+		opts := newOpts.
+		"newOpts size < size ifTrue: [ self halt ]" ].
+	^ res
 ]
 
 { #category : #accessing }
@@ -215,15 +244,29 @@ GPAssertion >> nameResultFile: string [
 { #category : #accessing }
 GPAssertion >> options [
 	options ifEmpty: [ 
-		options := OrderedCollection new
-			add:  nil;
-			add: 42;
-			add: 'hello';
-			add: 0;
-			add: 1.2;
+		options := OrderedCollection new 
+			add: nil;
+			add: Color blue;
 			add: #();
-			add: -4;
 			add: '';
+			add: 'hello';
+			add: Dictionary new;
+			add: Float infinity;
+			add: (-1000 to: 1000) asArray;
+			add: 0;
+			add: -1;
+			add: 1;
+			add: OrderedCollection new;
+			add: -1.0;
+			add: 1.0;
+			add: #r;
+			add: $5;
+			add: true;
+			add: false;
+			add: Object new;
+			add: ((1 to: 1000) collect: [:n | 
+				GPRandom instance randomlySelect: String loremIpsum substrings
+				]);
 			yourself ].
 	^ options
 	 
@@ -239,18 +282,23 @@ GPAssertion >> options: collection [
 
 { #category : #running }
 GPAssertion >> run [
+	| dict |
 	self assert: configuration targetClass notNil.
 	configuration 
 		addOptionClasses: (optionsDict at: #class ifAbsent: [#()]);
-		addOptionSelectors: (optionsDict at: #selector ifAbsent: [#()]).
+		addOptionSelectors: (optionsDict at: #selector ifAbsent: [#()])";
+		depth: 3".
 	configuration targetSelectors ifEmpty: [ 
 		individuals := Dictionary new.
 		^ self ].
 	GPCounter reset.
+	dict := (configuration targetClass methods collect: [ :cMethod |
+		cMethod selector -> cMethod protocol	
+	]) asDictionary.
 	individuals := Dictionary 
 		newFromAssociations: (configuration targetSelectors 
 			collect: [ :tSelector |
-				self calculateMetrics: tSelector.
+				self calculateMetrics: tSelector given: (dict at: tSelector ifAbsent: [ nil ]).
 				tSelector -> (self getBestIndividualGiven: tSelector)
 				"tSelector -> ((1 to: tSelector numArgs) collect: [:n | 
 					 (self getBestIndividualGiven: tSelector given: n) ])"]).
@@ -260,32 +308,47 @@ GPAssertion >> run [
 { #category : #running }
 GPAssertion >> runAllClasses [
 
-	| cls |
+	| selectedClasses packageClasses |
 	self assert: packageRegexs notEmpty.
-	cls := packageRegexs flatCollect: [ :regex | 
-		           self selectCandidateClasses: regex ].
-	cls do: [ :cl | 
+	packageClasses := packageRegexs flatCollect: [ :regex | 
+		self selectPackageClasses: regex	
+	].
+	selectedClasses := self selectCandidateClasses: packageClasses.
+	"selectedClasses := packageRegexs flatCollect: [ :regex | 
+		           self selectCandidateClasses: regex ]."
+	selectedClasses do: [ :cl | 
 		configuration := GPAssertConfiguration new.
 		self targetClass: cl.
 		self testClass: (self class environment at: cl name , 'Test').
-		self options: options.
-		(optionsDict at: #class ifAbsent: [#()]) ifNotEmpty: [ self addOptionClasses: (optionsDict at: #class)].
+		self options: self options.
+		self addOptionClasses: (packageClasses collect: #name).
+		self addOptionSelectors: (self collectTestingSelectors: packageClasses).
+		(optionsDict at: #class ifAbsent: [ #() ]) ifNotEmpty: [ self addOptionClasses: (optionsDict at: #class)].
 		(optionsDict at: #selector ifAbsent: [ #() ] ) ifNotEmpty: [ self addOptionSelectors: (optionsDict at: #selector) ].
 		self run.
 		individuals ifNotEmpty: [ self writeOnCsv ] ]
 ]
 
 { #category : #'as yet unclassified' }
-GPAssertion >> selectCandidateClasses: regex [
-	| classes packages names |
-	packages := RPackageOrganizer default packages select: [:p | regex match: p name asString ].
+GPAssertion >> selectCandidateClasses: classes [
+	| names |
+	"packages := RPackageOrganizer default packages select: [:p | regex match: p name asString ].
 	classes := packages 
 					inject: #() 
-					into: [:sum :el | sum, (el classes reject: #isTrait) asOrderedCollection ].
+					into: [:sum :el | sum, (el classes reject: #isTrait) asOrderedCollection ]."
 	names := classes collect: #name thenSelect: [:n | n endsWith: 'Test'].
 	^ (classes reject: [ :c | c name endsWith: 'Test' ]) 
 		select: [ :c | names includes: c name, 'Test' ].
 						
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertion >> selectPackageClasses: regex [
+	| packages |
+	packages := RPackageOrganizer default packages select: [:p | regex match: p name asString ].
+	^ packages 
+			inject: #() 
+			into: [:sum :el | sum, (el classes reject: #isTrait) asOrderedCollection ].
 ]
 
 { #category : #'as yet unclassified' }
@@ -372,7 +435,7 @@ GPAssertion >> writeOnCsv [
 			add: best print;
 			add: e logs first bestFitnessValue;
 			add: best fitness;
-			yourself ] on: Error do: [ nil ]] thenSelect: [:d | d notNil ]).
+			yourself ] on: Error do: [ :err | nil ]] thenSelect: [:d | d notNil ]).
 	
 	data ifNotEmpty: [ 
 		self filename writeStreamDo: [ :stream |

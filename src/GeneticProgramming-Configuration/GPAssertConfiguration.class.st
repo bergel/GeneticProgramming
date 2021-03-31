@@ -178,7 +178,7 @@ GPAssertConfiguration >> newFunction [
 	i := 0.
 	grammar := self updateGrammar.
 	[ found or: [ i > 100 ] ] whileFalse: [ 
-		depth ifNil: [ depth := GPRandom instance randomNumber: 7 ].
+		depth ifNil: [ depth := GPRandom instance randomNumber: 5 ].
 		grammar 
 			methodName: (GPRandom instance randomlySelect: #(#full #grow));
 			configuration: self.
@@ -199,7 +199,7 @@ GPAssertConfiguration >> newTerminal [
 
 { #category : #hooks }
 GPAssertConfiguration >> numberOfGenerations [ 
-	^ 25
+	^ 50
 ]
 
 { #category : #accessing }

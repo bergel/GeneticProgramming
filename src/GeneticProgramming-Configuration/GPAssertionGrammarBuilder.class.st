@@ -40,7 +40,7 @@ GPAssertionGrammarBuilder >> buildAssertionGrammarGiven: tgClass [
 		addSelectorRule: #Message1 withValues: #(#isKindOf: #isMemberOf:);
 		addSelectorRule: #Satisfy withValues: #(#allSatisfy: #noneSatisfy: #anySatisfy:);
 		addSelectorRule: #And withValues: #(#and:);
-		addSelectorRule: #Comparison withValues: #(#= #== #> #<);
+		addSelectorRule: #Comparison withValues: #(#= #== #> #< #<= #>=);
 		addRule: #Args1 withCollectionOptions: #(#Class) ofSize: 1;
 		addRule: #Block ofClass: RBBlockNode withSequence: #(#Method);
 		addLeafRule: #Self ofClass: RBVariableNode withValues: #('self');
