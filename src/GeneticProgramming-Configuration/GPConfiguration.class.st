@@ -6,7 +6,8 @@ Class {
 		'method',
 		'ruleWeights',
 		'optionWeights',
-		'depth'
+		'depth',
+		'depthModified'
 	],
 	#category : #'GeneticProgramming-Configuration-Core'
 }
@@ -52,12 +53,14 @@ GPConfiguration >> createNewIndividualRoot: rootNode depth: nDepth [
 
 { #category : #accessing }
 GPConfiguration >> depth [
-	^ depth ifNil: [ random randomNumber: 10 ] ifNotNil: [ depth ]
+	^ depth ifNil: [ random randomNumber: 7 ] ifNotNil: [ depth ]
 ]
 
 { #category : #accessing }
 GPConfiguration >> depth: anInteger [
-	depth := anInteger
+	self assert: anInteger isInteger.
+	depth := anInteger.
+	depthModified := true
 ]
 
 { #category : #operations }
@@ -86,7 +89,8 @@ GPConfiguration >> initialize [
 	random := GPRandom instance.
 	ruleWeights := Dictionary new.
 	optionWeights := Dictionary new.
-	method := #grow
+	method := #grow.
+	depthModified := false
 ]
 
 { #category : #accessing }

@@ -95,12 +95,17 @@ GPAssertion >> calculateCallsMetric: tSelector [
 
 { #category : #'as yet unclassified' }
 GPAssertion >> calculateErrorMetric: tSelector given: protocol [
-	| tC val |
+	| tC val res |
 	self assert: configuration targetClass notNil.
 	tC := configuration targetClass.
 	val := contexts 
-		ifEmpty: [ OrderedCollection new add: ([(self countErrors: tSelector given: protocol and: tC new)] on: Error do: [ 0 ]); yourself] 
-		ifNotEmpty: [ contexts collect: [ :ctx | self countErrors: tSelector given: protocol and: ctx ] ].
+		ifEmpty: [ res := [ self countErrors: tSelector given: protocol and: tC new ] on: Error do: [ Array with: 0 with: self options ].
+			configuration options: res second.
+			OrderedCollection new add: res first; yourself ] 
+		ifNotEmpty: [ contexts collect: [ :ctx | 
+				res := self countErrors: tSelector given: protocol and: ctx.
+				configuration options: res second.
+				res first ] ].
 	metrics at: 'numErrors'
 		ifAbsentPut: [ Dictionary new ].
 	(metrics at: 'numErrors') at: tSelector put: val min
@@ -145,9 +150,8 @@ GPAssertion >> countErrors: targetSelector given: protocol and: object [
 			on: Error
 			do: [ :ex | newOpts addAll: args.
 				1 ]) ].
-		opts := newOpts.
-		"newOpts size < size ifTrue: [ self halt ]" ].
-	^ res
+		opts := newOpts ].
+	^ Array with: res with: opts
 ]
 
 { #category : #accessing }
@@ -251,7 +255,6 @@ GPAssertion >> options [
 			add: '';
 			add: 'hello';
 			add: Dictionary new;
-			add: Float infinity;
 			add: (-1000 to: 1000) asArray;
 			add: 0;
 			add: -1;
@@ -299,9 +302,7 @@ GPAssertion >> run [
 		newFromAssociations: (configuration targetSelectors 
 			collect: [ :tSelector |
 				self calculateMetrics: tSelector given: (dict at: tSelector ifAbsent: [ nil ]).
-				tSelector -> (self getBestIndividualGiven: tSelector)
-				"tSelector -> ((1 to: tSelector numArgs) collect: [:n | 
-					 (self getBestIndividualGiven: tSelector given: n) ])"]).
+				tSelector -> (self getBestIndividualGiven: tSelector) ]).
 	self summaryOfEvolutionData
 ]
 

@@ -178,7 +178,8 @@ GPAssertConfiguration >> newFunction [
 	i := 0.
 	grammar := self updateGrammar.
 	[ found or: [ i > 100 ] ] whileFalse: [ 
-		depth ifNil: [ depth := GPRandom instance randomNumber: 5 ].
+		depthModified ifFalse: [ depth := GPRandom instance randomNumber: 5 ].
+		self assert: depth notNil.
 		grammar 
 			methodName: (GPRandom instance randomlySelect: #(#full #grow));
 			configuration: self.
@@ -188,7 +189,8 @@ GPAssertConfiguration >> newFunction [
 	"self assert: node notNil."
 	node ifNotNil: [
 		node evaluationBlock: [ :n :ctx | n ast ];
-			printBlock: [ :n :ctx | n ast formattedCode ] ].
+			printBlock: [ :n :ctx | n ast formattedCode ] ]
+		ifNil: [ self halt ].
 	^ node
 ]
 
