@@ -201,7 +201,7 @@ GPAssertConfiguration >> newTerminal [
 
 { #category : #hooks }
 GPAssertConfiguration >> numberOfGenerations [ 
-	^ 50
+	^ 60
 ]
 
 { #category : #accessing }
@@ -218,7 +218,7 @@ GPAssertConfiguration >> options: collection [
 
 { #category : #accessing }
 GPAssertConfiguration >> populationSize [ 
-	^ 20
+	^ 25
 ]
 
 { #category : #accessing }

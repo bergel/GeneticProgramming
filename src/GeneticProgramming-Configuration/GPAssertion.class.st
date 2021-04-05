@@ -147,7 +147,7 @@ GPAssertion >> countErrors: targetSelector given: protocol and: object [
 			sum + ([ object perform: targetSelector withArguments: args.
 				protocol = #accesing ifTrue: [ newOpts addAll: args ].
 				0 ]
-			on: Error
+			on: Exception
 			do: [ :ex | newOpts addAll: args.
 				1 ]) ].
 		opts := newOpts ].
@@ -328,6 +328,38 @@ GPAssertion >> runAllClasses [
 		(optionsDict at: #selector ifAbsent: [ #() ] ) ifNotEmpty: [ self addOptionSelectors: (optionsDict at: #selector) ].
 		self run.
 		individuals ifNotEmpty: [ self writeOnCsv ] ]
+]
+
+{ #category : #running }
+GPAssertion >> runAllClasses: collection [
+
+	| selectedClasses packageClasses |
+	self assert: packageRegexs notEmpty.
+	packageClasses := packageRegexs flatCollect: [ :regex | 
+		self selectPackageClasses: regex	
+	].
+	selectedClasses := (self selectCandidateClasses: packageClasses) reject: [:cls |
+		collection includes: cls	
+	].
+	"selectedClasses := packageRegexs flatCollect: [ :regex | 
+		           self selectCandidateClasses: regex ]."
+	selectedClasses do: [ :cl | 
+		configuration := GPAssertConfiguration new.
+		self targetClass: cl.
+		self testClass: (self class environment at: cl name , 'Test').
+		self options: self options.
+		self addOptionClasses: (packageClasses collect: #name).
+		self addOptionSelectors: (self collectTestingSelectors: packageClasses).
+		(optionsDict at: #class ifAbsent: [ #() ]) ifNotEmpty: [ self addOptionClasses: (optionsDict at: #class)].
+		(optionsDict at: #selector ifAbsent: [ #() ] ) ifNotEmpty: [ self addOptionSelectors: (optionsDict at: #selector) ].
+		self run.
+		individuals ifNotEmpty: [ self writeOnCsv ] ]
+]
+
+{ #category : #running }
+GPAssertion >> runAllClassesExcept: collection [
+
+	self runAllClasses: collection
 ]
 
 { #category : #'as yet unclassified' }
