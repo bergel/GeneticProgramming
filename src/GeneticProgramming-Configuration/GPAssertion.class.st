@@ -88,9 +88,6 @@ GPAssertion >> calculateCallsMetric: tSelector [
 		ifAbsentPut: [ Dictionary new ].
 	(metrics at: 'numCalls') at: tSelector put: (GPCounter instance occurrencesOf: tSelector).
 	self uninstallOf: originalMethod.
-	"val := contexts 
-		ifEmpty: [ OrderedCollection new add: (self countErrors: tSelector given: tC new); yourself ] 
-		ifNotEmpty: [ contexts collect: [ :ctx | self countErrors: tSelector given: ctx ] ]."
 ]
 
 { #category : #'as yet unclassified' }
@@ -300,8 +297,10 @@ GPAssertion >> run [
 	]) asDictionary.
 	individuals := Dictionary 
 		newFromAssociations: (configuration targetSelectors 
-			collect: [ :tSelector |
+			select: [ :tSelector |
 				self calculateMetrics: tSelector given: (dict at: tSelector ifAbsent: [ nil ]).
+				((metrics at: 'numCalls') at: tSelector ifAbsent: [ 0 ]) > 0 ]
+			thenCollect: [:tSelector |
 				tSelector -> (self getBestIndividualGiven: tSelector) ]).
 	self summaryOfEvolutionData
 ]
@@ -458,7 +457,7 @@ GPAssertion >> writeOnCsv [
 	self assert: individuals notEmpty.
 	self assert: metrics notEmpty.
 	data := (configuration targetSelectors collect: [ :s | | best e |
-		e := individuals at: s.
+		e := individuals at: s ifAbsent: [ nil ].
 		[ best := e pickBestIndividual.
 		OrderedCollection new 
 			add: configuration targetClass;

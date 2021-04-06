@@ -95,7 +95,7 @@ GPAssertConfiguration >> countErrorsGiven: ctx [
 		        rm randomlySelect: self options ].
 		sum + ([ ctx perform: targetSelector withArguments: args.
 			0 ]
-			on: Error
+			on: Exception
 			do: [ :e | e class == AssertionFailure 
 				ifTrue: [ 0 ] 
 				ifFalse: [ 1 ] ])
