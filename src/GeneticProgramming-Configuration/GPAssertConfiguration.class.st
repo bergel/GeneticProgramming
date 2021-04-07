@@ -11,7 +11,8 @@ Class {
 		'targetSelectors',
 		'builder',
 		'index',
-		'contexts'
+		'contextBlocks',
+		'numberOfFailures'
 	],
 	#category : #'GeneticProgramming-Configuration-GPAssert'
 }
@@ -72,28 +73,30 @@ GPAssertConfiguration >> buildGrammar [
 ]
 
 { #category : #accessing }
-GPAssertConfiguration >> contexts: collection [
-	contexts := collection
+GPAssertConfiguration >> contextBlocks: collection [
+	self assert: (collection isCollection and: [ collection notEmpty ]).
+	contextBlocks := collection
 ]
 
 { #category : #'as yet unclassified' }
 GPAssertConfiguration >> countErrors [
 	self assert: targetClass notNil.
 	self assert: targetSelector notNil.
-	^ contexts 
-		ifEmpty: [ [ self countErrorsGiven: targetClass new ] on: Error do: [ 0 ] ] 
-		ifNotEmpty: [ [(contexts collect: [ :ctx | 
-				self countErrorsGiven: ctx ]) min] on: Error do: [ 0 ] ]
+	^ contextBlocks 
+		ifEmpty: [ [ self countErrorsGiven: [ targetClass new ] ] on: Exception do: [ 0 ] ] 
+		ifNotEmpty: [ [(contextBlocks collect: [ :block | 
+				self countErrorsGiven: block ]) min] on: Exception do: [ 0 ] ]
 ]
 
 { #category : #'as yet unclassified' }
-GPAssertConfiguration >> countErrorsGiven: ctx [
+GPAssertConfiguration >> countErrorsGiven: block [
 	| rm |
+	self assert: block isBlock.
 	rm := GPRandom instance.
 	^ (1 to: 30) inject: 0 into: [ :sum :num | | args |
 		args := (1 to: targetSelector numArgs) collect: [ :a | 
 		        rm randomlySelect: self options ].
-		sum + ([ ctx perform: targetSelector withArguments: args.
+		sum + ([ block value perform: targetSelector withArguments: args.
 			0 ]
 			on: Exception
 			do: [ :e | e class == AssertionFailure 
@@ -117,7 +120,7 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 	].
 	f := self countErrors.
 	t := testClass buildSuite run.
-	individual fitness: f + ((t failureCount + t errorCount) * 3).
+	individual fitness: f + ((t failureCount + t errorCount - numberOfFailures) * 3).
 	self uninstall.
 	^ individual fitness
 ]
@@ -134,7 +137,8 @@ GPAssertConfiguration >> initialize [
 	builder := GPAssertionGrammarBuilder new.
 	options := OrderedCollection new.
 	targetSelectors := OrderedCollection new.
-	contexts := OrderedCollection new
+	contextBlocks := OrderedCollection new.
+	numberOfFailures := 0
 ]
 
 { #category : #'as yet unclassified' }
@@ -197,6 +201,12 @@ GPAssertConfiguration >> newFunction [
 { #category : #hooks }
 GPAssertConfiguration >> newTerminal [
 	^ self newFunction 
+]
+
+{ #category : #accessing }
+GPAssertConfiguration >> numberOfFailures: number [
+	self assert: (number isInteger and: [ number positive ]).
+	numberOfFailures := number
 ]
 
 { #category : #hooks }

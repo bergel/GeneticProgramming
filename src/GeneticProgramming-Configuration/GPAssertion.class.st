@@ -3,16 +3,15 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'individuals',
-		'dictDepth',
 		'options',
 		'configuration',
 		'metrics',
-		'contexts',
+		'contextBlocks',
 		'packageRegexs',
 		'optionsDict',
 		'directoryName',
 		'results',
-		'nameFileResult'
+		'nameResultFile'
 	],
 	#category : #'GeneticProgramming-Configuration-GPAssert'
 }
@@ -95,12 +94,12 @@ GPAssertion >> calculateErrorMetric: tSelector given: protocol [
 	| tC val res |
 	self assert: configuration targetClass notNil.
 	tC := configuration targetClass.
-	val := contexts 
-		ifEmpty: [ res := [ self countErrors: tSelector given: protocol and: tC new ] on: Error do: [ Array with: 0 with: self options ].
+	val := contextBlocks
+		ifEmpty: [ res := [ self countErrors: tSelector given: protocol and: [tC new] ] on: Error do: [ Array with: 0 with: self options ].
 			configuration options: res second.
 			OrderedCollection new add: res first; yourself ] 
-		ifNotEmpty: [ contexts collect: [ :ctx | 
-				res := self countErrors: tSelector given: protocol and: ctx.
+		ifNotEmpty: [ contextBlocks collect: [ :block | 
+				res := self countErrors: tSelector given: protocol and: block.
 				configuration options: res second.
 				res first ] ].
 	metrics at: 'numErrors'
@@ -115,6 +114,14 @@ GPAssertion >> calculateMetrics: tSelector given: protocol [
 ]
 
 { #category : #'as yet unclassified' }
+GPAssertion >> calculateNumberOfFailures [ 
+	| t |
+	self assert: configuration testClass notNil.
+	t := configuration testClass buildSuite run.
+	^ t errorCount + t failureCount 
+]
+
+{ #category : #'as yet unclassified' }
 GPAssertion >> collectTestingSelectors: classes [
 	^ (classes flatCollect: [ :cls | 
 		(cls methodsInProtocol: #testing) collect: #selector ])
@@ -122,18 +129,18 @@ GPAssertion >> collectTestingSelectors: classes [
 ]
 
 { #category : #accessing }
-GPAssertion >> contexts: collection [
+GPAssertion >> contextBlocks: collection [
 	self assert: (collection isCollection and: [ collection notEmpty ]).
-	contexts := collection.
-	configuration contexts: collection 
+	contextBlocks := collection.
+	configuration contextBlocks: collection 
 ]
 
 { #category : #'as yet unclassified' }
-GPAssertion >> countErrors: targetSelector given: protocol and: object [
+GPAssertion >> countErrors: targetSelector given: protocol and: block [
 	| rm opts newOpts res i size |
 	opts := self options.
 	size := opts size.
-	newOpts := OrderedCollection new.
+	newOpts := Set new.
 	rm := GPRandom instance.
 	res := i := 0.
 	[ i < 10 and: [ res < 30 ] ] whileTrue: [ 
@@ -141,13 +148,13 @@ GPAssertion >> countErrors: targetSelector given: protocol and: object [
 		res := (1 to: 30) inject: 0 into: [ :sum :num | | args |
 			args := (1 to: targetSelector numArgs) collect: [ :a | 
 		        rm randomlySelect: opts ].
-			sum + ([ object perform: targetSelector withArguments: args.
+			sum + ([ block value perform: targetSelector withArguments: args.
 				protocol = #accesing ifTrue: [ newOpts addAll: args ].
 				0 ]
 			on: Exception
 			do: [ :ex | newOpts addAll: args.
 				1 ]) ].
-		opts := newOpts ].
+		opts := newOpts asOrderedCollection ].
 	^ Array with: res with: opts
 ]
 
@@ -170,10 +177,17 @@ GPAssertion >> filename [
 ]
 
 { #category : #'as yet unclassified' }
-GPAssertion >> for: symbol putDepth: number [
-	self assert: number isNumber.
-	self assert: number > 0.
-	dictDepth at: symbol put: number
+GPAssertion >> getBestIndividual: aSelector given: index [
+	| engine |
+	engine := GPEngine new.
+	configuration 
+		targetSelector: aSelector;
+		options: self options;
+		index: index.
+	"dictDepth at: aSelector ifPresent: [ :n | configuration depth: n ]."
+	engine configuration: configuration.
+	engine execute.
+	^ engine "pickBestIndividual "
 ]
 
 { #category : #'as yet unclassified' }
@@ -183,21 +197,7 @@ GPAssertion >> getBestIndividualGiven: aSelector [
 	configuration 
 		targetSelector: aSelector;
 		options: self options.
-	dictDepth at: aSelector ifPresent: [ :n | configuration depth: n ].
-	engine configuration: configuration.
-	engine execute.
-	^ engine "pickBestIndividual "
-]
-
-{ #category : #'as yet unclassified' }
-GPAssertion >> getBestIndividualGiven: aSelector given: index [
-	| engine |
-	engine := GPEngine new.
-	configuration 
-		targetSelector: aSelector;
-		options: self options;
-		index: index.
-	dictDepth at: aSelector ifPresent: [ :n | configuration depth: n ].
+	"dictDepth at: aSelector ifPresent: [ :n | configuration depth: n ]."
 	engine configuration: configuration.
 	engine execute.
 	^ engine "pickBestIndividual "
@@ -210,16 +210,15 @@ GPAssertion >> individuals [
 
 { #category : #initialization }
 GPAssertion >> initialize [
-	dictDepth := Dictionary new.
 	configuration := GPAssertConfiguration new.
 	options := OrderedCollection new.
 	metrics := Dictionary new.
-	contexts := OrderedCollection new.
+	contextBlocks := OrderedCollection new.
 	packageRegexs := OrderedCollection new.
 	optionsDict := Dictionary new.
 	directoryName := ''.
 	results := OrderedCollection new.
-	nameFileResult := 'result'
+	nameResultFile := 'result'
 ]
 
 { #category : #'as yet unclassified' }
@@ -231,15 +230,15 @@ GPAssertion >> injectInto: tSelector given: originalMethod [
 	configuration targetClass compile: rbMethodNode printString notifying: nil.
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 GPAssertion >> nameResultFile [ 
-	^ (nameFileResult, '.csv') asFileReference 
+	^ (nameResultFile, '.csv') asFileReference 
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 GPAssertion >> nameResultFile: string [
 	self assert: (string isString and: [ string notEmpty ]).
-	nameFileResult := string
+	nameResultFile := string
 ]
 
 { #category : #accessing }
@@ -285,6 +284,7 @@ GPAssertion >> run [
 	| dict |
 	self assert: configuration targetClass notNil.
 	configuration 
+		numberOfFailures: self calculateNumberOfFailures;
 		addOptionClasses: (optionsDict at: #class ifAbsent: [#()]);
 		addOptionSelectors: (optionsDict at: #selector ifAbsent: [#()])";
 		depth: 3".
@@ -378,9 +378,9 @@ GPAssertion >> selectCandidateClasses: classes [
 GPAssertion >> selectPackageClasses: regex [
 	| packages |
 	packages := RPackageOrganizer default packages select: [:p | regex match: p name asString ].
-	^ packages 
+	^ ((packages 
 			inject: #() 
-			into: [:sum :el | sum, (el classes reject: #isTrait) asOrderedCollection ].
+			into: [:sum :el | sum, (el classes reject: #isTrait) asOrderedCollection ]) asSet) asOrderedCollection sort: [ :cl1 :cl2 | cl1 name < cl2 name ]..
 ]
 
 { #category : #'as yet unclassified' }
