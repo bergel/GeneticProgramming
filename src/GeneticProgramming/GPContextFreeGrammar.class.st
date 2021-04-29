@@ -221,7 +221,7 @@ GPContextFreeGrammar >> expandTree: symbol [
 			i := i + 1
 		 ].
 		tree := [ self expandTree: symbol withDepth: depth ]
-			on: Error do: [ nil ].
+			on: Exception do: [ nil ].
 		tree ifNil: [ numbers add: depth ]
 			ifNotNil: [ found := true ] ].
 	^ tree

@@ -142,8 +142,8 @@ GPAbstractNode >> crossOverWith: anotherNode using: random [
 	ids := (self children collect: #id) asSet.
 	^ (ids size == 1 and: [ ids includes: nil ])
 		ifTrue: [ self crossOverWith: anotherNode 
-			at: ([ (random randomNumber: self numberOfNodes - 1) ] on: Error do: [ 0 ]) + 1
-			at: ( [random randomNumber: anotherNode numberOfNodes - 1] on: Error do: [ 0 ] ) + 1 ]
+			at: ([ (random randomNumber: self numberOfNodes - 1) ] on: Exception do: [ 0 ]) + 1
+			at: ( [random randomNumber: anotherNode numberOfNodes - 1] on: Exception do: [ 0 ] ) + 1 ]
 		ifFalse: [ self crossOverGiven: anotherNode and: random ]
 ]
 

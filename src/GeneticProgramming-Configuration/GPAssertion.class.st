@@ -79,7 +79,7 @@ GPAssertion >> calculateCallsMetric: tSelector [
 	self assert: configuration targetClass notNil.
 	aBehavior := configuration targetClass instanceSide.
 	originalMethod := aBehavior compiledMethodAt: tSelector.
-	[ self injectInto: tSelector given: originalMethod ] on: Error do: [ 
+	[ self injectInto: tSelector given: originalMethod ] on: Exception do: [ 
 		self uninstallOf: originalMethod.
 	].
 	t := configuration testClass buildSuite run.
@@ -95,7 +95,7 @@ GPAssertion >> calculateErrorMetric: tSelector given: protocol [
 	self assert: configuration targetClass notNil.
 	tC := configuration targetClass.
 	val := contextBlocks
-		ifEmpty: [ res := [ self countErrors: tSelector given: protocol and: [tC new] ] on: Error do: [ Array with: 0 with: self options ].
+		ifEmpty: [ res := [ self countErrors: tSelector given: protocol and: [tC new] ] on: Exception do: [ Array with: 0 with: self options ].
 			configuration options: res second.
 			OrderedCollection new add: res first; yourself ] 
 		ifNotEmpty: [ contextBlocks collect: [ :block | 
@@ -149,6 +149,7 @@ GPAssertion >> countErrors: targetSelector given: protocol and: block [
 			args := (1 to: targetSelector numArgs) collect: [ :a | 
 		        rm randomlySelect: opts ].
 			sum + ([ block value perform: targetSelector withArguments: args.
+				"if the method has accesing protocol, it means that args are not validated and just are assigned, that is the reason the values are added to the list"
 				protocol = #accesing ifTrue: [ newOpts addAll: args ].
 				0 ]
 			on: Exception
@@ -467,7 +468,7 @@ GPAssertion >> writeOnCsv [
 			add: best print;
 			add: e logs first bestFitnessValue;
 			add: best fitness;
-			yourself ] on: Error do: [ :err | nil ]] thenSelect: [:d | d notNil ]).
+			yourself ] on: Exception do: [ :err | nil ]] thenSelect: [:d | d notNil ]).
 	
 	data ifNotEmpty: [ 
 		self filename writeStreamDo: [ :stream |

@@ -115,7 +115,7 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 	| t f |
 	self assert: targetClass notNil.
 	self assert: testClass notNil.
-	[ self injectIntoMethod: individual ] on: Error do: [ 
+	[ self injectIntoMethod: individual ] on: Exception do: [ 
 		self uninstall.
 	].
 	f := self countErrors.
