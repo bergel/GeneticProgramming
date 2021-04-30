@@ -390,6 +390,7 @@ GPAssertion >> summaryOfEvolutionData [
 	col := OrderedCollection new
 		add: configuration targetClass name;
 		add: configuration targetSelectors size;
+		add: configuration numberOfFailures;
 		yourself.
 	dictMessages := Dictionary new.
 	nCalledMets := nSuccMets := nEvolMets := nSuccEvolMets := 0.
@@ -410,7 +411,6 @@ GPAssertion >> summaryOfEvolutionData [
 	col 
 		add: nCalledMets;
 		add: nSuccMets; 
-		add: nCalledMets - nSuccMets; 
 		add: nEvolMets; 
 		add: nSuccEvolMets;
 		add: (dictMessages at: #Message ifAbsent: [ 0 ]);
@@ -463,6 +463,7 @@ GPAssertion >> writeOnCsv [
 		OrderedCollection new 
 			add: configuration targetClass;
 			add: s;
+			add: configuration numberOfFailures;
 			add: ((metrics at: 'numErrors') at: s);
 			add: ((metrics at: 'numCalls') at: s);
 			add: best print;
@@ -473,7 +474,7 @@ GPAssertion >> writeOnCsv [
 	data ifNotEmpty: [ 
 		self filename writeStreamDo: [ :stream |
 			(NeoCSVWriter on: stream)
-				nextPut: #(Class Method Errors Calls Result FstFitness LstFitness);
+				nextPut: #(Class Method TestErrors Errors Calls Result FstFitness LstFitness);
 				nextPutAll: data;
 				flush ] 
 	]
@@ -484,7 +485,7 @@ GPAssertion >> writeResults [
 	results ifNotEmpty: [ 
 		self nameResultFile writeStreamDo: [ :stream |
 			(NeoCSVWriter on: stream)
-				nextPut: #(Class Methods CalledMethods MethodsWithFitnessZero MethodsWithFitnessGreaterThanZero MethodsWithEvolution MethodsWithSuccessEvolution Message Message1 Satisfy Comparison And);
+				nextPut: #(Class nMethods nTestErrors nCalledMeths nSatisfactoryAsserts nEvolvedAsserts nSatisfactoryEvols Message Message1 Satisfy Comparison And);
 				nextPutAll: results;
 				flush ] 
 	]

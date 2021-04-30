@@ -120,7 +120,7 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 	].
 	f := self countErrors.
 	t := testClass buildSuite run.
-	individual fitness: f + ((t failureCount + t errorCount - numberOfFailures) * 3).
+	individual fitness: f + ((t failureCount + t errorCount "- numberOfFailures") * 3).
 	self uninstall.
 	^ individual fitness
 ]
@@ -201,6 +201,11 @@ GPAssertConfiguration >> newFunction [
 { #category : #hooks }
 GPAssertConfiguration >> newTerminal [
 	^ self newFunction 
+]
+
+{ #category : #accessing }
+GPAssertConfiguration >> numberOfFailures [
+	^ numberOfFailures
 ]
 
 { #category : #accessing }
