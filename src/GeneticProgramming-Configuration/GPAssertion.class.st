@@ -138,7 +138,7 @@ GPAssertion >> contextBlocks: collection [
 { #category : #'as yet unclassified' }
 GPAssertion >> countErrors: targetSelector given: protocol and: block [
 	| rm opts newOpts res i size |
-	opts := self options.
+	opts := self options copy.
 	size := opts size.
 	newOpts := Set new.
 	rm := GPRandom instance.
@@ -196,8 +196,8 @@ GPAssertion >> getBestIndividualGiven: aSelector [
 	| engine |
 	engine := GPEngine new.
 	configuration 
-		targetSelector: aSelector;
-		options: self options.
+		targetSelector: aSelector";
+		options: self options".
 	"dictDepth at: aSelector ifPresent: [ :n | configuration depth: n ]."
 	engine configuration: configuration.
 	engine execute.
@@ -275,8 +275,7 @@ GPAssertion >> options [
 { #category : #accessing }
 GPAssertion >> options: collection [
 	self assert: collection isCollection.
-	options := collection.
-	configuration options: collection  
+	options := collection
 	 
 ]
 

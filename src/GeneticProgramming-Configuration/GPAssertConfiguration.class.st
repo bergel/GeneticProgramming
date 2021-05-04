@@ -112,15 +112,30 @@ GPAssertConfiguration >> createNewIndividual [
 
 { #category : #operations }
 GPAssertConfiguration >> distanceFromSolutionOf: individual [
-	| t f |
+	| t e |
 	self assert: targetClass notNil.
 	self assert: testClass notNil.
 	[ self injectIntoMethod: individual ] on: Exception do: [ 
 		self uninstall.
 	].
-	f := self countErrors.
+	e := self countErrors.
 	t := testClass buildSuite run.
-	individual fitness: f + ((t failureCount + t errorCount "- numberOfFailures") * 3).
+	individual fitness: (GPFitness new 
+		addObjective: 'nRandomErrors' -> e;
+		addObjective: 'nTestErrors' -> (t failureCount + t errorCount);
+		addFunctions: (Dictionary new 
+			add: '=' -> [ :f1 :f2 | (f1 objectiveAt: 'nTestErrors') = (f2 objectiveAt: 'nTestErrors') and: [ (f1 objectiveAt: 'nRandomErrors') = (f2 objectiveAt: 'nRandomErrors') ] ];
+			add: '<' -> [ :f1 :f2 | (f1 objectiveAt: 'nTestErrors') < (f2 objectiveAt: 'nTestErrors') 
+					ifFalse: [ (f1 objectiveAt: 'nTestErrors') = (f2 objectiveAt: 'nTestErrors') 
+						ifTrue: [ (f1 objectiveAt: 'nRandomErrors') < (f1 objectiveAt: 'nRandomErrors') ]
+						ifFalse: [ false ] ]
+					ifTrue: [ true ] ];
+			add: '>' -> [ :f1 :f2 | (f1 objectiveAt: 'nTestErrors') > (f1 objectiveAt: 'nTestErrors') 
+					ifFalse: [ (f1 objectiveAt: 'nTestErrors') = (f2 objectiveAt: 'nTestErrors') 
+						ifTrue: [ (f1 objectiveAt: 'nRandomErrors') > (f2 objectiveAt: 'nRandomErrors') ]
+						ifFalse: [ false ] ]
+					ifTrue: [ true ] ];
+			yourself )).
 	self uninstall.
 	^ individual fitness
 ]
@@ -228,7 +243,7 @@ GPAssertConfiguration >> options [
 { #category : #accessing }
 GPAssertConfiguration >> options: collection [
 	self assert: collection notEmpty.
-	options := collection 
+	options := collection
 ]
 
 { #category : #accessing }

@@ -127,7 +127,7 @@ GPEngine >> execute [
 			log generation: gen.
 			log bestFitnessValue: rInds first value.
 			log worstFitnessValue: rInds last value.
-			log averageFitness: (rInds collect: #value) sum / rInds size.
+			log averageFitness: ([(rInds collect: #value) sum / rInds size] on: MessageNotUnderstood do: [ rInds last value ]).
 			logs add: log.
 
 			"self fitnessOfBestIndividual"
@@ -241,7 +241,7 @@ GPEngine >> randomElementOf: aCollection [
 { #category : #'as yet unclassified' }
 GPEngine >> rankedIndividuals [
 	"return the list of individuals, sorted as the best match in front"
-	^ (population collect: [ :i | i -> (self distanceFromSolutionOf: i) abs ]) 
+	^ (population collect: [ :i | i -> (self distanceFromSolutionOf: i) ]) 
 		asSortedCollection: [ :i1 :i2 | i1 value < i2 value ]
 	"| d as |
 	d := Dictionary new.
@@ -266,7 +266,7 @@ GPEngine >> returnTopIndividuals: ratio [
 { #category : #'as yet unclassified' }
 GPEngine >> sortedIndividuals [
 	"return the list of individuals, sorted as the best match in front"
-	^ (population collect: [ :i | i -> i fitness abs ]) 
+	^ (population collect: [ :i | i -> i fitness ]) 
 		asSortedCollection: [ :i1 :i2 | i1 value < i2 value ]
 
 ]
@@ -275,8 +275,8 @@ GPEngine >> sortedIndividuals [
 GPEngine >> tournament [
 	"Return the best individual from a tournament"
 	| fitness best |
-	fitness := SmallInteger maxVal.
-	best := nil.
+	best := (population asSortedCollection: [ :ind1 :ind2 | ind1 fitness > ind2 fitness ]) first.
+	fitness := best fitness.
 	5 timesRepeat: [ 
 		| competitor i |
 		competitor := configuration randomElementOf: population.
