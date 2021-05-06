@@ -99,7 +99,7 @@ GPAssertConfiguration >> countErrorsGiven: block [
 		sum + ([ block value perform: targetSelector withArguments: args.
 			0 ]
 			on: Exception
-			do: [ :e | e class == AssertionFailure 
+			do: [ :e | self halt. e class == AssertionFailure 
 				ifTrue: [ 0 ] 
 				ifFalse: [ 1 ] ])
 	]
@@ -135,6 +135,7 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 						ifTrue: [ (f1 objectiveAt: 'nRandomErrors') > (f2 objectiveAt: 'nRandomErrors') ]
 						ifFalse: [ false ] ]
 					ifTrue: [ true ] ];
+			add: 'shouldTerminate' -> [ :f1 | (f1 objectiveAt: 'nTestErrors') == 0 and: [ (f1 objectiveAt: 'nRandomErrors') == 0 ] ];
 			yourself )).
 	self uninstall.
 	^ individual fitness

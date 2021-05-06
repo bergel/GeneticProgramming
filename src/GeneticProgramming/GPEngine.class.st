@@ -33,9 +33,7 @@ GPEngine >> createNewGeneration [
 	"check if problem solved"
 
 	| i1 i2 newInd newPopulation |
-	self pickBestIndividual fitness = 0 ifTrue: [ ^ self ].
-	"(self distanceFromSolutionOf: self pickBestIndividual) = 0 ifTrue: [ 
-		^ self ]."
+	self pickBestIndividual fitness shouldTerminate ifTrue: [ ^ self ].
 	newPopulation := "OrderedCollection new." self eliteOfPopulation.
 	population size - newPopulation size timesRepeat: [ 
 		| number |

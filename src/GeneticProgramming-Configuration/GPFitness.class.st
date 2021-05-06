@@ -66,3 +66,10 @@ GPFitness >> printOn: stream [
 		nextPutAll: assoc value asString;
 		nextPut: $, ]
 ]
+
+{ #category : #asserting }
+GPFitness >> shouldTerminate [
+	^ dictFunction at: 'shouldTerminate' 
+		ifPresent: [ :block | block valueWithEnoughArguments: (Array with: self) ]
+		ifAbsent: [ Error signal: 'Does not have a condition termination' ]
+]
