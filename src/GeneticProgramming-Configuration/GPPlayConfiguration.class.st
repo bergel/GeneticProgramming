@@ -2,7 +2,8 @@ Class {
 	#name : #GPPlayConfiguration,
 	#superclass : #GPConfiguration,
 	#instVars : [
-		'grammar'
+		'grammar',
+		'testClass'
 	],
 	#category : #'GeneticProgramming-Configuration-GPPlay'
 }
@@ -12,13 +13,41 @@ GPPlayConfiguration >> createNewIndividual [
 	^ self newFunction
 ]
 
+{ #category : #'as yet unclassified' }
+GPPlayConfiguration >> crossover: individual1 with: individual2 [
+	 | copy ids childNodes childIds shuffleIds indexes |
+	copy := individual1 deepCopy.
+	ids := copy children collect: #id.
+	childNodes := individual2 withAllChildren allButFirst.
+	childIds := childNodes collect: #id.
+	shuffleIds := random shuffleElementsOf: ids copy.
+	shuffleIds 
+		detect: [ :nodeId | 
+			indexes := random shuffleElementsOf: (individual1 indexesOf: nodeId on: childIds).
+			indexes notEmpty ]
+		ifFound: [ :nodeId | copy children at: (ids indexOf: nodeId) put: (childNodes at: indexes first) deepCopy.
+			^ copy ]
+		ifNone: [ | c |
+			copy children 
+				detect: [ :child | 
+					c := self crossover: child with: individual2.
+					c notNil ] 
+				ifFound: [ :child | 
+					copy children at: (ids indexOf: child id) put: c.
+					^ copy ]  ].
+	^ nil
+		
+]
+
 { #category : #operations }
 GPPlayConfiguration >> distanceFromSolutionOf: individual [
 	| p t |
 	p := GPPlay new.
 	p assertionGP: [ :obj | individual evaluateWith: { 'obj' -> obj } asDictionary ].
-	t := GPPlayTest buildSuite run.
-	individual fitness: t runCount + t failureCount + t errorCount - t passedCount.
+	t := testClass buildSuite run.
+	individual fitness: (GPFitness new
+		fitnessValue: t failureCount + t errorCount;
+		objective: [:fitness | fitness fitnessValue == 0 ]).
 	^ individual fitness
 ]
 
@@ -36,6 +65,7 @@ GPPlayConfiguration >> example [
 GPPlayConfiguration >> initialize [ 
 	super initialize.
 	grammar := self initializeGrammar.
+	testClass := GPPlayTest
 ]
 
 { #category : #initialization }

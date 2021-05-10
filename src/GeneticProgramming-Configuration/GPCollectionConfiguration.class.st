@@ -9,14 +9,10 @@ GPCollectionConfiguration >> depth [
 	^ 10
 ]
 
-{ #category : #operations }
-GPCollectionConfiguration >> distanceFromSolutionOf: individual [
-	| p t |
-	p := GPPlay new.
-	p assertionGP: [ :obj | individual evaluateWith: { 'obj' -> obj } asDictionary ].
-	t := GPCollectionTest buildSuite run.
-	individual fitness: t runCount + t failureCount + t errorCount - t passedCount.
-	^ individual fitness
+{ #category : #initialization }
+GPCollectionConfiguration >> initialize [
+	super initialize.
+	testClass := GPCollectionTest
 ]
 
 { #category : #initialization }

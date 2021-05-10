@@ -28,7 +28,6 @@ GPAssertionGrammarBuilder >> buildAssertionGrammarGiven: tgClass [
 	| grammar instVars |
 	self assert: tgClass isClass.
 	grammar := GPContextFreeGrammar new.
-	instVars := self instanceVarsOf: tgClass.
 	grammar 
 		addRule: #Assertion ofClass: RBMessageNode withSequence: #(#Self #Assert #Method);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Message);
@@ -36,19 +35,26 @@ GPAssertionGrammarBuilder >> buildAssertionGrammarGiven: tgClass [
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Satisfy #Message);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Method #And #Block);
 		addSelectorRule: #Assert withValues: #(#assert:);
-		addSelectorRule: #Message withValues: #(#isString #isInteger #isFloat #isNumber #isFinite #isCharacter #isCollection #isArray #isSymbol #isColor #isBlock #isEmpty #notEmpty #isNil #notNil #positive #negative #isPoint);
+		addSelectorRule: #Message withValues: #(#isString #isInteger #isFloat #isNumber #isFinite #isCharacter #isCollection #isArray #isSymbol #isColor #isBlock #isEmpty #notEmpty #isNil #positive #negative #isPoint);
 		addSelectorRule: #Message1 withValues: #(#isKindOf: #isMemberOf:);
+		addSelectorRule: #Includes withValues: #(#includes:);
 		addSelectorRule: #Satisfy withValues: #(#allSatisfy: #noneSatisfy: #anySatisfy:);
 		addSelectorRule: #And withValues: #(#and:);
+		addSelectorRule: #Not withValues: #(#not);
 		addSelectorRule: #Comparison withValues: #(#= #== #> #< #<= #>=);
 		addRule: #Args1 withCollectionOptions: #(#Class) ofSize: 1;
 		addRule: #Block ofClass: RBBlockNode withSequence: #(#Method);
 		addLeafRule: #Self ofClass: RBVariableNode withValues: #('self');
 		addLeafRule: #Class ofClass: RBVariableNode  withValues: #(#ByteString #Point #Character #Symbol #SmallInteger #Number #SmallFloat64 #Boolean #Collection #Array #BlockClosure #Dictionary #Set #OrderedCollection).
+	instVars := self instanceVarsOf: tgClass.
 	instVars ifNotEmpty: [ 
 		grammar 
 			addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Comparison #InstanceVar);
-			addLeafRule: #InstanceVar ofClass: RBVariableNode withValues: instVars ].
+			addRule: #Inclusion ofClass: RBMessageNode withSequence: #(#InstanceVar #Includes #Variable);
+			addRule: #NegativeInclusion ofClass: RBMessageNode withSequence: #(#Inclusion #Not);
+			addLeafRule: #InstanceVar ofClass: RBVariableNode withValues: instVars;
+			addRule: #Method redirectingTo: #Inclusion;
+			addRule: #Method redirectingTo: #NegativeInclusion ].
 	^ grammar
 ]
 

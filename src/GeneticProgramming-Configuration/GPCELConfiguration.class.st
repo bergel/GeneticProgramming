@@ -5,7 +5,7 @@ Class {
 }
 
 { #category : #operations }
-GPCELConfiguration >> distanceFromSolutionOf: individual [
+GPCELConfiguration >> calculateFitnessValue: individual [
 	"This method has to return a number that describes how close the individual is to the solution.
 	If this returns 0, then the individual is a perfect match
 	"

@@ -9,6 +9,21 @@ GPRootInPolynomConfiguration >> createNewIndividual [
 	^ self newFunction
 ]
 
+{ #category : #'as yet unclassified' }
+GPRootInPolynomConfiguration >> crossover: individual1 with: individual2 [
+	^ self crossoverOf: individual1 with: individual2 
+		at: ([random randomNumber: individual1 numberOfNodes - 1] on: Exception do: [ 0 ]) + 1
+		at: ([random randomNumber: individual2 numberOfNodes - 1] on: Exception do: [0]) + 1
+]
+
+{ #category : #'as yet unclassified' }
+GPRootInPolynomConfiguration >> crossoverOf: individual1 with: individual2 at: index1 at: index2 [
+	| copy |
+	copy := individual1 deepCopy.
+	copy atIndex: index1 put: (individual2 atIndex: index2) deepCopy.
+	^ copy
+]
+
 { #category : #operations }
 GPRootInPolynomConfiguration >> distanceFromSolutionOf: individual [
 	"This method has to return a number that describes how close the individual is to the solution.
@@ -21,7 +36,10 @@ GPRootInPolynomConfiguration >> distanceFromSolutionOf: individual [
 	context at: #b put: -2.
 	context at: #c put: 10.
 	
-	^ (individual evaluateUsing: context) abs
+	individual fitness: (GPFitness new
+		fitnessValue: (individual evaluateUsing: context) abs;
+		objective: [ :fitness | fitness fitnessValue == 0 ]).
+	^ individual fitness
 ]
 
 { #category : #example }

@@ -12,9 +12,36 @@ GPGrammarConfiguration >> createNewIndividual [
 	^ self newFunction
 ]
 
+{ #category : #'as yet unclassified' }
+GPGrammarConfiguration >> crossover: individual1 with: individual2 [
+	| copy ids childIds childNodes indexes shuffledIds |
+	copy := individual1 deepCopy.
+	ids := copy children collect: #id.
+	childNodes := individual2 withAllChildren allButFirst.
+	childIds := childNodes collect: #id.
+	shuffledIds := random shuffleElementsOf: ids copy.
+	shuffledIds 
+		detect: [ :nodeId |
+			indexes := random shuffleElementsOf: (individual1 indexesOf: nodeId on: childIds).
+			indexes notEmpty ] 
+		ifFound: [ :nodeId | copy children at: (ids indexOf: nodeId) put: (childNodes at: indexes first) deepCopy.
+			^ copy ] 
+		ifNone: [ | c | 
+			copy children 
+				detect: [ :child |
+					c := self crossover: child with: individual2.
+					c notNil ]
+				ifFound: [ :child | copy children at: (ids indexOf: child id) put: c.
+					^ copy ] ].
+	^ nil
+]
+
 { #category : #operations }
 GPGrammarConfiguration >> distanceFromSolutionOf: individual [
-	^ [(individual evaluate - 234) abs] on: MessageNotUnderstood do: [ 234 ]
+	individual fitness: (GPFitness new 
+		fitnessValue: ([(individual evaluate - 234) abs] on: MessageNotUnderstood do: [ 234 ]);
+		objective: [ :fitness | fitness fitnessValue == 0 ]).
+	^ individual fitness
 ]
 
 { #category : #example }

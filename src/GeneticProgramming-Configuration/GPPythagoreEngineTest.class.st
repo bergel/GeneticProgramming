@@ -20,5 +20,5 @@ GPPythagoreEngineTest >> testSolution [
 	i4 := c sumNode children: { i1 . i2 }.
 	i5 := c subNode children: { i4 . i3 }.
 
-	self assert: (engine distanceFromSolutionOf: i5) equals: 0
+	self assert: (engine distanceFromSolutionOf: i5) fitnessValue equals: 0
 ]

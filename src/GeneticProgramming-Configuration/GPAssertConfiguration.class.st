@@ -110,6 +110,30 @@ GPAssertConfiguration >> createNewIndividual [
 	^ self newFunction
 ]
 
+{ #category : #'as yet unclassified' }
+GPAssertConfiguration >> crossover: individual1 with: individual2 [
+	| copy ids childIds childNodes indexes shuffledIds |
+	copy := individual1 deepCopy.
+	ids := copy children collect: #id.
+	childNodes := individual2 withAllChildren allButFirst: 3.
+	childIds := childNodes collect: #id.
+	shuffledIds := random shuffleElementsOf: ids copy.
+	shuffledIds 
+		detect: [ :nodeId |
+			indexes := random shuffleElementsOf: (individual1 indexesOf: nodeId on: childIds).
+			indexes notEmpty ] 
+		ifFound: [ :nodeId | copy children at: (ids indexOf: nodeId) put: (childNodes at: indexes first) deepCopy.
+			^ copy ] 
+		ifNone: [ | c | 
+			copy children 
+				detect: [ :child |
+					c := self crossover: child with: individual2.
+					c notNil ]
+				ifFound: [ :child | copy children at: (ids indexOf: child id) put: c.
+					^ copy ] ].
+	^ nil
+]
+
 { #category : #operations }
 GPAssertConfiguration >> distanceFromSolutionOf: individual [
 	| t e |
@@ -120,7 +144,7 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 	].
 	e := self countErrors.
 	t := testClass buildSuite run.
-	individual fitness: (GPFitness new 
+	individual fitness: (GPMultiObjectiveFitness new 
 		addObjective: 'nRandomErrors' -> e;
 		addObjective: 'nTestErrors' -> (t failureCount + t errorCount);
 		addFunctions: (Dictionary new 
@@ -176,10 +200,10 @@ GPAssertConfiguration >> injectIntoMethod: individual [
 { #category : #operations }
 GPAssertConfiguration >> mutate: individual [
 	| source children nodeToMutate indivIds sourceIds sceChildren |
-	children := GPRandom instance shuffleElementsOf: (individual withAllChildren allButFirst: 3 "select: #isLeaf").
+	children := GPRandom instance shuffleElementsOf: (individual withAllChildren allButFirst: 3).
 	source := self newTerminal.
 	indivIds := children collect: #id.
-	sceChildren := source withAllChildren allButFirst: 3 "select: #isLeaf".
+	sceChildren := source withAllChildren allButFirst: 3.
 	sourceIds := sceChildren collect: #id.
 	(indivIds includesAny: sourceIds) ifFalse: [ ^ self ].
 	nodeToMutate := children at: (indivIds indexOfAnyOf: sourceIds).

@@ -51,6 +51,11 @@ GPConfiguration >> createNewIndividualRoot: rootNode depth: nDepth [
 			ifFalse: [ rootNode addChild: self newTerminal ] ]
 ]
 
+{ #category : #'as yet unclassified' }
+GPConfiguration >> crossover: individual1 with: individual2 [
+	self subclassResponsibility 
+]
+
 { #category : #accessing }
 GPConfiguration >> depth [
 	^ depth ifNil: [ random randomNumber: 7 ] ifNotNil: [ depth ]

@@ -5,23 +5,7 @@ Class {
 }
 
 { #category : #operations }
-GPNumberPuzzleConfiguration >> createNewIndividual [
-	"Return a new individual"
-	"
-	(self new createNewIndividual; createNewIndividual) print
-	"
-	| f1 f2 |
-	f1 := self sumNode.
-	f2 := self sumNode.
-	f1 addChild: f2.
-	f1 addChild: self newTerminal.
-	f2 addChild: self newTerminal.
-	f2 addChild: self newTerminal.
-	^ f1
-]
-
-{ #category : #operations }
-GPNumberPuzzleConfiguration >> distanceFromSolutionOf: individual [
+GPNumberPuzzleConfiguration >> calculateFitnessValue: individual [
 	"This method has to return a number that describes how close the individual is to the solution.
 	If this returns 0, then the individual is a perfect match
 	"
@@ -41,6 +25,22 @@ GPNumberPuzzleConfiguration >> distanceFromSolutionOf: individual [
 		ifTrue: [ penalty1 := 0 ]
 		ifFalse: [ penalty1 := 100 ].
 	^ result + penalty1 + penalty2
+]
+
+{ #category : #operations }
+GPNumberPuzzleConfiguration >> createNewIndividual [
+	"Return a new individual"
+	"
+	(self new createNewIndividual; createNewIndividual) print
+	"
+	| f1 f2 |
+	f1 := self sumNode.
+	f2 := self sumNode.
+	f1 addChild: f2.
+	f1 addChild: self newTerminal.
+	f2 addChild: self newTerminal.
+	f2 addChild: self newTerminal.
+	^ f1
 ]
 
 { #category : #example }

@@ -38,12 +38,11 @@ GPEngine >> createNewGeneration [
 	population size - newPopulation size timesRepeat: [ 
 		| number |
 		number := configuration randomInt: 100.
-		"(configuration randomInt: 100) < 90"
 		number <= 90
 			ifTrue: [ 
 				i1 := self tournament.
 				i2 := self tournament.
-				newInd := i1 crossOverWith: i2 using: configuration random.
+				newInd := configuration crossover: i1 with: i2.
 				newInd ifNil: [ newInd := i1 deepCopy ] ]
 			ifFalse: [newInd := self tournament deepCopy ].
 		number := configuration randomInt: 100.
@@ -51,37 +50,6 @@ GPEngine >> createNewGeneration [
 				ifTrue: [ configuration mutate: newInd ].
 		newPopulation add: newInd ].
 	population := newPopulation
-]
-
-{ #category : #'as yet unclassified' }
-GPEngine >> createNewGenerationOLD [
-	"The argument is a collection of GPNode, each element being the root node of an individual."
-	| fitIndividuals oldIndividual offSprings oldPopulation |
-	fitIndividuals := self pickFitIndividuals.
-
-	oldIndividual := population copyFrom: 1 to: (population size * 0.25) asInteger.
-	"Mutation on the old individuals"
-	1 to: (population size * 0.05) asInteger do: [ :unused |
-		configuration mutate: (self randomElementOf: oldIndividual) 
-	].
-
-	offSprings := OrderedCollection new.
-	(population size * 0.25) asInteger timesRepeat: [
-		| i1 i2 |
-		i1 := self randomElementOf: fitIndividuals.
-		i2 := self randomElementOf: fitIndividuals.
-		offSprings add: (i1 crossOverWith: i2 using: configuration random) 
-	].
-	oldPopulation := population.
-	population := fitIndividuals , oldIndividual, offSprings.
-	
-"	Halt if: [ self numberOfDifferentIndividuals > 2 ].
-	self numberOfDifferentIndividualsIn: fitIndividuals.
-	self numberOfDifferentIndividualsIn: oldIndividual.
-	self numberOfDifferentIndividualsIn: offSprings.
-	
-	self numberOfDifferentIndividualsIn: population.
-	self numberOfDifferentIndividualsIn: oldPopulation."
 ]
 
 { #category : #operations }
@@ -129,7 +97,7 @@ GPEngine >> execute [
 			logs add: log.
 
 			"self fitnessOfBestIndividual"
-			rInds first value = 0 ifTrue: [ ^ self ] ]
+			rInds first value shouldTerminate ifTrue: [ ^ self ] ]
 		displayingProgress: [ :gen | 
 		'Evolving - Generation ' , gen printString ]
 ]
@@ -279,11 +247,9 @@ GPEngine >> tournament [
 		| competitor i |
 		competitor := configuration randomElementOf: population.
 		i := competitor fitness.
-		"i := self distanceFromSolutionOf: competitor."
-		i < fitness ifTrue: [ 
+		(i < fitness or: [i = fitness]) ifTrue: [ 
 			best := competitor.
-			fitness := competitor fitness.
-			"fitness := self distanceFromSolutionOf: competitor" ]
+			fitness := competitor fitness ]
 	].
 	^ best
 ]

@@ -139,7 +139,7 @@ GPNodeTest >> testCrossOver [
 	self assert: (i2 atIndex: 3) print equals: '(1 + (6 - 3))'.
 	self assert: (i2 atIndex: 2) print equals: '5'.
 	
-	offspring := i1 crossOverWith: i2 at: 4 at: 2.
+	offspring := c crossoverOf: i1 with: i2 at: 4 at: 2.
 	self assert: offspring print equals: '(5 + (5 * 3))'.
 	self assert: i1 print equals: '(5 + (4 * 3))'.
 	self assert: i2 print equals: '(5 * (1 + (6 - 3)))'.
@@ -156,14 +156,15 @@ GPNodeTest >> testCrossOver02 [
 	self assert: i1 print equals: '(5 - (2 * 3))'.
 	self assert: i2 print equals: '(5 * (1 + (5 * 3)))'.
 	
-	offspring := i1 crossOverWith: i2.
+	offspring := c crossover: i1 with: i2.
 	self assert: offspring print ~= i1 print.
 	self assert: offspring print ~= i2 print.
 ]
 
 { #category : #tests }
 GPNodeTest >> testCrossOver03 [
-	| i1 i2 offspring |
+	| i1 i2 offspring configuration |
+	configuration := GPGrammarConfiguration new.
 	GPRandom seed: 1.
 	i1 := GPNode new id: #E; type: RBMessageNode;
 		printBlock: [:n :ctx | (n generateAST: GPReplacementVisitor new) formattedCode ];
@@ -180,7 +181,7 @@ GPNodeTest >> testCrossOver03 [
 	
 	self assert: i1 print equals: '3 + 7'.
 	self assert: i2 print equals: '8 odd'.
-	offspring := i1 crossOverWith: i2.
+	offspring := configuration crossover: i1 with: i2.
 	self deny: offspring print equals: '3 odd 7'.
 	self deny: offspring print equals: i1 print.
 	self deny: offspring print equals: i2 print.
@@ -189,8 +190,9 @@ GPNodeTest >> testCrossOver03 [
 
 { #category : #tests }
 GPNodeTest >> testCrossOver04 [
-	| i1 i2 offspring |
+	| i1 i2 offspring configuration |
 	GPRandom seed: 163.
+	configuration := GPGrammarConfiguration new.
 	i1 := GPNode new id: #E; type: RBMessageNode;
 		printBlock: [:n :ctx | n ast formattedCode ];
 		evaluationBlock: [ :n :ctx | n ast ];
@@ -207,7 +209,7 @@ GPNodeTest >> testCrossOver04 [
 	
 	self assert: i1 print equals: 'obj allSatisfy: #isCollection'.
 	self assert: i2 print equals: 'obj1 isNotNil'.
-	offspring := i1 crossOverWith: i2.
+	offspring := configuration crossover: i1 with: i2.
 	self deny: offspring print equals: i1 print.
 	self deny: offspring print equals: i2 print.
 	self assertCollection: (Array with: offspring print) includesAny: #('obj allSatisfy: #isNotNil' 'obj1 allSatisfy: #isNotNil' 'obj1 allSatisfy: #isCollection').
@@ -215,8 +217,9 @@ GPNodeTest >> testCrossOver04 [
 
 { #category : #tests }
 GPNodeTest >> testCrossOver05 [
-	| i1 i2 offspring |
+	| i1 i2 offspring configuration |
 	GPRandom seed: 163.
+	configuration := GPGrammarConfiguration new.
 	i1 := GPNode new id: #E; type: RBMessageNode;
 		printBlock: [:n :ctx | n ast formattedCode ];
 		children: (Array 
@@ -234,7 +237,7 @@ GPNodeTest >> testCrossOver05 [
 	
 	self assert: i1 print equals: '3 + 7'.
 	self assert: i2 print equals: '8 - 9'.
-	offspring := i1 crossOverWith: i2.
+	offspring := configuration crossover: i1 with: i2.
 	self deny: offspring print equals: i1 print.
 	self deny: offspring print equals: i2 print.
 	self assert: offspring print equals: '3 - 7'.
@@ -242,8 +245,9 @@ GPNodeTest >> testCrossOver05 [
 
 { #category : #tests }
 GPNodeTest >> testCrossOver06 [
-	| i1 i2 offspring |
+	| i1 i2 offspring configuration |
 	GPRandom seed: 1.
+	configuration := GPGrammarConfiguration new.
 	i1 := GPNode new id: #E; 
 		type: RBMessageNode;
 		children:  (Array 
@@ -286,7 +290,7 @@ GPNodeTest >> testCrossOver06 [
 	self assert: i1 ast formattedCode equals: 'obj noneSatisfy: #isNumber'.
 	self assert: i2 ast formattedCode equals: '((obj isString and: [ obj notNil ]) and: [ obj isFloat ]) and: [ 
 	obj allSatisfy: #isString ]'.
-	offspring := i1 crossOverWith: i2.
+	offspring := configuration crossover: i1 with: i2.
 	self deny: offspring ast formattedCode equals: i1 ast formattedCode.
 	self deny: offspring ast formattedCode equals: i2 ast formattedCode.
 	self assert: offspring ast formattedCode equals: 'obj allSatisfy: #isNumber'.
@@ -294,8 +298,9 @@ GPNodeTest >> testCrossOver06 [
 
 { #category : #tests }
 GPNodeTest >> testCrossOver07 [
-	| i1 i2 offspring |
+	| i1 i2 offspring configuration |
 	GPRandom seed: 1.
+	configuration := GPGrammarConfiguration new.
 	i1 := GPNode new id: #E; 
 		type: RBMessageNode;
 		children:  (Array 
@@ -349,7 +354,7 @@ GPNodeTest >> testCrossOver07 [
 	self assert: i1 print equals: '((obj isString and: [ obj notNil ]) and: [ obj isFloat ]) and: [ 
 	obj allSatisfy: #isString ]'.
 	self assert: i2 print equals: 'obj noneSatisfy: #isNumber'.
-	offspring := i1 crossOverWith: i2.
+	offspring := configuration crossover: i1 with: i2.
 	self deny: offspring print equals: i1 print.
 	self deny: offspring print equals: i2 print.
 	self assert: offspring print equals: '((obj isNumber and: [ obj notNil ]) and: [ obj isFloat ]) and: [ 
@@ -358,8 +363,9 @@ GPNodeTest >> testCrossOver07 [
 
 { #category : #tests }
 GPNodeTest >> testCrossOver08 [
-	| i1 i2 offspring |
+	| i1 i2 offspring configuration |
 	GPRandom seed: 1.
+	configuration := GPGrammarConfiguration new.
 	i1 := GPNode new id: #E; 
 		type: RBMessageNode;
 		children:  (Array 
@@ -413,7 +419,7 @@ GPNodeTest >> testCrossOver08 [
 	self assert: i1 print equals: '((obj isString and: [ obj notNil ]) and: [ obj isFloat ]) and: [ 
 	obj allSatisfy: #isString ]'.
 	self assert: i2 print equals: 'obj noneSatisfy: #isNumber'.
-	offspring := i1 crossOverWith: i2.
+	offspring := configuration crossover: i1 with: i2.
 	self deny: offspring print equals: i1 print.
 	self deny: offspring print equals: i2 print.
 	self assert: offspring print equals: '((obj isNumber and: [ obj notNil ]) and: [ obj isFloat ]) and: [ 

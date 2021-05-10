@@ -106,7 +106,8 @@ GPGrammarTest >> testSelectValueForRuleWithMoreWeightsThanOptions [
 { #category : #tests }
 GPGrammarTest >> testTournament [
 	| i1 i2 |
-	engine createInitialPopulation.
+	engine createInitialPopulation;
+	rankedIndividuals.
 	i1 := engine tournament.
 	self assert: (i1 isKindOf: GPAbstractNode).
 	i2 := engine tournament.

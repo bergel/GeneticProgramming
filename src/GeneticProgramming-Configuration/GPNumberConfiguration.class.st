@@ -4,14 +4,10 @@ Class {
 	#category : #'GeneticProgramming-Configuration-GPPlay'
 }
 
-{ #category : #operations }
-GPNumberConfiguration >> distanceFromSolutionOf: individual [
-	| p t |
-	p := GPPlay new.
-	p assertionGP: [ :obj | individual evaluateWith: { 'obj' -> obj } asDictionary ].
-	t := GPNumberTest buildSuite run.
-	individual fitness: t runCount + t failureCount + t errorCount - t passedCount.
-	^ individual fitness
+{ #category : #initialization }
+GPNumberConfiguration >> initialize [ 
+	super initialize.
+	testClass := GPNumberTest 
 ]
 
 { #category : #initialization }

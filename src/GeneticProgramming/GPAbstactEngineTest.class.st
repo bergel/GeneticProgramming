@@ -47,9 +47,12 @@ GPAbstactEngineTest >> testBasic [
 
 	| best1 score1 best2 score2 |
 	engine createInitialPopulation.
+	engine rankedIndividuals.
 	best1 := engine pickBestIndividual.
 	score1 := engine distanceFromSolutionOf: best1.
-	10 timesRepeat: [ engine createNewGeneration ].
+	10 timesRepeat: [ 
+		engine createNewGeneration;
+		rankedIndividuals ].
 	best2 := engine pickBestIndividual.
 	score2 := engine distanceFromSolutionOf: best2.
 	self assert: score1 > score2.
@@ -88,7 +91,8 @@ GPAbstactEngineTest >> testMutation [
 { #category : #tests }
 GPAbstactEngineTest >> testTournament [
 	| i1 i2 |
-	engine createInitialPopulation.
+	engine createInitialPopulation;
+	rankedIndividuals.
 	i1 := engine tournament.
 	self assert: i1 class == GPNode.
 	i2 := engine tournament.
