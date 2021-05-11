@@ -83,26 +83,27 @@ GPAssertConfiguration >> countErrors [
 	self assert: targetClass notNil.
 	self assert: targetSelector notNil.
 	^ contextBlocks 
-		ifEmpty: [ [ self countErrorsGiven: [ targetClass new ] ] on: Exception do: [ 0 ] ] 
+		ifEmpty: [ [ self countErrorsGiven: [ targetClass new ] ] on: Exception do: [ 30 ] ] 
 		ifNotEmpty: [ [(contextBlocks collect: [ :block | 
-				self countErrorsGiven: block ]) min] on: Exception do: [ 0 ] ]
+				self countErrorsGiven: block ]) min] on: Exception do: [ 30 ] ]
 ]
 
 { #category : #'as yet unclassified' }
 GPAssertConfiguration >> countErrorsGiven: block [
-	| rm |
+	| rm res |
 	self assert: block isBlock.
 	rm := GPRandom instance.
-	^ (1 to: 30) inject: 0 into: [ :sum :num | | args |
+	res := (1 to: 30) inject: 0 into: [ :sum :num | | args |
 		args := (1 to: targetSelector numArgs) collect: [ :a | 
 		        rm randomlySelect: self options ].
 		sum + ([ block value perform: targetSelector withArguments: args.
 			0 ]
 			on: Exception
-			do: [ :e | self halt. e class == AssertionFailure 
+			do: [ :e | e class == AssertionFailure 
 				ifTrue: [ 0 ] 
 				ifFalse: [ 1 ] ])
-	]
+	].
+	^ res
 ]
 
 { #category : #operations }
@@ -111,27 +112,31 @@ GPAssertConfiguration >> createNewIndividual [
 ]
 
 { #category : #'as yet unclassified' }
-GPAssertConfiguration >> crossover: individual1 with: individual2 [
-	| copy ids childIds childNodes indexes shuffledIds |
-	copy := individual1 deepCopy.
-	ids := copy children collect: #id.
-	childNodes := individual2 withAllChildren allButFirst: 3.
-	childIds := childNodes collect: #id.
+GPAssertConfiguration >> crossover: individual between: children1 and: children2 [
+	| ids childIds indexes shuffledIds |
+	ids := children1 collect: #id.
+	childIds := children2 collect: #id.
 	shuffledIds := random shuffleElementsOf: ids copy.
 	shuffledIds 
 		detect: [ :nodeId |
-			indexes := random shuffleElementsOf: (individual1 indexesOf: nodeId on: childIds).
+			indexes := random shuffleElementsOf: (individual indexesOf: nodeId on: childIds).
 			indexes notEmpty ] 
-		ifFound: [ :nodeId | copy children at: (ids indexOf: nodeId) put: (childNodes at: indexes first) deepCopy.
-			^ copy ] 
-		ifNone: [ | c | 
-			copy children 
-				detect: [ :child |
-					c := self crossover: child with: individual2.
-					c notNil ]
-				ifFound: [ :child | copy children at: (ids indexOf: child id) put: c.
-					^ copy ] ].
+		ifFound: [ :nodeId | children1 at: (random randomlySelect: (individual indexesOf: nodeId on: ids)) put: (children2 at: (random randomlySelect: indexes)) deepCopy.
+			^ individual ] 
+		ifNone: [
+			children1 
+				detect: [ :child | | ind |
+					ind := self crossover: individual between: child children and: children2.
+					ind notNil ]
+				ifFound: [ ^ individual ] ].
 	^ nil
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertConfiguration >> crossover: individual1 with: individual2 [
+	| copy |
+	copy := individual1 deepCopy.
+	^ self crossover: copy between: (copy children at: 3) children and: (individual2 withAllChildren allButFirst: 3)
 ]
 
 { #category : #operations }
