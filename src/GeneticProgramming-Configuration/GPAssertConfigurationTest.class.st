@@ -17,7 +17,7 @@ GPAssertConfigurationTest >> setUp [
 
 { #category : #tests }
 GPAssertConfigurationTest >> testCountErrorsGiven [
-	configuration options: #(1 2 -2 4 $e $r $, 'asdf' nil #(Greeting Integer));
+	"configuration options: #(1 2 -2 4 $e $r $, 'asdf' nil #(Greeting Integer));
 		targetSelector: #columns:;
 		targetClass: DataFrame;
 		testClass: DataFrameTest.
@@ -25,7 +25,7 @@ GPAssertConfigurationTest >> testCountErrorsGiven [
 	self assert: (configuration countErrorsGiven: [ 
 		(DataFrame withRows: #((Hi 0) (World 1)))
 		rowNames: #(A B);
-		columnNames: #(Greeting Integer) ]) equals: 23
+		columnNames: #(Greeting Integer) ]) equals: 23"
 ]
 
 { #category : #tests }
