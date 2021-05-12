@@ -25,6 +25,11 @@ GPFitness >> > other [
 	^ fitnessValue > other fitnessValue 
 ]
 
+{ #category : #converting }
+GPFitness >> asNumber [ 
+	^ fitnessValue 
+]
+
 { #category : #accessing }
 GPFitness >> fitnessValue [
 	^ fitnessValue  

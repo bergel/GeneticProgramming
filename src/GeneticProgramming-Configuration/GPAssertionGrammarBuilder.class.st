@@ -35,7 +35,7 @@ GPAssertionGrammarBuilder >> buildAssertionGrammarGiven: tgClass [
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Satisfy #Message);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Method #And #Block);
 		addSelectorRule: #Assert withValues: #(#assert:);
-		addSelectorRule: #Message withValues: #(#isString #isInteger #isFloat #isNumber #isFinite #isCharacter #isCollection #isArray #isSymbol #isColor #isBlock #isEmpty #notEmpty #isNil #positive #negative #isPoint);
+		addSelectorRule: #Message withValues: #(#isString #isInteger #isFloat #isNumber #isFinite #isCharacter #isCollection #isArray #isSymbol #isColor #isBlock #isEmpty #notEmpty #isNil #notNil #positive #negative #isPoint);
 		addSelectorRule: #Message1 withValues: #(#isKindOf: #isMemberOf:);
 		addSelectorRule: #Includes withValues: #(#includes:);
 		addSelectorRule: #Satisfy withValues: #(#allSatisfy: #noneSatisfy: #anySatisfy:);

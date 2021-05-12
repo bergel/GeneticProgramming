@@ -93,7 +93,7 @@ GPEngine >> execute [
 			log generation: gen.
 			log bestFitnessValue: rInds first value.
 			log worstFitnessValue: rInds last value.
-			log averageFitness: ([(rInds collect: #value) sum / rInds size] on: MessageNotUnderstood do: [ rInds last value ]).
+			log averageFitness: (rInds at: (rInds size / 2) asInteger) value."([(rInds collect: [:ass | ass value asNumber]) sum / rInds size] on: MessageNotUnderstood do: [ rInds last value ])."
 			logs add: log.
 
 			"self fitnessOfBestIndividual"
@@ -240,16 +240,24 @@ GPEngine >> sortedIndividuals [
 { #category : #evolution }
 GPEngine >> tournament [
 	"Return the best individual from a tournament"
-	| fitness best |
+	| k best ind |
+	best := nil.
+	k := 4.
+	k timesRepeat: [ 
+		ind := self randomElementOf: population. "population at: (configuration random randomNumber: population size)".
+		(best isNil or: [ ind fitness < best fitness ]) 
+			ifTrue: [ best := ind ] ].
+	^ best
+	"| fitness best |
 	best := (population asSortedCollection: [ :ind1 :ind2 | ind1 fitness > ind2 fitness ]) first.
 	fitness := best fitness.
 	5 timesRepeat: [ 
 		| competitor i |
 		competitor := configuration randomElementOf: population.
 		i := competitor fitness.
-		(i < fitness or: [i = fitness]) ifTrue: [ 
+		(i < fitness ""or: [i = fitness]"") ifTrue: [ 
 			best := competitor.
 			fitness := competitor fitness ]
 	].
-	^ best
+	^ best"
 ]

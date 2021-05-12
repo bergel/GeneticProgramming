@@ -44,6 +44,11 @@ GPMultiObjectiveFitness >> addObjective: association [
 	dictObjective add: association
 ]
 
+{ #category : #converting }
+GPMultiObjectiveFitness >> asNumber [ 	
+	^ dictObjective values sum
+]
+
 { #category : #initialization }
 GPMultiObjectiveFitness >> initialize [ 
 	dictFunction := Dictionary new.

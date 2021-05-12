@@ -466,8 +466,8 @@ GPAssertion >> writeOnCsv [
 			add: ((metrics at: 'numErrors') at: s);
 			add: ((metrics at: 'numCalls') at: s);
 			add: best print;
-			add: e logs first bestFitnessValue;
-			add: best fitness;
+			add: e logs first bestFitnessValue asString;
+			add: best fitness asString;
 			yourself ] on: Exception do: [ :err | nil ]] thenSelect: [:d | d notNil ]).
 	
 	data ifNotEmpty: [ 

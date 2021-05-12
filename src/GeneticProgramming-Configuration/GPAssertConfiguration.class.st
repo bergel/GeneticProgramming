@@ -136,7 +136,7 @@ GPAssertConfiguration >> crossover: individual between: children1 and: children2
 GPAssertConfiguration >> crossover: individual1 with: individual2 [
 	| copy |
 	copy := individual1 deepCopy.
-	^ self crossover: copy between: (copy children at: 3) children and: (individual2 withAllChildren allButFirst: 3)
+	^ self crossover: copy between: (copy children at: 3) children and: (individual2 withAllChildren allButFirst: 4)
 ]
 
 { #category : #operations }
@@ -239,7 +239,7 @@ GPAssertConfiguration >> newFunction [
 	node ifNotNil: [
 		node evaluationBlock: [ :n :ctx | n ast ];
 			printBlock: [ :n :ctx | n ast formattedCode ] ]
-		ifNil: [ self halt ].
+		ifNil: [ ^ nil ].
 	^ node
 ]
 
