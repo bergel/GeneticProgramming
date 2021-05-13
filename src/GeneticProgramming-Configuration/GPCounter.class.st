@@ -42,8 +42,8 @@ GPCounter >> initialize [
 	occurrences := Dictionary new
 ]
 
-{ #category : #'as yet unclassified' }
-GPCounter >> occurrencesDictionary [
+{ #category : #accessing }
+GPCounter >> occurrences [
 	^ occurrences 
 ]
 

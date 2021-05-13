@@ -46,7 +46,9 @@ GPMultiObjectiveFitness >> addObjective: association [
 
 { #category : #converting }
 GPMultiObjectiveFitness >> asNumber [ 	
-	^ dictObjective values sum
+	^ dictFunction at: 'asNumber' 
+		ifPresent: [:block | block valueWithEnoughArguments: (Array with: self) ]
+		ifAbsent: [ dictObjective values sum ]
 ]
 
 { #category : #initialization }

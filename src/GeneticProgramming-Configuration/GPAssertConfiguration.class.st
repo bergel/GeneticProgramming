@@ -74,7 +74,7 @@ GPAssertConfiguration >> buildGrammar [
 
 { #category : #accessing }
 GPAssertConfiguration >> contextBlocks: collection [
-	self assert: (collection isCollection and: [ collection notEmpty ]).
+	self assert: (collection isCollection).
 	contextBlocks := collection
 ]
 
@@ -99,7 +99,8 @@ GPAssertConfiguration >> countErrorsGiven: block [
 		sum + ([ block value perform: targetSelector withArguments: args.
 			0 ]
 			on: Exception
-			do: [ :e | e class == AssertionFailure 
+			do: [ :e | "Transcript show: individual print, String cr, args asString, String cr, e class name, '->', e messageText, String cr."
+				e class == AssertionFailure 
 				ifTrue: [ 0 ] 
 				ifFalse: [ 1 ] ])
 	].
@@ -141,17 +142,19 @@ GPAssertConfiguration >> crossover: individual1 with: individual2 [
 
 { #category : #operations }
 GPAssertConfiguration >> distanceFromSolutionOf: individual [
-	| t e |
+	| t e uninstalled |
 	self assert: targetClass notNil.
 	self assert: testClass notNil.
+	uninstalled := false.
 	[ self injectIntoMethod: individual ] on: Exception do: [ 
+		uninstalled := true.
 		self uninstall.
 	].
 	e := self countErrors.
 	t := testClass buildSuite run.
 	individual fitness: (GPMultiObjectiveFitness new 
-		addObjective: 'nRandomErrors' -> e;
-		addObjective: 'nTestErrors' -> (t failureCount + t errorCount);
+		addObjective: 'nRandomErrors' -> (uninstalled ifTrue: [ 30 ] ifFalse: [ e ]);
+		addObjective: 'nTestErrors' -> (uninstalled ifTrue: [ t runCount ] ifFalse: [ (t failureCount + t errorCount)]);
 		addFunctions: (Dictionary new 
 			add: '=' -> [ :f1 :f2 | (f1 objectiveAt: 'nTestErrors') = (f2 objectiveAt: 'nTestErrors') and: [ (f1 objectiveAt: 'nRandomErrors') = (f2 objectiveAt: 'nRandomErrors') ] ];
 			add: '<' -> [ :f1 :f2 | (f1 objectiveAt: 'nTestErrors') < (f2 objectiveAt: 'nTestErrors') 
@@ -165,6 +168,7 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 						ifFalse: [ false ] ]
 					ifTrue: [ true ] ];
 			add: 'shouldTerminate' -> [ :f1 | (f1 objectiveAt: 'nTestErrors') == 0 and: [ (f1 objectiveAt: 'nRandomErrors') == 0 ] ];
+			add: 'asNumber' -> [:f1 | ((f1 objectiveAt: 'nTestErrors') * 0.7) + ((f1 objectiveAt: 'nRandomErrors') * 0.3) ];
 			yourself )).
 	self uninstall.
 	^ individual fitness
@@ -188,7 +192,7 @@ GPAssertConfiguration >> initialize [
 
 { #category : #'as yet unclassified' }
 GPAssertConfiguration >> injectIntoMethod: individual [
-	| "copy" aBehavior rbMethodNode |
+	| aBehavior rbMethodNode |
 	self assert: targetSelector notNil.
 	self assert: targetClass notNil.
 	aBehavior := targetClass instanceSide.
@@ -292,6 +296,11 @@ GPAssertConfiguration >> targetClass: aClass [
 ]
 
 { #category : #accessing }
+GPAssertConfiguration >> targetSelector [
+	^ targetSelector
+]
+
+{ #category : #accessing }
 GPAssertConfiguration >> targetSelector: aSelector [
 	targetSelector := aSelector 
 ]
@@ -299,9 +308,6 @@ GPAssertConfiguration >> targetSelector: aSelector [
 { #category : #accessing }
 GPAssertConfiguration >> targetSelectors [
 	self assert: targetClass notNil.
-	targetSelectors ifEmpty: [ 
-		targetSelectors := targetClass selectors 
-			select: [ :s | s numArgs > 0 ] ].
 	^ targetSelectors
 ]
 

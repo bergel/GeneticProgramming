@@ -4,22 +4,25 @@ Class {
 	#instVars : [
 		'individuals',
 		'options',
-		'configuration',
 		'metrics',
 		'contextBlocks',
 		'packageRegexs',
 		'optionsDict',
 		'directoryName',
 		'results',
-		'nameResultFile'
+		'nameResultFile',
+		'exportVisualization',
+		'targetClass',
+		'testClass',
+		'targetSelectors'
 	],
 	#category : #'GeneticProgramming-Configuration-GPAssert'
 }
 
 { #category : #adding }
 GPAssertion >> addAutomaticallyOptions [
-	self addOptionClasses: (Array with: configuration targetClass name).
-	self addOptionSelectors: (self collectTestingSelectors: (Array with: configuration targetClass)).
+	self addOptionClasses: (Array with: "configuration" targetClass name).
+	self addOptionSelectors: (self collectTestingSelectors: (Array with: "configuration" targetClass)).
 ]
 
 { #category : #adding }
@@ -40,12 +43,11 @@ GPAssertion >> addDataOfNameSelectors: dictionary given: node [
 
 { #category : #adding }
 GPAssertion >> addOptionArgs: collection [
-	configuration addOptionArgs: collection
+	"configuration addOptionArgs: collection"
 ]
 
 { #category : #adding }
 GPAssertion >> addOptionClasses: classNames [
-	"configuration addOptionClasses: classNames."
 	self assert: classNames isCollection.
 	classNames ifNotEmpty: [ 
 		optionsDict at: #class put: classNames
@@ -54,7 +56,6 @@ GPAssertion >> addOptionClasses: classNames [
 
 { #category : #adding }
 GPAssertion >> addOptionSelectors: selectors [
-	"configuration addOptionSelectors: selectors."
 	self assert: selectors isCollection.
 	selectors ifNotEmpty: [ 
 		optionsDict at: #selector put: selectors
@@ -63,26 +64,26 @@ GPAssertion >> addOptionSelectors: selectors [
 
 { #category : #adding }
 GPAssertion >> addRule: symbol withValues: collection [
-	configuration addRule: symbol withValues: collection
+	"configuration addRule: symbol withValues: collection"
 ]
 
 { #category : #adding }
 GPAssertion >> addVariableRule: symbol withValues: collection [
 	self assert: (collection isCollection and: [ collection notEmpty ]).
-	configuration addVariableRule: symbol withValues: collection
+	"configuration addVariableRule: symbol withValues: collection"
 ]
 
 { #category : #'as yet unclassified' }
 GPAssertion >> calculateCallsMetric: tSelector [
 	| t originalMethod aBehavior |
-	self assert: configuration testClass notNil.
-	self assert: configuration targetClass notNil.
-	aBehavior := configuration targetClass instanceSide.
+	self assert: testClass isClass.
+	self assert: targetClass isClass.
+	aBehavior := targetClass instanceSide.
 	originalMethod := aBehavior compiledMethodAt: tSelector.
 	[ self injectInto: tSelector given: originalMethod ] on: Exception do: [ 
 		self uninstallOf: originalMethod.
 	].
-	t := configuration testClass buildSuite run.
+	t := testClass buildSuite run.
 	metrics at: 'numCalls'
 		ifAbsentPut: [ Dictionary new ].
 	(metrics at: 'numCalls') at: tSelector put: (GPCounter instance occurrencesOf: tSelector).
@@ -90,12 +91,11 @@ GPAssertion >> calculateCallsMetric: tSelector [
 ]
 
 { #category : #'as yet unclassified' }
-GPAssertion >> calculateErrorMetric: tSelector given: protocol [
-	| tC val res |
-	self assert: configuration targetClass notNil.
-	tC := configuration targetClass.
+GPAssertion >> calculateErrorMetric: tSelector given: protocol and: configuration [
+	|  val res |
+	self assert: targetClass isClass.
 	val := contextBlocks
-		ifEmpty: [ res := [ self countErrors: tSelector given: protocol and: [tC new] ] on: Exception do: [ Array with: 0 with: self options ].
+		ifEmpty: [ res := [ self countErrors: tSelector given: protocol and: [targetClass new] ] on: Exception do: [ Array with: 0 with: self options ].
 			configuration options: res second.
 			OrderedCollection new add: res first; yourself ] 
 		ifNotEmpty: [ contextBlocks collect: [ :block | 
@@ -108,16 +108,16 @@ GPAssertion >> calculateErrorMetric: tSelector given: protocol [
 ]
 
 { #category : #'as yet unclassified' }
-GPAssertion >> calculateMetrics: tSelector given: protocol [
-	self calculateErrorMetric: tSelector given: protocol.
+GPAssertion >> calculateMetrics: tSelector given: protocol and: configuration [
+	self calculateErrorMetric: tSelector given: protocol and: configuration.
 	self calculateCallsMetric: tSelector 
 ]
 
 { #category : #'as yet unclassified' }
 GPAssertion >> calculateNumberOfFailures [ 
 	| t |
-	self assert: configuration testClass notNil.
-	t := configuration testClass buildSuite run.
+	self assert: testClass isClass.
+	t := testClass buildSuite run.
 	^ t errorCount + t failureCount 
 ]
 
@@ -131,8 +131,7 @@ GPAssertion >> collectTestingSelectors: classes [
 { #category : #accessing }
 GPAssertion >> contextBlocks: collection [
 	self assert: (collection isCollection and: [ collection notEmpty ]).
-	contextBlocks := collection.
-	configuration contextBlocks: collection 
+	contextBlocks := collection
 ]
 
 { #category : #'as yet unclassified' }
@@ -165,26 +164,34 @@ GPAssertion >> directoryName: string [
 	directoryName := string
 ]
 
-{ #category : #accessing }
-GPAssertion >> filename [
+{ #category : #operations }
+GPAssertion >> ensureDirectory [ 
 	(directoryName notNil and: [directoryName notEmpty ])
+		ifFalse: [ ^ self ]
 		ifTrue: [ | directory ref |
 			directory := FileSystem disk workingDirectory.
 			ref := directory / directoryName.
 			ref ensureCreateDirectory
-		].
+		]
+]
+
+{ #category : #accessing }
+GPAssertion >> exportVisualization: boolean [
+	self assert: (boolean or: [ boolean not ]).
+	exportVisualization := boolean
+]
+
+{ #category : #accessing }
+GPAssertion >> filename [
+	self ensureDirectory.
 	^ ((directoryName ifNil: [ '' ] ifNotNil: [ directoryName ifEmpty: [ directoryName ] ifNotEmpty: [ directoryName, '/' ] ]) , 
-		configuration targetClass name, '.csv') asFileReference 
+		targetClass name, '.csv') asFileReference 
 ]
 
 { #category : #'as yet unclassified' }
-GPAssertion >> getBestIndividual: aSelector given: index [
+GPAssertion >> getBestIndividual: configuration [
 	| engine |
 	engine := GPEngine new.
-	configuration 
-		targetSelector: aSelector;
-		options: self options;
-		index: index.
 	"dictDepth at: aSelector ifPresent: [ :n | configuration depth: n ]."
 	engine configuration: configuration.
 	engine execute.
@@ -192,16 +199,37 @@ GPAssertion >> getBestIndividual: aSelector given: index [
 ]
 
 { #category : #'as yet unclassified' }
-GPAssertion >> getBestIndividualGiven: aSelector [
+GPAssertion >> getBestIndividual: configuration given: index [
 	| engine |
 	engine := GPEngine new.
-	configuration 
-		targetSelector: aSelector";
-		options: self options".
+	configuration index: index.
 	"dictDepth at: aSelector ifPresent: [ :n | configuration depth: n ]."
 	engine configuration: configuration.
 	engine execute.
 	^ engine "pickBestIndividual "
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertion >> getSelectorCandidates [
+	| numberOfFailures dict |
+	numberOfFailures := self calculateNumberOfFailures.
+	dict := (targetClass methods collect: [ :cMethod |
+		cMethod selector -> cMethod protocol	
+	]) asDictionary.
+	^ targetSelectors collect: [ :tSelector | | configuration |
+		configuration := GPAssertConfiguration new
+			targetClass: targetClass;
+			targetSelectors: targetSelectors;
+			contextBlocks: contextBlocks;
+			testClass: testClass;
+			targetSelector: tSelector;
+			numberOfFailures: numberOfFailures;
+			addOptionClasses: (optionsDict at: #class ifAbsent: [#()]);
+			addOptionSelectors: (optionsDict at: #selector ifAbsent: [#()]).
+		self calculateMetrics: tSelector given: (dict at: tSelector ifAbsent: [ nil ]) and: configuration.
+		tSelector -> configuration
+		] thenSelect: [ :assoc | ((metrics at: 'numCalls') at: assoc key ifAbsent: [0]) > 0 ]
+	
 ]
 
 { #category : #accessing }
@@ -211,7 +239,7 @@ GPAssertion >> individuals [
 
 { #category : #initialization }
 GPAssertion >> initialize [
-	configuration := GPAssertConfiguration new.
+	targetSelectors := OrderedCollection new.
 	options := OrderedCollection new.
 	metrics := Dictionary new.
 	contextBlocks := OrderedCollection new.
@@ -219,7 +247,8 @@ GPAssertion >> initialize [
 	optionsDict := Dictionary new.
 	directoryName := ''.
 	results := OrderedCollection new.
-	nameResultFile := 'result'
+	nameResultFile := 'result'.
+	exportVisualization := false
 ]
 
 { #category : #'as yet unclassified' }
@@ -228,7 +257,7 @@ GPAssertion >> injectInto: tSelector given: originalMethod [
 	rbMethodNode := RBParser
 		parseMethod: originalMethod sourceCode.
 	rbMethodNode body addNodeFirst: (RBParser parseExpression: 'GPCounter addOccurrence: ''', tSelector, '''').
-	configuration targetClass compile: rbMethodNode printString notifying: nil.
+	targetClass compile: rbMethodNode printString notifying: nil.
 ]
 
 { #category : #accessing }
@@ -281,28 +310,19 @@ GPAssertion >> options: collection [
 
 { #category : #running }
 GPAssertion >> run [
-	| dict |
-	self assert: configuration targetClass notNil.
-	configuration 
-		numberOfFailures: self calculateNumberOfFailures;
-		addOptionClasses: (optionsDict at: #class ifAbsent: [#()]);
-		addOptionSelectors: (optionsDict at: #selector ifAbsent: [#()])";
-		depth: 3".
-	configuration targetSelectors ifEmpty: [ 
+	| associations |
+	self assert: targetClass isClass.
+	self assert: testClass isClass.
+	self targetSelectors ifEmpty: [ 
 		individuals := Dictionary new.
 		^ self ].
 	GPCounter reset.
-	dict := (configuration targetClass methods collect: [ :cMethod |
-		cMethod selector -> cMethod protocol	
-	]) asDictionary.
+	associations := self getSelectorCandidates.
 	individuals := Dictionary 
-		newFromAssociations: (configuration targetSelectors 
-			select: [ :tSelector |
-				self calculateMetrics: tSelector given: (dict at: tSelector ifAbsent: [ nil ]).
-				((metrics at: 'numCalls') at: tSelector ifAbsent: [ 0 ]) > 0 ]
-			thenCollect: [:tSelector |
-				tSelector -> (self getBestIndividualGiven: tSelector) ]).
-	self summaryOfEvolutionData
+		newFromAssociations: (associations collect: [:assoc | 
+			assoc key -> (self getBestIndividual: assoc value)]).
+	self summaryOfEvolutionData.
+	exportVisualization ifTrue: [ self exportEvolutionGraphic ] 
 ]
 
 { #category : #running }
@@ -314,60 +334,41 @@ GPAssertion >> runAllClasses [
 		self selectPackageClasses: regex	
 	].
 	selectedClasses := self selectCandidateClasses: packageClasses.
-	"selectedClasses := packageRegexs flatCollect: [ :regex | 
-		           self selectCandidateClasses: regex ]."
-	selectedClasses do: [ :cl | 
-		configuration := GPAssertConfiguration new.
-		self targetClass: cl.
-		self testClass: (self class environment at: cl name , 'Test').
-		self options: self options.
-		self addOptionClasses: (packageClasses collect: #name).
-		self addOptionSelectors: (self collectTestingSelectors: packageClasses).
-		(optionsDict at: #class ifAbsent: [ #() ]) ifNotEmpty: [ self addOptionClasses: (optionsDict at: #class)].
-		(optionsDict at: #selector ifAbsent: [ #() ] ) ifNotEmpty: [ self addOptionSelectors: (optionsDict at: #selector) ].
-		self run.
-		individuals ifNotEmpty: [ self writeOnCsv ] ]
+	self runOn: selectedClasses given: packageClasses 
 ]
 
 { #category : #running }
-GPAssertion >> runAllClasses: collection [
+GPAssertion >> runAllClassesExcept: collection [
 
-	| selectedClasses packageClasses |
-	self assert: packageRegexs notEmpty.
+	| packageClasses selectedClasses |
 	packageClasses := packageRegexs flatCollect: [ :regex | 
 		self selectPackageClasses: regex	
 	].
 	selectedClasses := (self selectCandidateClasses: packageClasses) reject: [:cls |
 		collection includes: cls	
 	].
-	"selectedClasses := packageRegexs flatCollect: [ :regex | 
-		           self selectCandidateClasses: regex ]."
-	selectedClasses do: [ :cl | 
-		configuration := GPAssertConfiguration new.
+	self runOn: selectedClasses given: packageClasses 
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertion >> runOn: classes given: packageClasses [
+	classes do: [ :cl | 
 		self targetClass: cl.
 		self testClass: (self class environment at: cl name , 'Test').
 		self options: self options.
 		self addOptionClasses: (packageClasses collect: #name).
 		self addOptionSelectors: (self collectTestingSelectors: packageClasses).
-		(optionsDict at: #class ifAbsent: [ #() ]) ifNotEmpty: [ self addOptionClasses: (optionsDict at: #class)].
-		(optionsDict at: #selector ifAbsent: [ #() ] ) ifNotEmpty: [ self addOptionSelectors: (optionsDict at: #selector) ].
+		(optionsDict at: #class ifAbsent: [ #() ]) 
+			ifNotEmpty: [ self addOptionClasses: (optionsDict at: #class)].
+		(optionsDict at: #selector ifAbsent: [ #() ] ) 
+			ifNotEmpty: [ self addOptionSelectors: (optionsDict at: #selector) ].
 		self run.
 		individuals ifNotEmpty: [ self writeOnCsv ] ]
-]
-
-{ #category : #running }
-GPAssertion >> runAllClassesExcept: collection [
-
-	self runAllClasses: collection
 ]
 
 { #category : #'as yet unclassified' }
 GPAssertion >> selectCandidateClasses: classes [
 	| names |
-	"packages := RPackageOrganizer default packages select: [:p | regex match: p name asString ].
-	classes := packages 
-					inject: #() 
-					into: [:sum :el | sum, (el classes reject: #isTrait) asOrderedCollection ]."
 	names := classes collect: #name thenSelect: [:n | n endsWith: 'Test'].
 	^ (classes reject: [ :c | c name endsWith: 'Test' ]) 
 		select: [ :c | names includes: c name, 'Test' ].
@@ -380,26 +381,28 @@ GPAssertion >> selectPackageClasses: regex [
 	packages := RPackageOrganizer default packages select: [:p | regex match: p name asString ].
 	^ ((packages 
 			inject: #() 
-			into: [:sum :el | sum, (el classes reject: #isTrait) asOrderedCollection ]) asSet) asOrderedCollection sort: [ :cl1 :cl2 | cl1 name < cl2 name ]..
+			into: [:sum :el | sum, (el classes reject: #isTrait) asOrderedCollection ]) asSet) asOrderedCollection sort: [ :cl1 :cl2 | cl1 name < cl2 name ]
 ]
 
 { #category : #'as yet unclassified' }
 GPAssertion >> summaryOfEvolutionData [
-	| col nCalledMets nSuccMets nEvolMets nSuccEvolMets dictMessages |
+	| col nCalledMets nSuccMets nEvolMets nSuccEvolMets dictMessages numFailures |
 	col := OrderedCollection new
-		add: configuration targetClass name;
-		add: configuration targetSelectors size;
-		add: configuration numberOfFailures;
+		add: targetClass name;
+		add: targetSelectors size;
 		yourself.
+	numFailures := 0.
 	dictMessages := Dictionary new.
 	nCalledMets := nSuccMets := nEvolMets := nSuccEvolMets := 0.
-	individuals associationsDo: [ :assoc | 
+	individuals associationsDo: [ :assoc | | eng |
+		eng := assoc value. 
 		((metrics at: 'numCalls') at: assoc key) > 0 ifTrue: [ | bestFitness bestIndiv |
 			nCalledMets := nCalledMets + 1.
-			(assoc value population isEmpty or: [ assoc value population allSatisfy: #isNil ])
-				ifFalse: [ 
-					bestFitness := assoc value logs first bestFitnessValue.
-					bestIndiv := assoc value pickBestIndividual. 
+			(eng population isEmpty or: [ eng population allSatisfy: #isNil ])
+				ifFalse: [
+					numFailures := eng configuration numberOfFailures. 
+					bestFitness := eng logs first bestFitnessValue.
+					bestIndiv := eng pickBestIndividual. 
 					bestIndiv fitness == 0 ifTrue: [ nSuccMets := nSuccMets + 1 ].
 					bestFitness > bestIndiv fitness ifTrue: [ 
 						nEvolMets := nEvolMets + 1.
@@ -408,6 +411,7 @@ GPAssertion >> summaryOfEvolutionData [
 		]
 	].
 	col 
+		add: numFailures;
 		add: nCalledMets;
 		add: nSuccMets; 
 		add: nEvolMets; 
@@ -422,8 +426,8 @@ GPAssertion >> summaryOfEvolutionData [
 
 { #category : #accessing }
 GPAssertion >> targetClass: aClass [
-	self assert: aClass notNil.
-	configuration targetClass: aClass 
+	self assert: aClass isClass.
+	targetClass := aClass
 ]
 
 { #category : #'as yet unclassified' }
@@ -433,22 +437,30 @@ GPAssertion >> targetPackageRegexs: collection [
 ]
 
 { #category : #accessing }
+GPAssertion >> targetSelectors [
+	targetSelectors ifEmpty: [ 
+		targetSelectors := targetClass selectors 
+			select: [ :s | s numArgs > 0 ] ].
+	^ targetSelectors 
+]
+
+{ #category : #accessing }
 GPAssertion >> targetSelectors: collection [
 	self assert: (collection isCollection and: [ collection notEmpty ]).
-	configuration targetSelectors: collection 
+	targetSelectors := collection
 	
 ]
 
 { #category : #accessing }
 GPAssertion >> testClass: aClass [
-	self assert: aClass notNil.
-	configuration testClass: aClass 
+	self assert: aClass isClass.
+	testClass := aClass
 ]
 
 { #category : #'as yet unclassified' }
 GPAssertion >> uninstallOf: originalMethod [
-	self assert: configuration targetClass notNil.
-	configuration targetClass methodDict at: originalMethod selector put: originalMethod 
+	self assert: targetClass isClass.
+	targetClass methodDict at: originalMethod selector put: originalMethod 
 ]
 
 { #category : #writing }
@@ -456,13 +468,13 @@ GPAssertion >> writeOnCsv [
 	| data  |
 	self assert: individuals notEmpty.
 	self assert: metrics notEmpty.
-	data := (configuration targetSelectors collect: [ :s | | best e |
+	data := (targetSelectors collect: [ :s | | best e |
 		e := individuals at: s ifAbsent: [ nil ].
 		[ best := e pickBestIndividual.
 		OrderedCollection new 
-			add: configuration targetClass;
+			add: e configuration targetClass;
 			add: s;
-			add: configuration numberOfFailures;
+			add: e configuration numberOfFailures;
 			add: ((metrics at: 'numErrors') at: s);
 			add: ((metrics at: 'numCalls') at: s);
 			add: best print;
