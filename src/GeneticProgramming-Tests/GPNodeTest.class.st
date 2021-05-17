@@ -660,3 +660,26 @@ GPNodeTest >> testNodeValueForMessageNode [
 	
 
 ]
+
+{ #category : #tests }
+GPNodeTest >> testReplaceBy [
+	| node replacement |
+	node := GPNode new id: #E; type: RBMessageNode; 
+		printBlock: [ :n :ctx | n ast formattedCode ];
+		children: (OrderedCollection new 
+			add: (GPLeafNode new id: #F; nodeValue: 4; type: RBLiteralNode; printBlock: [:n :ctx | n nodeValue asString ]);
+			add: (GPSelectorNode new id: #Add; nodeValue: #+; printBlock: [:n :ctx | n nodeValue ]);
+			add: (GPLeafNode new id: #F; nodeValue: 7; type: RBLiteralNode; printBlock: [:n :ctx | n nodeValue asString ]);
+			yourself).
+	replacement := GPNode new id: #E; type: RBMessageNode; 
+		printBlock: [ :n :ctx | n ast formattedCode ];
+		children: (OrderedCollection new 
+			add: (GPLeafNode new id: #G; nodeValue: 12; type: RBLiteralNode; printBlock: [:n :ctx | n nodeValue asString ]);
+			add: (GPSelectorNode new id: #Add; nodeValue: #-; printBlock: [:n :ctx | n nodeValue ]);
+			add: (GPLeafNode new id: #F; nodeValue: 8; type: RBLiteralNode; printBlock: [:n :ctx | n nodeValue asString ]);
+			yourself).
+	self assert: node print equals: '4 + 7'.
+	self assert: replacement print equals: '12 - 8'.
+	node replaceBy: replacement.
+	self assert: node print equals: '12 - 8'
+]

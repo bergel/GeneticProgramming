@@ -34,6 +34,7 @@ GPAssertionGrammarBuilder >> buildAssertionGrammarGiven: tgClass [
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Message1 #Args1);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Satisfy #Message);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Method #And #Block);
+		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Comparison #Integer);
 		addSelectorRule: #Assert withValues: #(#assert:);
 		addSelectorRule: #Message withValues: #(#isString #isInteger #isFloat #isNumber #isFinite #isCharacter #isCollection #isArray #isSymbol #isColor #isBlock #isEmpty #notEmpty #isNil #notNil #positive #negative #isPoint);
 		addSelectorRule: #Message1 withValues: #(#isKindOf: #isMemberOf:);
@@ -45,6 +46,7 @@ GPAssertionGrammarBuilder >> buildAssertionGrammarGiven: tgClass [
 		addRule: #Args1 withCollectionOptions: #(#Class) ofSize: 1;
 		addRule: #Block ofClass: RBBlockNode withSequence: #(#Method);
 		addLeafRule: #Self ofClass: RBVariableNode withValues: #('self');
+		addLeafRule: #Integer ofClass: RBLiteralNode withValues: (-10 to: 10) asOrderedCollection;
 		addLeafRule: #Class ofClass: RBVariableNode  withValues: #(#ByteString #Point #Character #Symbol #SmallInteger #Number #SmallFloat64 #Boolean #Collection #Array #BlockClosure #Dictionary #Set #OrderedCollection).
 	instVars := self instanceVarsOf: tgClass.
 	instVars ifNotEmpty: [ 

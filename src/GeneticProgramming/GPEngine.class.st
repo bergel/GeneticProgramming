@@ -83,11 +83,13 @@ GPEngine >> execute [
 	self createInitialPopulation.
 	(population allSatisfy: #notNil) ifFalse: [ ^ self ].
 	self rankedIndividuals.
+	"population do: [ :ind | Transcript show: ind print, String cr ]."
 	(1 to: configuration numberOfGenerations)
 		do: [ :gen | 
 			| rInds |
 			self createNewGeneration.
 			(population allSatisfy: #notNil) ifFalse: [ ^ self ].
+			"population do: [ :ind | Transcript show: ind print, String cr ]."
 			rInds := self rankedIndividuals.
 			log := GPLog new.
 			log generation: gen.
@@ -178,12 +180,6 @@ GPEngine >> pickBestIndividual [
 ]
 
 { #category : #'as yet unclassified' }
-GPEngine >> pickFitIndividuals [
-	"return the list of individuals that are considered as fit"
-	^ self returnTopIndividuals: 0.5
-]
-
-{ #category : #'as yet unclassified' }
 GPEngine >> pickWorstIndividual [
 	"^ self rankedIndividuals last key"
 	^ self sortedIndividuals last key
@@ -220,13 +216,6 @@ GPEngine >> rankedIndividuals [
 { #category : #'as yet unclassified' }
 GPEngine >> ratioOfDifferentIndividualsIn: setOfIndividuals [
 	^ ((self numberOfDifferentIndividualsIn: setOfIndividuals) / setOfIndividuals size) asFloat round: 2
-]
-
-{ #category : #'as yet unclassified' }
-GPEngine >> returnTopIndividuals: ratio [
-	"return the list of individuals that are considered as fit"
-	^ self rankedIndividuals copyFrom: 1 to: (population size * ratio) asInteger
-
 ]
 
 { #category : #'as yet unclassified' }

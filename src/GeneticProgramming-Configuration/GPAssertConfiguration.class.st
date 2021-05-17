@@ -102,8 +102,9 @@ GPAssertConfiguration >> countErrorsGiven: block [
 			do: [ :e | "Transcript show: individual print, String cr, args asString, String cr, e class name, '->', e messageText, String cr."
 				e class == AssertionFailure 
 				ifTrue: [ 0 ] 
-				ifFalse: [ 1 ] ])
-	].
+				ifFalse: [ 1 "e class == MessageNotUnderstood 
+					ifTrue: [ 0 ] 
+					ifFalse: [ 1 ]" ] ] ) ] .
 	^ res
 ]
 
@@ -122,22 +123,27 @@ GPAssertConfiguration >> crossover: individual between: children1 and: children2
 		detect: [ :nodeId |
 			indexes := random shuffleElementsOf: (individual indexesOf: nodeId on: childIds).
 			indexes notEmpty ] 
-		ifFound: [ :nodeId | children1 at: (random randomlySelect: (individual indexesOf: nodeId on: ids)) put: (children2 at: (random randomlySelect: indexes)) deepCopy.
+		ifFound: [ :nodeId | 
+			"children1 at: (random randomlySelect: (individual indexesOf: nodeId on: ids)) put: (children2 at: (random randomlySelect: indexes)) deepCopy."
+			(children1 at: (random randomlySelect: (individual indexesOf: nodeId on: ids))) replaceBy: (children2 at: (random randomlySelect: indexes)) deepCopy.
 			^ individual ] 
-		ifNone: [
+		"ifNone: [
 			children1 
 				detect: [ :child | | ind |
 					ind := self crossover: individual between: child children and: children2.
 					ind notNil ]
-				ifFound: [ ^ individual ] ].
+				ifFound: [ ^ individual ] ]".
 	^ nil
 ]
 
 { #category : #'as yet unclassified' }
 GPAssertConfiguration >> crossover: individual1 with: individual2 [
-	| copy |
+	| copy i |
 	copy := individual1 deepCopy.
-	^ self crossover: copy between: (copy children at: 3) children and: (individual2 withAllChildren allButFirst: 4)
+	i := (((copy children at: 3) children collect: #id) includes: #Method) 
+		ifTrue: [ 3 ] 
+		ifFalse: [ 4 ].
+	^ self crossover: copy between: (copy withAllChildren allButFirst: 4) "(copy children at: 3) children" and: (individual2 withAllChildren allButFirst: i "4")
 ]
 
 { #category : #operations }
@@ -208,20 +214,24 @@ GPAssertConfiguration >> injectIntoMethod: individual [
 
 { #category : #operations }
 GPAssertConfiguration >> mutate: individual [
-	| source children nodeToMutate indivIds sourceIds sceChildren |
-	children := GPRandom instance shuffleElementsOf: (individual withAllChildren allButFirst: 3).
-	source := self newTerminal.
+	self mutate: individual with: self newTerminal.
+]
+
+{ #category : #operations }
+GPAssertConfiguration >> mutate: individual with: source [
+	| children indivIds sceChildren sourceIds nodeToMutate node |
+	children := GPRandom instance shuffleElementsOf: (individual withAllChildren allButFirst: 4).
 	indivIds := children collect: #id.
-	sceChildren := source withAllChildren allButFirst: 3.
+	sceChildren := source withAllChildren allButFirst: 4.
 	sourceIds := sceChildren collect: #id.
 	(indivIds includesAny: sourceIds) ifFalse: [ ^ self ].
 	nodeToMutate := children at: (indivIds indexOfAnyOf: sourceIds).
-	source := sceChildren at: (sourceIds indexOf: nodeToMutate id).
-	nodeToMutate evaluationBlock: source evaluationBlock.
-	nodeToMutate printBlock: source printBlock.
-	nodeToMutate type: source type.
-	nodeToMutate children: source children.
-	nodeToMutate nodeValue: source nodeValue
+	node := sceChildren at: (sourceIds indexOf: nodeToMutate id).
+	nodeToMutate evaluationBlock: node evaluationBlock.
+	nodeToMutate printBlock: node printBlock.
+	"nodeToMutate type: node type."
+	nodeToMutate children: node children.
+	nodeToMutate nodeValue: node nodeValue
 ]
 
 { #category : #hooks }

@@ -253,6 +253,17 @@ GPAbstractNode >> printUsing: context [
 ]
 
 { #category : #accessing }
+GPAbstractNode >> replaceBy: anotherNode [
+	self assert: anotherNode class == self class.
+	self id: anotherNode id;
+		"type: anotherNode type;"
+		nodeValue: anotherNode nodeValue;
+		printBlock: anotherNode printBlock;
+		evaluationBlock: anotherNode evaluationBlock;
+		children: anotherNode children 
+]
+
+{ #category : #accessing }
 GPAbstractNode >> second [
 	^ children second
 ]

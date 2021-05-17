@@ -10,6 +10,17 @@ GPLeafNodeTest >> testDeepCopy [
 ]
 
 { #category : #tests }
+GPLeafNodeTest >> testReplaceBy [
+	| node replacement |
+	node := GPLeafNode new id: #E; type: RBLiteralNode; nodeValue: 1; printBlock: [ :n :ctx | n nodeValue asString ].
+	replacement := GPLeafNode new id: #E; type: RBLiteralNode; nodeValue: 5; printBlock: [ :n :ctx | n nodeValue asString ].
+	self assert: node print equals: '1'.
+	self assert: replacement print equals: '5'.
+	node replaceBy: replacement.
+	self assert: node print equals: '5'
+]
+
+{ #category : #tests }
 GPLeafNodeTest >> testSelectOptionNodeGiven [
 	| opts config node |
 	config := GPConfiguration new

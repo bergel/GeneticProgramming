@@ -12,6 +12,17 @@ GPMessageNodeTest >> testDeepCopy [
 ]
 
 { #category : #tests }
+GPMessageNodeTest >> testReplaceBy [
+	| node replacement |
+	node := GPSelectorNode new id: #Add; nodeValue: #+; printBlock: [ :n :ctx | n nodeValue ].
+	replacement := GPSelectorNode new id: #Add; nodeValue: #-; printBlock: [ :n :ctx | n nodeValue ].
+	self assert: node print equals: '+'.
+	self assert: replacement print equals: '-'.
+	node replaceBy: replacement.
+	self assert: node print equals: '-'
+]
+
+{ #category : #tests }
 GPMessageNodeTest >> testSelectOptionNodeGiven [
 	| opts config node |
 	config := GPConfiguration new
