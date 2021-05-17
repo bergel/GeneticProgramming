@@ -5,7 +5,8 @@ Class {
 		'bestFitnessValue',
 		'averageFitness',
 		'generation',
-		'worstFitnessValue'
+		'worstFitnessValue',
+		'population'
 	],
 	#category : #'GeneticProgramming-Core'
 }
@@ -31,13 +32,29 @@ GPLog >> bestFitnessValue: aNumber [
 ]
 
 { #category : #accessing }
-GPLog >> generation [
+GPLog >> generation [ 
 	^ generation
 ]
 
 { #category : #accessing }
 GPLog >> generation: aNumber [
 	generation := aNumber
+]
+
+{ #category : #initialization }
+GPLog >> initialize [ 
+	population := OrderedCollection new
+]
+
+{ #category : #accessing }
+GPLog >> population [ 
+	^ population
+]
+
+{ #category : #accessing }
+GPLog >> population: collection [
+	self assert: (collection isCollection and: [ collection notEmpty ]).
+	population := collection
 ]
 
 { #category : #accessing }

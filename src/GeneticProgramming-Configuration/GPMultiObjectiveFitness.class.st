@@ -63,6 +63,11 @@ GPMultiObjectiveFitness >> objectiveAt: key [
 	^ dictObjective at: key
 ]
 
+{ #category : #'as yet unclassified' }
+GPMultiObjectiveFitness >> objectives [
+	^ dictObjective associations 
+]
+
 { #category : #printing }
 GPMultiObjectiveFitness >> printOn: stream [
 	dictObjective associationsDo: [ :assoc | 

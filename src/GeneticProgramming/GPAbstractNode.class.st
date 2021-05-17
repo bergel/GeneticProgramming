@@ -9,7 +9,11 @@ Class {
 		'printBlock',
 		'depth',
 		'fitness',
-		'nodeValue'
+		'nodeValue',
+		'parents',
+		'position',
+		'generation',
+		'childrenByGeneration'
 	],
 	#category : #'GeneticProgramming-Core'
 }
@@ -17,6 +21,18 @@ Class {
 { #category : #accessing }
 GPAbstractNode >> addChild: aNode [
 	children add: aNode
+]
+
+{ #category : #accessing }
+GPAbstractNode >> addChildByGeneration: aNode [
+	self assert: aNode notNil.
+	childrenByGeneration add: aNode
+]
+
+{ #category : #adding }
+GPAbstractNode >> addParent: aNode [
+	parents add: aNode.
+	aNode addChildByGeneration: self.
 ]
 
 { #category : #accessing }
@@ -37,6 +53,24 @@ GPAbstractNode >> allLeaves: collection [
 ]
 
 { #category : #accessing }
+GPAbstractNode >> allParents [ 
+	| col |
+	col := OrderedCollection new.
+	self allParents: self on: col using: Set new.
+	^ col
+]
+
+{ #category : #'as yet unclassified' }
+GPAbstractNode >> allParents: node on: collection using: set [
+	node parents 
+		reject: [ :obj | (set includes: obj generation -> obj position) ]
+		thenDo: [ :obj | 
+			set add: obj generation -> obj position.
+			collection add: obj.
+			self allParents: obj on: collection using: set ]
+]
+
+{ #category : #accessing }
 GPAbstractNode >> ast [
 	^ self generateAST: GPReplacementVisitor new
 ]
@@ -53,7 +87,7 @@ GPAbstractNode >> atIndex: index put: anotherNode [
 	i := index.
 	i := i - 1.
 	self children doWithIndex: [ :child :ii |
-		i = 1 ifTrue: [  self children at: ii put: anotherNode. ^ self ].
+		i = 1 ifTrue: [ self children at: ii put: anotherNode. ^ self ].
 		child atIndex: i put: anotherNode.
 		i := i - 1. ].
 	
@@ -67,6 +101,11 @@ GPAbstractNode >> children [
 { #category : #accessing }
 GPAbstractNode >> children: someNodes [
 	children := someNodes
+]
+
+{ #category : #accessing }
+GPAbstractNode >> childrenByGeneration [
+	^ childrenByGeneration
 ]
 
 { #category : #copying }
@@ -88,6 +127,14 @@ GPAbstractNode >> depth [
 { #category : #accessing }
 GPAbstractNode >> depth: aNumber [
 	depth := aNumber
+]
+
+{ #category : #accessing }
+GPAbstractNode >> elements [ 
+	^ #()
+	"^ self withAllChildren
+		collect: [ :n | GPElementNode new
+			id: n id ]"
 ]
 
 { #category : #initialization }
@@ -149,6 +196,17 @@ GPAbstractNode >> generateAST: visitor [
 ]
 
 { #category : #accessing }
+GPAbstractNode >> generation [ 
+	^ generation
+]
+
+{ #category : #accessing }
+GPAbstractNode >> generation: aNumber [
+	self assert: aNumber isInteger.
+	generation := aNumber
+]
+
+{ #category : #accessing }
 GPAbstractNode >> id [
 	^ id
 ]
@@ -172,7 +230,10 @@ GPAbstractNode >> initialize [
 
 	super initialize.
 	children := OrderedCollection new.
-	depth := 0
+	parents := OrderedCollection new.
+	childrenByGeneration := OrderedCollection new.
+	depth := 0.
+	position := 0
 ]
 
 { #category : #testing }
@@ -221,6 +282,22 @@ GPAbstractNode >> nodeValue: anObject [
 { #category : #metrics }
 GPAbstractNode >> numberOfNodes [
 	^ self withAllChildren size
+]
+
+{ #category : #accessing }
+GPAbstractNode >> parents [ 
+	^ parents
+]
+
+{ #category : #accessing }
+GPAbstractNode >> position [
+	^ position
+]
+
+{ #category : #accessing }
+GPAbstractNode >> position: number [
+	self assert: (number isInteger and: [ number > 0 ]).
+	position := number
 ]
 
 { #category : #initialization }

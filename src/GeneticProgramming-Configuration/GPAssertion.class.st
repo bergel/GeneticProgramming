@@ -175,6 +175,61 @@ GPAssertion >> ensureDirectory [
 		]
 ]
 
+{ #category : #writing }
+GPAssertion >> exportData: engine on: filename [
+	| data metricNames generation |
+	self assert: engine notNil.
+	self assert: (filename isString and: [ filename notEmpty ]).
+	metricNames := OrderedCollection new.
+	generation := 0.
+	data := (engine logs flatCollect: [ :log | | position |
+		position := 1. 
+		generation := generation + 1.
+		log population collect: [ :ind | | col ableToAdd |
+			ind generation: generation;
+			position: position.
+			col := OrderedCollection new 
+				add: ind generation;
+				add: ind position;
+				add: ind fitness asNumber;
+				yourself.
+			ableToAdd := metricNames isEmpty.
+			col addAll: (ind fitness objectives collect: [ :assoc | 
+				ableToAdd ifTrue: [ metricNames add: assoc key ].
+				assoc value ]).
+			position := position + 1.
+			col
+		] ]).
+	data ifNotEmpty: [ 
+		filename asFileReference writeStreamDo: [ :stream |
+			(NeoCSVWriter on: stream)
+				nextPut: #(Generation Id Fitness), metricNames asArray;
+				nextPutAll: data;
+				flush ] 
+	]
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertion >> exportEvolutionData [
+	| dName |
+	self ensureDirectory.
+	dName := directoryName 
+		ifNil: [ '' ] 
+		ifNotNil: [ directoryName 
+			ifEmpty: [ directoryName ] 
+			ifNotEmpty: [ directoryName, '/' ] ].
+	individuals valuesDo: [ :eng | | filename |
+		filename := String streamContents: [ :stream | 
+			stream
+				nextPutAll: dName; 
+				nextPutAll: targetClass name;
+				nextPut: $_;
+				nextPutAll: eng configuration targetSelector;
+				nextPutAll: '_Data.csv' ].
+		self exportData: eng on: filename
+	]
+]
+
 { #category : #accessing }
 GPAssertion >> exportVisualization: boolean [
 	self assert: (boolean or: [ boolean not ]).
@@ -322,6 +377,7 @@ GPAssertion >> run [
 		newFromAssociations: (associations collect: [:assoc | 
 			assoc key -> (self getBestIndividual: assoc value)]).
 	self summaryOfEvolutionData.
+	self exportEvolutionData.
 	exportVisualization ifTrue: [ self exportEvolutionGraphic ] 
 ]
 

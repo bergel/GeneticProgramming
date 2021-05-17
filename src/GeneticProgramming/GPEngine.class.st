@@ -36,15 +36,19 @@ GPEngine >> createNewGeneration [
 	self pickBestIndividual fitness shouldTerminate ifTrue: [ ^ self ].
 	newPopulation := "OrderedCollection new." self eliteOfPopulation.
 	population size - newPopulation size timesRepeat: [ 
-		| number |
+		| number parent |
 		number := configuration randomInt: 100.
 		number <= 90
 			ifTrue: [ 
 				i1 := self tournament.
 				i2 := self tournament.
+				parent := i1.
 				newInd := configuration crossover: i1 with: i2.
 				newInd ifNil: [ newInd := i1 deepCopy ] ]
-			ifFalse: [newInd := self tournament deepCopy ].
+			ifFalse: [ 
+				parent := self tournament.
+				newInd := parent deepCopy ].
+		newInd addParent: parent.
 		number := configuration randomInt: 100.
 		number <= 30
 				ifTrue: [ configuration mutate: newInd ].
@@ -79,11 +83,18 @@ GPEngine >> execute [
 	e configuration: GPAritConfiguration new.
 	e execute.
 	"
-	| log |
+	| log r |
 	self createInitialPopulation.
 	(population allSatisfy: #notNil) ifFalse: [ ^ self ].
-	self rankedIndividuals.
+	r := self rankedIndividuals.
 	"population do: [ :ind | Transcript show: ind print, String cr ]."
+	log := GPLog new 
+		population: population copy;
+		generation: 0;
+		bestFitnessValue: r first value;
+		worstFitnessValue: r last value;
+		averageFitness: (r at: (r size / 2) asInteger) value.
+	logs add: log.
 	(1 to: configuration numberOfGenerations)
 		do: [ :gen | 
 			| rInds |
@@ -92,6 +103,7 @@ GPEngine >> execute [
 			"population do: [ :ind | Transcript show: ind print, String cr ]."
 			rInds := self rankedIndividuals.
 			log := GPLog new.
+			log population: population copy.
 			log generation: gen.
 			log bestFitnessValue: rInds first value.
 			log worstFitnessValue: rInds last value.

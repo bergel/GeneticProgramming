@@ -137,13 +137,38 @@ GPAssertConfiguration >> crossover: individual between: children1 and: children2
 ]
 
 { #category : #'as yet unclassified' }
+GPAssertConfiguration >> crossover: individual between: children1 with: children2 given: individual1 and: individual2 [
+	| ids childIds indexes shuffledIds |
+	ids := children1 collect: #id.
+	childIds := children2 collect: #id.
+	shuffledIds := random shuffleElementsOf: ids copy.
+	shuffledIds 
+		detect: [ :nodeId |
+			indexes := random shuffleElementsOf: (individual indexesOf: nodeId on: childIds).
+			indexes notEmpty ] 
+		ifFound: [ :nodeId | | node |
+			individual addParent: individual2.
+			"children1 at: (random randomlySelect: (individual indexesOf: nodeId on: ids)) put: (children2 at: (random randomlySelect: indexes)) deepCopy."
+			node := children1 at: (random randomlySelect: (individual indexesOf: nodeId on: ids)).
+			node replaceBy: (children2 at: (random randomlySelect: indexes)) deepCopy.
+			^ individual ] 
+		"ifNone: [
+			children1 
+				detect: [ :child | | ind |
+					ind := self crossover: individual between: child children and: children2.
+					ind notNil ]
+				ifFound: [ ^ individual ] ]".
+	^ nil
+]
+
+{ #category : #'as yet unclassified' }
 GPAssertConfiguration >> crossover: individual1 with: individual2 [
 	| copy i |
 	copy := individual1 deepCopy.
 	i := (((copy children at: 3) children collect: #id) includes: #Method) 
 		ifTrue: [ 3 ] 
 		ifFalse: [ 4 ].
-	^ self crossover: copy between: (copy withAllChildren allButFirst: 4) "(copy children at: 3) children" and: (individual2 withAllChildren allButFirst: i "4")
+	^ self crossover: copy between: (copy withAllChildren allButFirst: 4) "(copy children at: 3) children" with: (individual2 withAllChildren allButFirst: i "4") given: individual1 and: individual2 
 ]
 
 { #category : #operations }
