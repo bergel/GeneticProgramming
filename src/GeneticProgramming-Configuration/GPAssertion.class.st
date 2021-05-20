@@ -201,6 +201,7 @@ GPAssertion >> exportData: engine on: filename [
 			col
 		] ]).
 	data ifNotEmpty: [ 
+		filename asFileReference ensureDelete.
 		filename asFileReference writeStreamDo: [ :stream |
 			(NeoCSVWriter on: stream)
 				nextPut: #(Generation Id Fitness), metricNames asArray;

@@ -18,6 +18,15 @@ Class {
 	#category : #'GeneticProgramming-Core'
 }
 
+{ #category : #operations }
+GPAbstractNode class >> indexesOf: nodeId on: childIds [
+	| indexes |
+	indexes := OrderedCollection new.
+	childIds doWithIndex: [ :childId :index | 
+		childId == nodeId ifTrue: [ indexes add: index ] ].
+	^ indexes 
+]
+
 { #category : #accessing }
 GPAbstractNode >> addChild: aNode [
 	children add: aNode
@@ -218,11 +227,7 @@ GPAbstractNode >> id: anObject [
 
 { #category : #operations }
 GPAbstractNode >> indexesOf: nodeId on: childIds [
-	| indexes |
-	indexes := OrderedCollection new.
-	childIds doWithIndex: [ :childId :index | 
-		childId == nodeId ifTrue: [ indexes add: index ] ].
-	^ indexes 
+	^ self class indexesOf: nodeId on: childIds 
 ]
 
 { #category : #initialization }

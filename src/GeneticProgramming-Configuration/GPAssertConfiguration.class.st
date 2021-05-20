@@ -12,7 +12,9 @@ Class {
 		'builder',
 		'index',
 		'contextBlocks',
-		'numberOfFailures'
+		'numberOfFailures',
+		'assocs',
+		'randomIterations'
 	],
 	#category : #'GeneticProgramming-Configuration-GPAssert'
 }
@@ -93,7 +95,7 @@ GPAssertConfiguration >> countErrorsGiven: block [
 	| rm res |
 	self assert: block isBlock.
 	rm := GPRandom instance.
-	res := (1 to: 30) inject: 0 into: [ :sum :num | | args |
+	res := (1 to: randomIterations) inject: 0 into: [ :sum :num | | args |
 		args := (1 to: targetSelector numArgs) collect: [ :a | 
 		        rm randomlySelect: self options ].
 		sum + ([ block value perform: targetSelector withArguments: args.
@@ -137,43 +139,46 @@ GPAssertConfiguration >> crossover: individual between: children1 and: children2
 ]
 
 { #category : #'as yet unclassified' }
-GPAssertConfiguration >> crossover: individual between: children1 with: children2 given: individual1 and: individual2 [
-	| ids childIds indexes shuffledIds |
-	ids := children1 collect: #id.
-	childIds := children2 collect: #id.
-	shuffledIds := random shuffleElementsOf: ids copy.
-	shuffledIds 
-		detect: [ :nodeId |
-			indexes := random shuffleElementsOf: (individual indexesOf: nodeId on: childIds).
-			indexes notEmpty ] 
-		ifFound: [ :nodeId | | node |
-			individual addParent: individual2.
-			"children1 at: (random randomlySelect: (individual indexesOf: nodeId on: ids)) put: (children2 at: (random randomlySelect: indexes)) deepCopy."
-			node := children1 at: (random randomlySelect: (individual indexesOf: nodeId on: ids)).
-			node replaceBy: (children2 at: (random randomlySelect: indexes)) deepCopy.
-			^ individual ] 
-		"ifNone: [
-			children1 
-				detect: [ :child | | ind |
-					ind := self crossover: individual between: child children and: children2.
-					ind notNil ]
-				ifFound: [ ^ individual ] ]".
-	^ nil
-]
-
-{ #category : #'as yet unclassified' }
 GPAssertConfiguration >> crossover: individual1 with: individual2 [
 	| copy i |
 	copy := individual1 deepCopy.
 	i := (((copy children at: 3) children collect: #id) includes: #Method) 
 		ifTrue: [ 3 ] 
 		ifFalse: [ 4 ].
-	^ self crossover: copy between: (copy withAllChildren allButFirst: 4) "(copy children at: 3) children" with: (individual2 withAllChildren allButFirst: i "4") given: individual1 and: individual2 
+	"^ self crossover: copy between: (copy children at: 3) and: individual2"
+	^ self crossover: copy with: individual2 given: (copy withAllChildren allButFirst: 4) and: (individual2 withAllChildren allButFirst: i)
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertConfiguration >> crossover: individual with: individual2 given: children1 and: children2 [
+	| ids childIds shuffledIds |
+	ids := children1 collect: #id.
+	childIds := children2 collect: #id.
+	shuffledIds := random shuffleElementsOf: ids copy.
+	assocs := shuffledIds 
+		collect: [ :nodeId | | inds |
+			inds := random shuffleElementsOf: (individual indexesOf: nodeId on: childIds).
+			nodeId -> inds ]
+		thenReject: [ :assoc | 
+			assoc value isEmpty or: [ assoc key = #Variable ] ].
+	assocs ifNotEmpty: [ | assoc node r |
+		individual addParent: individual2.
+		assoc := random randomlySelect: assocs.
+		node := children1 at: (random randomlySelect: (individual indexesOf: assoc key on: ids)).
+		r := (children2 at: (random randomlySelect: assoc value)) deepCopy.
+		Transcript show: 'crossover:', node print, ' replaced by: ', r print, String cr. 
+		node replaceBy: r"(children2 at: (random randomlySelect: assoc value)) deepCopy".
+		^ individual 
+	].
+	^ nil
 ]
 
 { #category : #operations }
 GPAssertConfiguration >> distanceFromSolutionOf: individual [
-	| t e uninstalled |
+	| t e uninstalled wTest |
+	"weight for each unit test -> wTest = 100/nTests, nTests = total unit tests
+	tErrors = nTestErrors * wTest * (2/3),            2/3 is the value percentage of importance
+	rErrors = (nTests/nIterations) * nRandomErrors * wTest * (1/3),   nIterations -> number of iterations of count errors"
 	self assert: targetClass notNil.
 	self assert: testClass notNil.
 	uninstalled := false.
@@ -183,6 +188,7 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 	].
 	e := self countErrors.
 	t := testClass buildSuite run.
+	wTest := 100/(t runCount).
 	individual fitness: (GPMultiObjectiveFitness new 
 		addObjective: 'nRandomErrors' -> (uninstalled ifTrue: [ 30 ] ifFalse: [ e ]);
 		addObjective: 'nTestErrors' -> (uninstalled ifTrue: [ t runCount ] ifFalse: [ (t failureCount + t errorCount)]);
@@ -198,8 +204,8 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 						ifTrue: [ (f1 objectiveAt: 'nRandomErrors') > (f2 objectiveAt: 'nRandomErrors') ]
 						ifFalse: [ false ] ]
 					ifTrue: [ true ] ];
-			add: 'shouldTerminate' -> [ :f1 | (f1 objectiveAt: 'nTestErrors') == 0 and: [ (f1 objectiveAt: 'nRandomErrors') == 0 ] ];
-			add: 'asNumber' -> [:f1 | ((f1 objectiveAt: 'nTestErrors') * 0.7) + ((f1 objectiveAt: 'nRandomErrors') * 0.3) ];
+			add: 'shouldTerminate' -> [ :f1 | f1 asNumber = 0 ];
+			add: 'asNumber' -> [:f1 | (((f1 objectiveAt: 'nTestErrors') * (wTest * (2/3))) + ((f1 objectiveAt: 'nRandomErrors') * (t runCount / randomIterations) * wTest * (1/3))) asFloat ];
 			yourself )).
 	self uninstall.
 	^ individual fitness
@@ -218,7 +224,8 @@ GPAssertConfiguration >> initialize [
 	options := OrderedCollection new.
 	targetSelectors := OrderedCollection new.
 	contextBlocks := OrderedCollection new.
-	numberOfFailures := 0
+	numberOfFailures := 0.
+	randomIterations := 100
 ]
 
 { #category : #'as yet unclassified' }
@@ -239,24 +246,47 @@ GPAssertConfiguration >> injectIntoMethod: individual [
 
 { #category : #operations }
 GPAssertConfiguration >> mutate: individual [
-	self mutate: individual with: self newTerminal.
+	| i newIndividual |
+	i :=  (((individual children at: 3) children collect: #id) includes: #Method) 
+		ifTrue: [ 3 ] 
+		ifFalse: [ 4 ].
+	newIndividual := self newTerminal.
+	self mutate: (individual withAllChildren allButFirst: 4) having: (newIndividual withAllChildren allButFirst: i)
+	"self mutate: individual with: self newTerminal."
+]
+
+{ #category : #operations }
+GPAssertConfiguration >> mutate: children1 having: children2 [
+	| ids childIds shuffledIds |
+	ids := children1 collect: #id.
+	childIds := children2 collect: #id.
+	shuffledIds := random shuffleElementsOf: ids copy.
+	assocs := shuffledIds 
+		collect: [ :nodeId | | inds |
+			inds := random shuffleElementsOf: (GPAbstractNode indexesOf: nodeId on: childIds).
+			nodeId -> inds ]
+		thenReject: [ :assoc | 
+			assoc value isEmpty or: [ assoc key = #Variable ] ].
+	assocs ifNotEmpty: [ | assoc node r |
+		assoc := random randomlySelect: assocs.
+		node := children1 at: (random randomlySelect: (GPAbstractNode indexesOf: assoc key on: ids)).
+		r := (children2 at: (random randomlySelect: assoc value)) deepCopy.
+		Transcript show: 'mutation:', node print, ' replaced by: ', r print, String cr. 
+		node replaceBy: r"(children2 at: (random randomlySelect: assoc value)) deepCopy".
+	].
 ]
 
 { #category : #operations }
 GPAssertConfiguration >> mutate: individual with: source [
 	| children indivIds sceChildren sourceIds nodeToMutate node |
-	children := GPRandom instance shuffleElementsOf: (individual withAllChildren allButFirst: 4).
+	children := random shuffleElementsOf: (individual withAllChildren allButFirst: 4).
 	indivIds := children collect: #id.
 	sceChildren := source withAllChildren allButFirst: 4.
 	sourceIds := sceChildren collect: #id.
 	(indivIds includesAny: sourceIds) ifFalse: [ ^ self ].
 	nodeToMutate := children at: (indivIds indexOfAnyOf: sourceIds).
 	node := sceChildren at: (sourceIds indexOf: nodeToMutate id).
-	nodeToMutate evaluationBlock: node evaluationBlock.
-	nodeToMutate printBlock: node printBlock.
-	"nodeToMutate type: node type."
-	nodeToMutate children: node children.
-	nodeToMutate nodeValue: node nodeValue
+	nodeToMutate replaceBy: node
 ]
 
 { #category : #hooks }
@@ -266,7 +296,7 @@ GPAssertConfiguration >> newFunction [
 	i := 0.
 	grammar := self updateGrammar.
 	[ found or: [ i > 100 ] ] whileFalse: [ 
-		depthModified ifFalse: [ depth := GPRandom instance randomNumber: 5 ].
+		depthModified ifFalse: [ depth := GPRandom instance randomNumber: 10 ].
 		self assert: depth notNil.
 		grammar 
 			methodName: (GPRandom instance randomlySelect: #(#full #grow));

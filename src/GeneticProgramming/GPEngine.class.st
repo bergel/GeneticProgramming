@@ -70,8 +70,12 @@ GPEngine >> distanceFromSolutionOf: individual [
 
 { #category : #'as yet unclassified' }
 GPEngine >> eliteOfPopulation [ 
+	| bestIndividual clonedIndividual |
+	bestIndividual := self pickBestIndividual.
+	clonedIndividual := bestIndividual deepCopy.
+	clonedIndividual addParent: bestIndividual.
 	^ OrderedCollection new 
-		add: self pickBestIndividual deepCopy;
+		add: clonedIndividual;
 		yourself 
 ]
 

@@ -33,17 +33,21 @@ GPAssertionGrammarBuilder >> buildAssertionGrammarGiven: tgClass [
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Message);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Message1 #Args1);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Satisfy #Message);
-		addRule: #Method ofClass: RBMessageNode withSequence: #(#Method #And #Block);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Comparison #Integer);
+		addRule: #Method ofClass: RBMessageNode withSequence: #(#Method #And #Block);
+		addRule: #Args1 withCollectionOptions: #(#Class) ofSize: 1;
+		"addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Message1 #Args1);"
 		addSelectorRule: #Assert withValues: #(#assert:);
 		addSelectorRule: #Message withValues: #(#isString #isInteger #isFloat #isNumber #isFinite #isCharacter #isCollection #isArray #isSymbol #isColor #isBlock #isEmpty #notEmpty #isNil #notNil #positive #negative #isPoint);
 		addSelectorRule: #Message1 withValues: #(#isKindOf: #isMemberOf:);
+		"addRule: #Message1 redirectingTo: #Comparison;
+		addRule: #Message1 redirectingTo: #Satisfy;
+		addRule: #Args1 withCollectionOptions: #(#Class #Message #Integer) ofSize: 1;"
 		addSelectorRule: #Includes withValues: #(#includes:);
 		addSelectorRule: #Satisfy withValues: #(#allSatisfy: #noneSatisfy: #anySatisfy:);
+		addSelectorRule: #Comparison withValues: #(#= #== #> #< #<= #>=);
 		addSelectorRule: #And withValues: #(#and:);
 		addSelectorRule: #Not withValues: #(#not);
-		addSelectorRule: #Comparison withValues: #(#= #== #> #< #<= #>=);
-		addRule: #Args1 withCollectionOptions: #(#Class) ofSize: 1;
 		addRule: #Block ofClass: RBBlockNode withSequence: #(#Method);
 		addLeafRule: #Self ofClass: RBVariableNode withValues: #('self');
 		addLeafRule: #Integer ofClass: RBLiteralNode withValues: (-10 to: 10) asOrderedCollection;

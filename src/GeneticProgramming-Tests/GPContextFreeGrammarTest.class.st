@@ -467,7 +467,7 @@ GPContextFreeGrammarTest >> testExpandOnMethodNode [
 { #category : #tests }
 GPContextFreeGrammarTest >> testExpandTree [
 
-	| tree |
+	| tree children |
 	GPRandom seed: 78652.
 	grammar
 		addRule: #Assignment
@@ -490,7 +490,16 @@ GPContextFreeGrammarTest >> testExpandTree [
 		addRule: #Args withCollectionOptions: #( #Value ) ofSize: 1.
 	tree := grammar expandTree: #Assignment.
 	self assert: tree id equals: #Assignment.
-	self assert: tree numberOfNodes equals: 7
+	self assert: tree numberOfNodes equals: 7.
+	self assert: tree depth equals: 0.
+	children := tree children.
+	self assert: children size equals: 2.
+	self assert: children first depth equals: 1.
+	self assert: children second depth equals: 2. 
+	self assert: children second id equals: #Message.
+	children := children second children.
+	self assert: children size equals: 3.
+	self assertCollection: (children allButFirst collect: #depth) asSet hasSameElements: #(3). 
 ]
 
 { #category : #tests }
