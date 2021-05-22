@@ -140,24 +140,31 @@ GPAssertConfiguration >> crossover: individual between: children1 and: children2
 
 { #category : #'as yet unclassified' }
 GPAssertConfiguration >> crossover: individual1 with: individual2 [
-	| copy i |
-	copy := individual1 deepCopy.
-	i := (((copy children at: 3) children collect: #id) includes: #Method) 
+	| offspring1 i offspring2 |
+	offspring1 := individual1 deepCopy.
+	i := (((offspring1 children at: 3) children collect: #id) includes: #Method) 
 		ifTrue: [ 3 ] 
 		ifFalse: [ 4 ].
+	
 	"^ self crossover: copy between: (copy children at: 3) and: individual2"
-	^ self crossover: copy with: individual2 given: (copy withAllChildren allButFirst: 4) and: (individual2 withAllChildren allButFirst: i)
+	offspring1 := self crossover: offspring1 with: individual2 given: (offspring1 withAllChildren allButFirst: 3) and: (individual2 withAllChildren allButFirst: 3).
+	offspring2 := individual2 deepCopy.
+	offspring2 := self crossover: offspring2 with: individual1 given: (offspring2 withAllChildren allButFirst: 3) and: (individual1 withAllChildren allButFirst: 3).
+	^ (self distanceFromSolutionOf: offspring1) < (self distanceFromSolutionOf: offspring2)
+		ifTrue: [ offspring1 ] ifFalse: [ offspring2 ]
 ]
 
 { #category : #'as yet unclassified' }
 GPAssertConfiguration >> crossover: individual with: individual2 given: children1 and: children2 [
-	| ids childIds shuffledIds |
+	| ids childIds "shuffledIds" nodeOptions |
 	ids := children1 collect: #id.
 	childIds := children2 collect: #id.
-	shuffledIds := random shuffleElementsOf: ids copy.
-	assocs := shuffledIds 
+	"shuffledIds := random shuffleElementsOf: ids copy."
+	nodeOptions := self getGrammarNodeOptions. 
+	assocs := "shuffledIds" ids asSet asOrderedCollection 
 		collect: [ :nodeId | | inds |
-			inds := random shuffleElementsOf: (individual indexesOf: nodeId on: childIds).
+			inds := individual indexesOf: nodeId on: childIds.
+			inds addAll: (self getNodeIdOptions: nodeOptions given: nodeId and: childIds).
 			nodeId -> inds ]
 		thenReject: [ :assoc | 
 			assoc value isEmpty or: [ assoc key = #Variable ] ].
@@ -166,8 +173,38 @@ GPAssertConfiguration >> crossover: individual with: individual2 given: children
 		assoc := random randomlySelect: assocs.
 		node := children1 at: (random randomlySelect: (individual indexesOf: assoc key on: ids)).
 		r := (children2 at: (random randomlySelect: assoc value)) deepCopy.
-		Transcript show: 'crossover:', node print, ' replaced by: ', r print, String cr. 
+		"Transcript show: 'crossover:', node print, ' replaced by: ', r print, String cr."
 		node replaceBy: r"(children2 at: (random randomlySelect: assoc value)) deepCopy".
+		^ individual 
+	].
+	^ nil
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertConfiguration >> crossoverOfType: individual with: individual2 given: children1 and: children2 [
+	| types1 types2 typesSet |
+	types1 := (children1 collectWithIndex: [:ch :ind | 
+		(ch type -> ch class) -> (ch id -> ind) ]) 
+		reject: [:assoc | assoc value key = #Variable ].
+	types2 := (children2 collectWithIndex: [:ch :ind | 
+		(ch type -> ch class) -> (ch id -> ind) ])
+		reject: [:assoc | assoc value key = #Variable ].
+	typesSet := (types1 collect: #key) asSet asOrderedCollection.
+	assocs := typesSet
+		collect: [ :assoc | | indexes |
+			indexes := types2 
+				select: [ :ass | ass key = assoc ]
+				thenCollect: [ :ass | ass value value ].
+			assoc -> indexes ]
+		thenReject: [ :assoc | assoc value isEmpty ].
+	assocs ifNotEmpty: [ | assoc node indexes |
+		individual addParent: individual2.
+		assoc := random randomlySelect: assocs.
+		indexes := types1 
+			select: [:ass | ass key = assoc key ]
+			thenCollect: [:ass | ass value value ].
+		node := children1 at: (random randomlySelect: indexes).
+		node replaceBy: (children2 at: (random randomlySelect: assoc value value)) deepCopy.
 		^ individual 
 	].
 	^ nil
@@ -177,7 +214,7 @@ GPAssertConfiguration >> crossover: individual with: individual2 given: children
 GPAssertConfiguration >> distanceFromSolutionOf: individual [
 	| t e uninstalled wTest |
 	"weight for each unit test -> wTest = 100/nTests, nTests = total unit tests
-	tErrors = nTestErrors * wTest * (2/3),            2/3 is the value percentage of importance
+	tErrors = nTestErrors * wTest * (2/3),            2/3 is the percentage value of importance
 	rErrors = (nTests/nIterations) * nRandomErrors * wTest * (1/3),   nIterations -> number of iterations of count errors"
 	self assert: targetClass notNil.
 	self assert: testClass notNil.
@@ -209,6 +246,30 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 			yourself )).
 	self uninstall.
 	^ individual fitness
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertConfiguration >> getGrammarNodeOptions [
+	^ (grammar options associations 
+			collect: [ :assoc | assoc key -> (assoc value nodeOptions) ]
+			thenSelect: [ :assoc | assoc value notEmpty ]) asDictionary
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertConfiguration >> getNodeIdOptions: dictionary given: nodeId and: ids [
+	| col |
+	col := OrderedCollection new.
+	dictionary at: nodeId 
+		ifPresent: [ :nodeIds | 
+			col addAll: (nodeIds 
+				collect: [ :id | ids indexOf: id ]
+				thenSelect: [ :ind | ind > 0 ]) ]
+		ifAbsent: [ dictionary associations
+			select: [ :assoc | assoc value includes: nodeId ]
+			thenDo: [ :assoc | | i |
+				i := ids indexOf: assoc key.
+				i > 0 ifTrue: [ col add: i ] ] ].
+	^ col
 ]
 
 { #category : #accessing }
@@ -251,19 +312,21 @@ GPAssertConfiguration >> mutate: individual [
 		ifTrue: [ 3 ] 
 		ifFalse: [ 4 ].
 	newIndividual := self newTerminal.
-	self mutate: (individual withAllChildren allButFirst: 4) having: (newIndividual withAllChildren allButFirst: i)
+	self mutate: (individual withAllChildren allButFirst: 3) having: (newIndividual withAllChildren allButFirst: 3)
 	"self mutate: individual with: self newTerminal."
 ]
 
 { #category : #operations }
 GPAssertConfiguration >> mutate: children1 having: children2 [
-	| ids childIds shuffledIds |
+	| ids childIds "shuffledIds" nodeOptions |
 	ids := children1 collect: #id.
 	childIds := children2 collect: #id.
-	shuffledIds := random shuffleElementsOf: ids copy.
-	assocs := shuffledIds 
+	"shuffledIds := random shuffleElementsOf: ids copy."
+	nodeOptions := self getGrammarNodeOptions. 
+	assocs := "shuffledIds" ids asSet asOrderedCollection 
 		collect: [ :nodeId | | inds |
-			inds := random shuffleElementsOf: (GPAbstractNode indexesOf: nodeId on: childIds).
+			inds := GPAbstractNode indexesOf: nodeId on: childIds.
+			inds addAll: (self getNodeIdOptions: nodeOptions given: nodeId and: childIds).
 			nodeId -> inds ]
 		thenReject: [ :assoc | 
 			assoc value isEmpty or: [ assoc key = #Variable ] ].
@@ -271,7 +334,7 @@ GPAssertConfiguration >> mutate: children1 having: children2 [
 		assoc := random randomlySelect: assocs.
 		node := children1 at: (random randomlySelect: (GPAbstractNode indexesOf: assoc key on: ids)).
 		r := (children2 at: (random randomlySelect: assoc value)) deepCopy.
-		Transcript show: 'mutation:', node print, ' replaced by: ', r print, String cr. 
+		"Transcript show: 'mutation:', node print, ' replaced by: ', r print, String cr. "
 		node replaceBy: r"(children2 at: (random randomlySelect: assoc value)) deepCopy".
 	].
 ]

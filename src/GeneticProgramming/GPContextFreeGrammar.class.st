@@ -299,6 +299,11 @@ GPContextFreeGrammar >> methodName: string [
 	
 ]
 
+{ #category : #accessing }
+GPContextFreeGrammar >> options [ 
+	^ options
+]
+
 { #category : #selecting }
 GPContextFreeGrammar >> randomlySelectOption: collection [
 

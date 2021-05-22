@@ -19,11 +19,11 @@ Class {
 }
 
 { #category : #operations }
-GPAbstractNode class >> indexesOf: nodeId on: childIds [
+GPAbstractNode class >> indexesOf: object on: objects [
 	| indexes |
 	indexes := OrderedCollection new.
-	childIds doWithIndex: [ :childId :index | 
-		childId == nodeId ifTrue: [ indexes add: index ] ].
+	objects doWithIndex: [ :obj :index | 
+		obj = object ifTrue: [ indexes add: index ] ].
 	^ indexes 
 ]
 
@@ -226,8 +226,8 @@ GPAbstractNode >> id: anObject [
 ]
 
 { #category : #operations }
-GPAbstractNode >> indexesOf: nodeId on: childIds [
-	^ self class indexesOf: nodeId on: childIds 
+GPAbstractNode >> indexesOf: object on: objects [
+	^ self class indexesOf: object on: objects 
 ]
 
 { #category : #initialization }
