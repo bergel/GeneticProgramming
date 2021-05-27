@@ -91,7 +91,7 @@ GPConfiguration >> forRule: symbol putWeights: numbers [
 { #category : #initialization }
 GPConfiguration >> initialize [
 	super initialize.
-	random := GPRandom instance.
+	random := GPRandom seed: 1.
 	ruleWeights := Dictionary new.
 	optionWeights := Dictionary new.
 	method := #grow.
@@ -141,6 +141,11 @@ GPConfiguration >> numberOfGenerations [
 GPConfiguration >> optionWeightsOf: symbol [
 
 	^ optionWeights at: symbol ifAbsent: [ #(1) ]
+]
+
+{ #category : #'as yet unclassified' }
+GPConfiguration >> pickBestIndividual: newInd and: individuals [
+	self subclassResponsibility 
 ]
 
 { #category : #accessing }
@@ -205,7 +210,7 @@ GPConfiguration >> selectValue: options forRule: symbol [
 						ws := weights asArray, ((1 to: optSize - wgtSize) collect: [ :n | 1 ]).
 						self selectOption: options given: ws ] 
 					ifFalse: [ self selectOption: options given: (weights copyFrom: 1 to: optSize) ] ] ]
-		ifAbsent: [ GPRandom instance randomlySelect: options ]
+		ifAbsent: [ random randomlySelect: options ]
 ]
 
 { #category : #'as yet unclassified' }
@@ -221,7 +226,7 @@ GPConfiguration >> shuffle: options forRule: symbol [
 						ws := weights asArray, ((1 to: optSize - wgtSize) collect: [ :n | 1 ]).
 						self sort: options given: ws ] 
 					ifFalse: [ self sort: options given: (weights copyFrom: 1 to: optSize) ] ] ]
-		ifAbsent: [ GPRandom instance shuffleElementsOf: options ]
+		ifAbsent: [ random shuffleElementsOf: options ]
 ]
 
 { #category : #'as yet unclassified' }

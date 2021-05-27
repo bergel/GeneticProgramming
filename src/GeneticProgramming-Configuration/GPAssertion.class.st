@@ -14,7 +14,8 @@ Class {
 		'exportVisualization',
 		'targetClass',
 		'testClass',
-		'targetSelectors'
+		'targetSelectors',
+		'random'
 	],
 	#category : #'GeneticProgramming-Configuration-GPAssert'
 }
@@ -136,17 +137,17 @@ GPAssertion >> contextBlocks: collection [
 
 { #category : #'as yet unclassified' }
 GPAssertion >> countErrors: targetSelector given: protocol and: block [
-	| rm opts newOpts res i size |
+	| opts newOpts res i size n |
 	opts := self options copy.
 	size := opts size.
 	newOpts := Set new.
-	rm := GPRandom instance.
 	res := i := 0.
-	[ i < 10 and: [ res < 30 ] ] whileTrue: [ 
+	n := 30.
+	[ i < 10 and: [ res < n ] ] whileTrue: [ 
 		i := i + 1.
-		res := (1 to: 30) inject: 0 into: [ :sum :num | | args |
+		res := (1 to: n) inject: 0 into: [ :sum :num | | args |
 			args := (1 to: targetSelector numArgs) collect: [ :a | 
-		        rm randomlySelect: opts ].
+		        random randomlySelect: opts ].
 			sum + ([ block value perform: targetSelector withArguments: args.
 				"if the method has accesing protocol, it means that args are not validated and just are assigned, that is the reason the values are added to the list"
 				protocol = #accesing ifTrue: [ newOpts addAll: args ].
@@ -304,7 +305,8 @@ GPAssertion >> initialize [
 	directoryName := ''.
 	results := OrderedCollection new.
 	nameResultFile := 'result'.
-	exportVisualization := false
+	exportVisualization := false.
+	random := GPRandom seed: 100
 ]
 
 { #category : #'as yet unclassified' }
@@ -350,7 +352,7 @@ GPAssertion >> options [
 			add: false;
 			add: Object new;
 			add: ((1 to: 1000) collect: [:n | 
-				GPRandom instance randomlySelect: String loremIpsum substrings
+				random randomlySelect: String loremIpsum substrings
 				]);
 			yourself ].
 	^ options
@@ -421,6 +423,12 @@ GPAssertion >> runOn: classes given: packageClasses [
 			ifNotEmpty: [ self addOptionSelectors: (optionsDict at: #selector) ].
 		self run.
 		individuals ifNotEmpty: [ self writeOnCsv ] ]
+]
+
+{ #category : #'instance creation' }
+GPAssertion >> seed: aNumber [
+	self assert: (aNumber isNumber and: [ aNumber > 0 ]).
+	random seed: aNumber
 ]
 
 { #category : #'as yet unclassified' }

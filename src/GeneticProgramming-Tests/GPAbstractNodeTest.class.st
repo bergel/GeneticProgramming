@@ -11,9 +11,10 @@ GPAbstractNodeTest >> setUp [
 
 { #category : #tests }
 GPAbstractNodeTest >> testDeepCopy: aNode [
-	| newNode |
+	| newNode random |
+	random := GPRandom seed: 1.
 	newNode := aNode deepCopy.
-	(GPRandom instance shuffleElementsOf: (newNode withAllChildren)) 
+	(random shuffleElementsOf: (newNode withAllChildren)) 
 		detect: [ :child | child isLeaf ]
 		ifFound: [:child | child nodeValue: (child isSelectorNode ifTrue: [child nodeValue, 's'] ifFalse: [child nodeValue + 5]) ].
 	self deny: aNode print equals: newNode print

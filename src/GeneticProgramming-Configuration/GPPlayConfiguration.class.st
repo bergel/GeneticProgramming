@@ -45,7 +45,7 @@ GPPlayConfiguration >> distanceFromSolutionOf: individual [
 	p := GPPlay new.
 	p assertionGP: [ :obj | individual evaluateWith: { 'obj' -> obj } asDictionary ].
 	t := testClass buildSuite run.
-	individual fitness: (GPFitness new
+	individual fitness: (GPFitnessFunction new
 		fitnessValue: t failureCount + t errorCount;
 		objective: [:fitness | fitness fitnessValue == 0 ]).
 	^ individual fitness
@@ -100,7 +100,7 @@ GPPlayConfiguration >> initializeGrammar [
 { #category : #operations }
 GPPlayConfiguration >> mutate: individual [
 	| source children nodeToMutate indivIds sourceIds sceChildren |
-	children := GPRandom instance shuffleElementsOf: (individual withAllChildren allButFirst "select: #isLeaf").
+	children := random shuffleElementsOf: (individual withAllChildren allButFirst "select: #isLeaf").
 	source := self newTerminal.
 	indivIds := children collect: #id.
 	sceChildren := source withAllChildren "select: #isLeaf".
@@ -121,8 +121,8 @@ GPPlayConfiguration >> newFunction [
 	found := false.
 	i := 0.
 	[ found or: [ i > 30 ] ] whileFalse: [ 
-		depth := GPRandom instance randomNumber: 10.
-		grammar methodName: (GPRandom instance randomlySelect: #(#full #grow)).
+		depth := random randomNumber: 10.
+		grammar methodName: (random randomlySelect: #(#full #grow)).
 		node := grammar expandTree: #E withDepth: depth.
 		found := node isNotNil.
 		i := i + 1. ].

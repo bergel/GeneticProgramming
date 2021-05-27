@@ -39,8 +39,7 @@ GPRun >> run [
 
 	| e |
 	e := GPEngine new.
-	GPRandom seed: 1342.
-	e configuration: GPPlayConfiguration new.
+	e configuration: (GPPlayConfiguration new seed: 1342).
 	e execute.
 	^ { 
 		  e.

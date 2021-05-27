@@ -36,7 +36,7 @@ GPRootInPolynomConfiguration >> distanceFromSolutionOf: individual [
 	context at: #b put: -2.
 	context at: #c put: 10.
 	
-	individual fitness: (GPFitness new
+	individual fitness: (GPFitnessFunction new
 		fitnessValue: (individual evaluateUsing: context) abs;
 		objective: [ :fitness | fitness fitnessValue == 0 ]).
 	^ individual fitness

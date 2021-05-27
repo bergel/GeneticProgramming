@@ -4,12 +4,6 @@ Class {
 	#category : #'GeneticProgramming-Tests'
 }
 
-{ #category : #running }
-GPRandomTest >> tearDown [ 
-	GPRandom resetInstance.
-	super tearDown 
-]
-
 { #category : #tests }
 GPRandomTest >> testRandomNumber [
 

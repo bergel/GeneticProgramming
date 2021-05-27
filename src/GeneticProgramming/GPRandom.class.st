@@ -10,24 +10,12 @@ Class {
 	#category : #'GeneticProgramming-Core'
 }
 
-{ #category : #accessing }
-GPRandom class >> instance [
-
-	 instance ifNil: [ instance := self new ].
-	 ^ instance
-]
-
-{ #category : #accessing }
-GPRandom class >> resetInstance [
-
-	 instance := nil
-]
-
 { #category : #'instance creation' }
 GPRandom class >> seed: aNumber [
 
-	self resetInstance.
-	^ self instance seed: aNumber
+	"self resetInstance.
+	^ self instance seed: aNumber"
+	^ self new seed: aNumber
 ]
 
 { #category : #enumerating }

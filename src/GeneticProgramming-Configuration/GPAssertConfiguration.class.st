@@ -85,16 +85,16 @@ GPAssertConfiguration >> countErrors [
 	self assert: targetClass notNil.
 	self assert: targetSelector notNil.
 	^ contextBlocks 
-		ifEmpty: [ [ self countErrorsGiven: [ targetClass new ] ] on: Exception do: [ 30 ] ] 
+		ifEmpty: [ [ self countErrorsGiven: [ targetClass new ] ] on: Exception do: [ randomIterations ] ] 
 		ifNotEmpty: [ [(contextBlocks collect: [ :block | 
-				self countErrorsGiven: block ]) min] on: Exception do: [ 30 ] ]
+				self countErrorsGiven: block ]) min] on: Exception do: [ randomIterations ] ]
 ]
 
 { #category : #'as yet unclassified' }
 GPAssertConfiguration >> countErrorsGiven: block [
-	| rm res |
+	| res rm |
 	self assert: block isBlock.
-	rm := GPRandom instance.
+	rm := GPRandom seed: 10.
 	res := (1 to: randomIterations) inject: 0 into: [ :sum :num | | args |
 		args := (1 to: targetSelector numArgs) collect: [ :a | 
 		        rm randomlySelect: self options ].
@@ -148,8 +148,10 @@ GPAssertConfiguration >> crossover: individual1 with: individual2 [
 	
 	"^ self crossover: copy between: (copy children at: 3) and: individual2"
 	offspring1 := self crossover: offspring1 with: individual2 given: (offspring1 withAllChildren allButFirst: 3) and: (individual2 withAllChildren allButFirst: 3).
+	offspring1 addParent: individual1.
 	offspring2 := individual2 deepCopy.
 	offspring2 := self crossover: offspring2 with: individual1 given: (offspring2 withAllChildren allButFirst: 3) and: (individual1 withAllChildren allButFirst: 3).
+	offspring2 addParent: individual2.
 	^ (self distanceFromSolutionOf: offspring1) < (self distanceFromSolutionOf: offspring2)
 		ifTrue: [ offspring1 ] ifFalse: [ offspring2 ]
 ]
@@ -212,12 +214,13 @@ GPAssertConfiguration >> crossoverOfType: individual with: individual2 given: ch
 
 { #category : #operations }
 GPAssertConfiguration >> distanceFromSolutionOf: individual [
-	| t e uninstalled wTest |
+	| t e uninstalled wTest fitnessFunction |
 	"weight for each unit test -> wTest = 100/nTests, nTests = total unit tests
 	tErrors = nTestErrors * wTest * (2/3),            2/3 is the percentage value of importance
 	rErrors = (nTests/nIterations) * nRandomErrors * wTest * (1/3),   nIterations -> number of iterations of count errors"
 	self assert: targetClass notNil.
 	self assert: testClass notNil.
+	"individual fitness ifNotNil: [ ^ individual fitness ]."
 	uninstalled := false.
 	[ self injectIntoMethod: individual ] on: Exception do: [ 
 		uninstalled := true.
@@ -226,7 +229,14 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 	e := self countErrors.
 	t := testClass buildSuite run.
 	wTest := 100/(t runCount).
-	individual fitness: (GPMultiObjectiveFitness new 
+	fitnessFunction := GPAssertionFitnessFunction new.
+	fitnessFunction 
+		objectiveAt: 'nRandomErrors' put: (uninstalled ifTrue: [ 30 ] ifFalse: [ e ]);
+		objectiveAt: 'nTestErrors' put: (uninstalled ifTrue: [ t runCount ] ifFalse: [ (t failureCount + t errorCount)]);
+		weightAt: 'nRandomErrors' put: (t runCount / randomIterations) * wTest * (1/3);
+		weightAt: 'nTestErrors' put: wTest * (2/3).
+	individual fitness: fitnessFunction.
+	"(GPMultiObjectiveFitnessFunction new 
 		addObjective: 'nRandomErrors' -> (uninstalled ifTrue: [ 30 ] ifFalse: [ e ]);
 		addObjective: 'nTestErrors' -> (uninstalled ifTrue: [ t runCount ] ifFalse: [ (t failureCount + t errorCount)]);
 		addFunctions: (Dictionary new 
@@ -243,7 +253,7 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 					ifTrue: [ true ] ];
 			add: 'shouldTerminate' -> [ :f1 | f1 asNumber = 0 ];
 			add: 'asNumber' -> [:f1 | (((f1 objectiveAt: 'nTestErrors') * (wTest * (2/3))) + ((f1 objectiveAt: 'nRandomErrors') * (t runCount / randomIterations) * wTest * (1/3))) asFloat ];
-			yourself )).
+			yourself ))."
 	self uninstall.
 	^ individual fitness
 ]
@@ -359,10 +369,10 @@ GPAssertConfiguration >> newFunction [
 	i := 0.
 	grammar := self updateGrammar.
 	[ found or: [ i > 100 ] ] whileFalse: [ 
-		depthModified ifFalse: [ depth := GPRandom instance randomNumber: 10 ].
+		depthModified ifFalse: [ depth := random randomNumber: 10 ].
 		self assert: depth notNil.
 		grammar 
-			methodName: (GPRandom instance randomlySelect: #(#full #grow));
+			methodName: (random randomlySelect: #(#full #grow));
 			configuration: self.
 		node := grammar expandTree: #Assertion.
 		found := node isNotNil.
@@ -406,6 +416,17 @@ GPAssertConfiguration >> options [
 GPAssertConfiguration >> options: collection [
 	self assert: collection notEmpty.
 	options := collection
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertConfiguration >> pickBestIndividual: individual and: individuals [
+	^ individuals 
+		detect: [ :ind | ind fitness < individual fitness ]
+		ifFound: [ :p | | indiv | 
+			indiv := p deepCopy.
+			indiv addParent: p.
+			indiv ]
+		ifNone: [ individual ]
 ]
 
 { #category : #accessing }

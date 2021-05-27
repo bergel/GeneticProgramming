@@ -80,6 +80,31 @@ GPAbstractNode >> allParents: node on: collection using: set [
 ]
 
 { #category : #accessing }
+GPAbstractNode >> allShapes [
+
+	^ (self withAllChildren collect: [ :child | 
+		   RSComposite new
+			   model: child;
+			   addShape: (RSEllipse new
+					    extent: 20 @ 20;
+					    color: (Color r: 0.5298142717497556 g: 0.8074291300097751 b: 0.9804496578690127);
+					    border: (RSBorder new
+							     color: (Color
+									      r: 0.2316715542521994
+									      g: 0.5141739980449658
+									      b: 0.7409579667644184);
+							     yourself);
+					    @ RSDraggable);
+			   addShape: (RSLabel new
+					    text: child id;
+					    color: Color black;
+					    bold;
+					    fontSize: 2);
+			   padding: 10;
+			   yourself ]) asOrderedCollection
+]
+
+{ #category : #accessing }
 GPAbstractNode >> ast [
 	^ self generateAST: GPReplacementVisitor new
 ]
@@ -348,6 +373,54 @@ GPAbstractNode >> replaceBy: anotherNode [
 { #category : #accessing }
 GPAbstractNode >> second [
 	^ children second
+]
+
+{ #category : #accessing }
+GPAbstractNode >> shapes [
+
+	^ (self withAllChildren collect: [ :child | 
+		   RSComposite new
+			   model: child;
+			   addShape: (RSEllipse new
+					    extent: 20 @ 20;
+					    color: (Color r: 0.5298142717497556 g: 0.8074291300097751 b: 0.9804496578690127);
+					    border: (RSBorder new
+							     color: (Color
+									      r: 0.2316715542521994
+									      g: 0.5141739980449658
+									      b: 0.7409579667644184);
+							     yourself);
+					    @ RSDraggable);
+			   addShape: (RSLabel new
+					    text: child id;
+					    color: Color black;
+					    bold;
+					    fontSize: 2);
+			   padding: 10;
+			   yourself ]) asOrderedCollection
+]
+
+{ #category : #accessing }
+GPAbstractNode >> shapes: canvas [
+	| group shapes shapeGroup |
+	group := RSGroup new.
+	shapeGroup := RSGroup new.
+	shapes := self allShapes.
+	shapeGroup addAll: shapes.
+	RSEdgeBuilder line
+		color: (Color
+			r: 0.2316715542521994
+			g: 0.5141739980449658
+			b: 0.7409579667644184);
+		canvas: canvas;
+		shapes: shapeGroup;
+		connectToAll: #children.
+	"canvas edges pushBack."
+	RSTreeLayout new
+		verticalGap: 10;
+		on: shapeGroup.
+	group add: (RSComposite new shapes: shapeGroup).
+	^ group
 ]
 
 { #category : #accessing }

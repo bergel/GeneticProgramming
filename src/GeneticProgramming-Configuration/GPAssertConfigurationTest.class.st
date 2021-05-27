@@ -147,13 +147,12 @@ GPAssertConfigurationTest >> node4 [
 
 { #category : #initialization }
 GPAssertConfigurationTest >> setUp [
-	GPRandom seed: 1345.
-	configuration := GPAssertConfiguration new
+	configuration := GPAssertConfiguration new seed: 1345
 ]
 
 { #category : #tests }
 GPAssertConfigurationTest >> testCountErrorsGiven [
-	GPRandom seed: 3.
+	configuration seed: 3.
 	configuration options: (OrderedCollection new 
 		addAll: #(1 2 -2 4 $e $r $, 'asdf' nil #(Greeting Integer));
 		"add: [ :obj | obj isArray and: [ obj allSatisfy: #isString ] ];"
@@ -185,7 +184,7 @@ GPAssertConfigurationTest >> testCrossoverWith [
 { #category : #tests }
 GPAssertConfigurationTest >> testCrossoverWith1 [
 	| individual1 individual2 offspring |
-	GPRandom seed: 8.
+	configuration seed: 8.
 	individual1 := self node3.
 	individual2 := self node4.
 	self assert: individual1 print equals: (RBParser parseExpression: 'self assert: (arrayOfNames notEmpty and: [ arrayOfNames allSatisfy: #isString ])') formattedCode.
@@ -197,7 +196,7 @@ GPAssertConfigurationTest >> testCrossoverWith1 [
 { #category : #tests }
 GPAssertConfigurationTest >> testCrossoverWithGivenAnd [
 	| individual1 individual2 children1 children2 |
-	GPRandom seed: 758.
+	configuration seed: 758.
 	individual1 := self node1.
 	individual2 := self node4.
 	children1 := individual1  withAllChildren allButFirst: 4.
@@ -237,7 +236,7 @@ GPAssertConfigurationTest >> testMutateWith [
 { #category : #tests }
 GPAssertConfigurationTest >> testMutateWith1 [
 	| individual1 individual2 |
-	GPRandom seed: 8.
+	configuration seed: 8.
 	individual1 := self node3.
 	individual2 := self node4.
 	self assert: individual1 print equals: (RBParser parseExpression: 'self assert: (arrayOfNames notEmpty and: [ arrayOfNames allSatisfy: #isString ])') formattedCode.

@@ -27,11 +27,6 @@ GPAbstactEngineTest >> setUp [
 	GPRandom seed: 42
 ]
 
-{ #category : #running }
-GPAbstactEngineTest >> tearDown [
-	GPRandom resetInstance
-]
-
 { #category : #tests }
 GPAbstactEngineTest >> testAllLeaves [
 	| i |

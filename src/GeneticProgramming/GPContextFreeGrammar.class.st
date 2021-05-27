@@ -5,7 +5,8 @@ Class {
 		'configuration',
 		'options',
 		'depth',
-		'methodName'
+		'methodName',
+		'random'
 	],
 	#category : #'GeneticProgramming-Grammar'
 }
@@ -278,7 +279,8 @@ GPContextFreeGrammar >> fillArrayOfSize: size1 to: size2 [
 GPContextFreeGrammar >> initialize [
 
 	options := Dictionary new.
-	methodName := #grow
+	methodName := #grow.
+	random := GPRandom seed: 1
 ]
 
 { #category : #'as yet unclassified' }
@@ -304,15 +306,26 @@ GPContextFreeGrammar >> options [
 	^ options
 ]
 
+{ #category : #accessing }
+GPContextFreeGrammar >> random: aRandom [
+	self assert: aRandom class == GPRandom.
+	random := aRandom 
+]
+
 { #category : #selecting }
 GPContextFreeGrammar >> randomlySelectOption: collection [
 
-	^ GPRandom instance randomlySelect: collection
+	^ random randomlySelect: collection
 ]
 
 { #category : #'as yet unclassified' }
 GPContextFreeGrammar >> ruleOptionOf: symbol [
 	^ options at: symbol ifAbsent: [ nil ]
+]
+
+{ #category : #'instance creation' }
+GPContextFreeGrammar >> seed: aNumber [
+	random seed: aNumber
 ]
 
 { #category : #selecting }
@@ -336,14 +349,14 @@ GPContextFreeGrammar >> selectValueForRule: symbol at: index [
 
 { #category : #'as yet unclassified' }
 GPContextFreeGrammar >> shuffle: collection [
-	^ GPRandom instance shuffleElementsOf: collection 
+	^ random shuffleElementsOf: collection 
 ]
 
 { #category : #'as yet unclassified' }
 GPContextFreeGrammar >> shuffleOrSortOptions: collection of: symbol regarding: integer [
 	integer == depth ifTrue: [
-		^ GPRandom instance  shuffleElementsOf: (collection select: [ :ass | ass key = 'node' ]) ].
-	^ GPRandom instance shuffleElementsOf: collection
+		^ random  shuffleElementsOf: (collection select: [ :ass | ass key = 'node' ]) ].
+	^ random shuffleElementsOf: collection
 	"^ configuration 
 		ifNil: [ GPRandom instance shuffleElementsOf: collection ] 
 		ifNotNil: [ configuration shuffle: collection forRule: symbol ]"

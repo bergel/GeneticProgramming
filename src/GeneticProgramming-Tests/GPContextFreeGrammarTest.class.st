@@ -11,16 +11,7 @@ Class {
 GPContextFreeGrammarTest >> setUp [
 
 	 super setUp.
-	 grammar := GPContextFreeGrammar new.
-	 GPRandom seed: 1
-]
-
-{ #category : #running }
-GPContextFreeGrammarTest >> tearDown [
-
-	 
-	 GPRandom resetInstance.
-	 super tearDown.
+	 grammar := GPContextFreeGrammar new seed: 1
 ]
 
 { #category : #tests }
@@ -227,8 +218,8 @@ GPContextFreeGrammarTest >> testAddSelectorRuleWithValues [
 GPContextFreeGrammarTest >> testExpand [
 
 	| tree |
-	GPRandom seed: 11324.
 	grammar
+		seed: 11324;
 		addSelectorRule: #Add withValues: #( #+ #- );
 		addRule: #E ofClass: RBMessageNode withSequence: #( #E #Add #T );
 		addRule: #E redirectingTo: #T;
@@ -246,8 +237,8 @@ GPContextFreeGrammarTest >> testExpand [
 GPContextFreeGrammarTest >> testExpandFrom [
 
 	 | tree |
-	 GPRandom seed: 113542.
 	 grammar
+		seed: 113542;
 		 addSelectorRule: #AddOp withValues: #( #sum: #sub: );
 		 addRule: #E ofClass: RBMessageNode withSequence: #( #E #AddOp #T );
 		 addRule: #E redirectingTo: #T;
@@ -268,8 +259,8 @@ GPContextFreeGrammarTest >> testExpandFrom [
 GPContextFreeGrammarTest >> testExpandFromWithLogicExample [
 
 	| tree |
-	GPRandom seed: 113542.
 	grammar
+		seed: 113542;
 		addSelectorRule: #LogOp withValues: #( #and: #or: );
 		addRule: #E ofClass: RBMessageNode withSequence: #( #E #LogOp #T );
 		addRule: #E redirectingTo: #T;
@@ -319,8 +310,8 @@ GPContextFreeGrammarTest >> testExpandGiven [
 GPContextFreeGrammarTest >> testExpandOnASTNodes [
 
 	| tree |
-	GPRandom seed: 78653.
 	grammar
+		seed: 78653;
 		addRule: #Assignment
 		ofClass: RBAssignmentNode
 		withSequence: #( #Variable #Value );
@@ -350,8 +341,8 @@ GPContextFreeGrammarTest >> testExpandOnASTNodes [
 GPContextFreeGrammarTest >> testExpandOnASTNodesRecursively [
 
 	| tree |
-	GPRandom seed: 78653.
 	grammar
+		seed: 78653;
 		addRule: #Assignment
 		ofClass: RBAssignmentNode
 		withSequence: #( #Variable #Value );
@@ -379,8 +370,8 @@ GPContextFreeGrammarTest >> testExpandOnASTNodesRecursively [
 GPContextFreeGrammarTest >> testExpandOnASTNodesRecursivelyWithWeigthsAndDepth [
 
 	| tree configuration |
-	GPRandom seed: 78653.
 	grammar
+		seed: 78653;
 		addRule: #Assignment ofClass: RBAssignmentNode withSequence: #( #Variable #Value );
 		addLeafRule: #Variable ofClass: RBVariableNode withValues: #( #a #v #m );
 		addRule: #Value withOptions: #( #Literal #Message );
@@ -468,8 +459,8 @@ GPContextFreeGrammarTest >> testExpandOnMethodNode [
 GPContextFreeGrammarTest >> testExpandTree [
 
 	| tree children |
-	GPRandom seed: 78652.
 	grammar
+		seed: 78652;
 		addRule: #Assignment
 		ofClass: RBAssignmentNode
 		withSequence: #( #Variable #Value );
@@ -523,8 +514,8 @@ GPContextFreeGrammarTest >> testExpandTree2 [
 GPContextFreeGrammarTest >> testExpandTreeFromLiteralNode [
 
 	| tree |
-	GPRandom seed: 78652.
 	grammar
+		seed: 78652;
 		addLeafRule: #Literal
 		ofClass: RBLiteralNode
 		withValues: (1 to: 10) asArray.
@@ -646,8 +637,8 @@ GPContextFreeGrammarTest >> testGenerateASTOfLiteral [
 GPContextFreeGrammarTest >> testGenerateASTOfRoassal3 [
 
 	| tree configuration |
-	GPRandom seed: 100.
 	grammar
+		seed: 100;
 		addRule: #Statements withCollectionOptions: #( #Assignment #Message ) ofSize: 1;
 		addRule: #Assignment ofClass: RBAssignmentNode withSequence: #( #Variable #Value );
 		addRule: #Message ofClass: RBMessageNode withSequence: #( #Value #Selector );
@@ -698,8 +689,8 @@ GPContextFreeGrammarTest >> testGeneratingManyTrees [
 GPContextFreeGrammarTest >> testSimpleExample [
 
 	| tree |
-	GPRandom seed: 342423.
 	grammar
+		seed: 342423;
 		addRule: #E
 		ofClass: RBMessageNode
 		withSequence: #( #E #AddOp #E ).
@@ -718,8 +709,8 @@ GPContextFreeGrammarTest >> testSimpleExample [
 GPContextFreeGrammarTest >> testSimpleExample2 [
 
 	| tree configuration |
-	GPRandom seed: 689669.
 	grammar
+		seed: 689669;
 		addSelectorRule: #AddOp withValues: #( #+ #- );
 		addRule: #E ofClass: RBMessageNode withSequence: #( #E #AddOp #T );
 		addRule: #E redirectingTo: #T;

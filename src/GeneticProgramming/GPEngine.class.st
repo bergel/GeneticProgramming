@@ -32,27 +32,33 @@ GPEngine >> createNewGeneration [
 
 	"check if problem solved"
 
-	| i1 i2 newInd newPopulation |
+	| i1 i2 newPopulation |
 	self pickBestIndividual fitness shouldTerminate ifTrue: [ ^ self ].
 	newPopulation := "OrderedCollection new." self eliteOfPopulation.
 	population size - newPopulation size timesRepeat: [ 
-		| number parent |
+		| number parent newInd indiv |
 		number := configuration randomInt: 100.
 		number <= 90
 			ifTrue: [ 
 				i1 := self tournament.
 				i2 := self tournament.
-				parent := i1.
 				newInd := configuration crossover: i1 with: i2.
-				newInd ifNil: [ newInd := i1 deepCopy ] ]
+				newInd ifNil: [ newInd := (configuration pickBestIndividual: i1 and: (Array with: i2)) deepCopy. "i1 fitness < i2 fitness ifTrue: [ i1 deepCopy ] ifFalse: [ i2 deepCopy ]" ] ]
 			ifFalse: [ 
 				parent := self tournament.
-				newInd := parent deepCopy ].
-		newInd addParent: parent.
+				newInd := parent deepCopy.
+				newInd addParent: parent.
+				"self distanceFromSolutionOf: newInd" ].
 		number := configuration randomInt: 100.
-		number <= 30
-				ifTrue: [ configuration mutate: newInd ].
-		newPopulation add: newInd ].
+		number <= 30 ifTrue: [ configuration mutate: newInd.
+			"self distanceFromSolutionOf: newInd "].
+		self distanceFromSolutionOf: newInd.
+		indiv := configuration pickBestIndividual: newInd and: newInd parents.
+		"newInd parents 
+			detect: [ :p | p fitness < fitnessInd ]
+			ifFound: [ :p | indiv := p deepCopy.
+				indiv addParent: p ]."
+		newPopulation add: indiv ].
 	population := newPopulation
 ]
 
@@ -88,6 +94,7 @@ GPEngine >> execute [
 	e execute.
 	"
 	| log r |
+	self halt.
 	self createInitialPopulation.
 	(population allSatisfy: #notNil) ifFalse: [ ^ self ].
 	r := self rankedIndividuals.

@@ -26,7 +26,7 @@ GPAbstractArithmeticConfiguration >> crossoverOf: individual1 with: individual2 
 
 { #category : #operations }
 GPAbstractArithmeticConfiguration >> distanceFromSolutionOf: individual [
-	individual fitness: (GPFitness new 
+	individual fitness: (GPFitnessFunction new 
 		fitnessValue: (self calculateFitnessValue: individual);
 		objective: [:fitness | fitness fitnessValue == 0 ]).
 	^ individual fitness 

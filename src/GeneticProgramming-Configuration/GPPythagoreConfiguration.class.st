@@ -58,7 +58,7 @@ GPPythagoreConfiguration >> example [
 { #category : #initialization }
 GPPythagoreConfiguration >> initialize [
 	super initialize.
-	random := GPRandom seed: 1
+	"random := GPRandom seed: 1"
 ]
 
 { #category : #'instance creation' }

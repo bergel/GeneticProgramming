@@ -86,11 +86,6 @@ GPNodeTest >> setUp [
 	GPRandom seed: 75314
 ]
 
-{ #category : #running }
-GPNodeTest >> tearDown [ 
-	GPRandom resetInstance
-]
-
 { #category : #tests }
 GPNodeTest >> testAst [
 	| node ast |

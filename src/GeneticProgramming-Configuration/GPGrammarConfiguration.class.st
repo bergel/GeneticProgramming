@@ -38,7 +38,7 @@ GPGrammarConfiguration >> crossover: individual1 with: individual2 [
 
 { #category : #operations }
 GPGrammarConfiguration >> distanceFromSolutionOf: individual [
-	individual fitness: (GPFitness new 
+	individual fitness: (GPFitnessFunction new 
 		fitnessValue: ([(individual evaluate - 234) abs] on: MessageNotUnderstood do: [ 234 ]);
 		objective: [ :fitness | fitness fitnessValue == 0 ]).
 	^ individual fitness
@@ -82,7 +82,7 @@ GPGrammarConfiguration >> initializeGrammar [
 { #category : #operations }
 GPGrammarConfiguration >> mutate: individual [
 	| found i source children nodeToMutate |
-	children := GPRandom instance shuffleElementsOf: (individual withAllChildren select: #isLeaf).
+	children := random shuffleElementsOf: (individual withAllChildren select: #isLeaf).
 	found := false.
 	i := 0.
 	[ found or: [ i > 20 ] ] whileFalse: [ | indivIds sourceIds sceChildren |
