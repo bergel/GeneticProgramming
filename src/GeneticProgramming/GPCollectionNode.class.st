@@ -9,6 +9,22 @@ GPCollectionNode class >> transform: node [
 	^ self new children: (Array with: node)
 ]
 
+{ #category : #comparing }
+GPCollectionNode >> = other [ 
+	^ super = other 
+		and: [ id == other id 
+			and: [ children size == other children size 
+				"and: [ depth == other depth "
+					and: [ | index |
+						index := 1.
+						children detect: [ :child | | found |
+							found := child ~= (other children at: index).
+							index := index + 1.
+							found ] 
+						ifFound: [ :c | false ] 
+						ifNone: [ true ] ] ] ] "]"
+]
+
 { #category : #accessing }
 GPCollectionNode >> ast [ 
 	^ RBSequenceNode statements: super ast

@@ -45,6 +45,11 @@ GPAssertionFitnessFunction >> initialize [
 	weights := Dictionary new
 ]
 
+{ #category : #asserting }
+GPAssertionFitnessFunction >> shouldTerminate [
+	^ self asNumber == 0
+]
+
 { #category : #'as yet unclassified' }
 GPAssertionFitnessFunction >> weightAt: string put: aNumber [
 	self assert: (dictObjective includesKey: string).

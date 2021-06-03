@@ -12,32 +12,37 @@ GPAssertionGrammarBuilder class >> buildAssertionGrammar: aClass of: targetSelec
 	^ self new buildAssertionGrammar: aClass of: targetSelectors
 ]
 
+{ #category : #'as yet unclassified' }
+GPAssertionGrammarBuilder >> addInstanceVarsOf: tgClass to: grammar [
+	| instVars |
+	self assert: tgClass isClass.
+	instVars := tgClass instanceVariables collect: #name.
+	instVars ifNotEmpty: [ 
+		grammar 
+			addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Comparison #InstanceVar);
+			addRule: #Inclusion ofClass: RBMessageNode withSequence: #(#InstanceVar #Includes #Variable);
+			addRule: #NegativeInclusion ofClass: RBMessageNode withSequence: #(#Inclusion #Not);
+			addLeafRule: #InstanceVar ofClass: RBVariableNode withValues: instVars;
+			addRule: #Method redirectingTo: #Inclusion;
+			addRule: #Method redirectingTo: #NegativeInclusion ]
+]
+
 { #category : #accessing }
 GPAssertionGrammarBuilder >> argumentsOf: symbol [
 	^ arguments at: symbol
 ]
 
 { #category : #'as yet unclassified' }
-GPAssertionGrammarBuilder >> buildAssertionGrammar: aClass of: targetSelectors [
-	self collectArguments: aClass given: targetSelectors.
-	^ self buildAssertionGrammarGiven: aClass
-]
-
-{ #category : #'as yet unclassified' }
-GPAssertionGrammarBuilder >> buildAssertionGrammarGiven: tgClass [
-	| grammar instVars |
-	self assert: tgClass isClass.
+GPAssertionGrammarBuilder >> buildAssertionGrammar [
+	| grammar |
 	grammar := GPContextFreeGrammar new.
 	grammar 
-		addRule: #Assertion ofClass: RBMessageNode withSequence: #(#Self #Assert #Method);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Message);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Message1 #Args1);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Satisfy #Message);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Comparison #Integer);
 		addRule: #Method ofClass: RBMessageNode withSequence: #(#Method #And #Block);
 		addRule: #Args1 withCollectionOptions: #(#Class) ofSize: 1;
-		"addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Message1 #Args1);"
-		addSelectorRule: #Assert withValues: #(#assert:);
 		addSelectorRule: #Message withValues: #(#isString #isInteger #isFloat #isNumber #isFinite #isCharacter #isCollection #isArray #isSymbol #isColor #isBlock #isEmpty #notEmpty #isNil #notNil #positive #negative #isPoint);
 		addSelectorRule: #Message1 withValues: #(#isKindOf: #isMemberOf:);
 		"addRule: #Message1 redirectingTo: #Comparison;
@@ -49,18 +54,18 @@ GPAssertionGrammarBuilder >> buildAssertionGrammarGiven: tgClass [
 		addSelectorRule: #And withValues: #(#and:);
 		addSelectorRule: #Not withValues: #(#not);
 		addRule: #Block ofClass: RBBlockNode withSequence: #(#Method);
-		addLeafRule: #Self ofClass: RBVariableNode withValues: #('self');
 		addLeafRule: #Integer ofClass: RBLiteralNode withValues: (-10 to: 10) asOrderedCollection;
 		addLeafRule: #Class ofClass: RBVariableNode  withValues: #(#ByteString #Point #Character #Symbol #SmallInteger #Number #SmallFloat64 #Boolean #Collection #Array #BlockClosure #Dictionary #Set #OrderedCollection).
-	instVars := self instanceVarsOf: tgClass.
-	instVars ifNotEmpty: [ 
-		grammar 
-			addRule: #Method ofClass: RBMessageNode withSequence: #(#Variable #Comparison #InstanceVar);
-			addRule: #Inclusion ofClass: RBMessageNode withSequence: #(#InstanceVar #Includes #Variable);
-			addRule: #NegativeInclusion ofClass: RBMessageNode withSequence: #(#Inclusion #Not);
-			addLeafRule: #InstanceVar ofClass: RBVariableNode withValues: instVars;
-			addRule: #Method redirectingTo: #Inclusion;
-			addRule: #Method redirectingTo: #NegativeInclusion ].
+	^ grammar
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertionGrammarBuilder >> buildAssertionGrammar: targetSelectors of: aClass [
+
+	| grammar |
+	grammar := self buildAssertionGrammar.
+	self collectArguments: aClass given: targetSelectors.
+	self addInstanceVarsOf: aClass to: grammar.
 	^ grammar
 ]
 
@@ -75,9 +80,4 @@ GPAssertionGrammarBuilder >> collectArguments: aClass given: targetSelectors [
 { #category : #initialization }
 GPAssertionGrammarBuilder >> initialize [
 	arguments := Dictionary new
-]
-
-{ #category : #'as yet unclassified' }
-GPAssertionGrammarBuilder >> instanceVarsOf: tgClass [
-	^ tgClass instanceVariables collect: #name
 ]

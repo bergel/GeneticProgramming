@@ -4,6 +4,14 @@ Class {
 	#category : #'GeneticProgramming-Core'
 }
 
+{ #category : #comparing }
+GPLeafNode >> = other [
+	^ super = other 
+		and: [ id == other id 
+			and: [ nodeValue = other nodeValue 
+				"and: [ depth == other depth ]" ] ]
+]
+
 { #category : #testing }
 GPLeafNode >> isLeafNode [ 		
 	^ true

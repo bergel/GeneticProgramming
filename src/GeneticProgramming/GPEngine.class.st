@@ -34,30 +34,26 @@ GPEngine >> createNewGeneration [
 
 	| i1 i2 newPopulation |
 	self pickBestIndividual fitness shouldTerminate ifTrue: [ ^ self ].
-	newPopulation := "OrderedCollection new." self eliteOfPopulation.
+	newPopulation := self eliteOfPopulation.
 	population size - newPopulation size timesRepeat: [ 
 		| number parent newInd indiv |
 		number := configuration randomInt: 100.
-		number <= 90
-			ifTrue: [ 
+		number <= 33
+			ifTrue: [
 				i1 := self tournament.
-				i2 := self tournament.
+				i2 := self tournamentDiscarding: i1.
 				newInd := configuration crossover: i1 with: i2.
-				newInd ifNil: [ newInd := (configuration pickBestIndividual: i1 and: (Array with: i2)) deepCopy. "i1 fitness < i2 fitness ifTrue: [ i1 deepCopy ] ifFalse: [ i2 deepCopy ]" ] ]
+				newInd ifNil: [ newInd := configuration pickBestIndividual: i1 and: i2 ] ]
 			ifFalse: [ 
 				parent := self tournament.
 				newInd := parent deepCopy.
 				newInd addParent: parent.
 				"self distanceFromSolutionOf: newInd" ].
 		number := configuration randomInt: 100.
-		number <= 30 ifTrue: [ configuration mutate: newInd.
+		number <= 50 ifTrue: [ configuration mutate: newInd.
 			"self distanceFromSolutionOf: newInd "].
 		self distanceFromSolutionOf: newInd.
-		indiv := configuration pickBestIndividual: newInd and: newInd parents.
-		"newInd parents 
-			detect: [ :p | p fitness < fitnessInd ]
-			ifFound: [ :p | indiv := p deepCopy.
-				indiv addParent: p ]."
+		indiv := configuration pickBestConsideringParents: newInd.
 		newPopulation add: indiv ].
 	population := newPopulation
 ]
@@ -94,7 +90,6 @@ GPEngine >> execute [
 	e execute.
 	"
 	| log r |
-	self halt.
 	self createInitialPopulation.
 	(population allSatisfy: #notNil) ifFalse: [ ^ self ].
 	r := self rankedIndividuals.
@@ -254,12 +249,52 @@ GPEngine >> tournament [
 	"Return the best individual from a tournament"
 	| k best ind |
 	best := nil.
-	k := 4.
+	k := 2.
 	k timesRepeat: [ 
 		ind := self randomElementOf: population. "population at: (configuration random randomNumber: population size)".
 		(best isNil or: [ ind fitness < best fitness ]) 
 			ifTrue: [ best := ind ] ].
 	^ best
+	"| fitness best |
+	best := (population asSortedCollection: [ :ind1 :ind2 | ind1 fitness > ind2 fitness ]) first.
+	fitness := best fitness.
+	5 timesRepeat: [ 
+		| competitor i |
+		competitor := configuration randomElementOf: population.
+		i := competitor fitness.
+		(i < fitness ""or: [i = fitness]"") ifTrue: [ 
+			best := competitor.
+			fitness := competitor fitness ]
+	].
+	^ best"
+]
+
+{ #category : #evolution }
+GPEngine >> tournamentDiscarding: individual [
+	"Return the best individual from a tournament"
+	| k best ind size i j m |
+	best := nil.
+	k := 2.
+	size := population size.
+	m := size > k 
+		ifTrue: [ k ]
+		ifFalse: [ size - 1 ].
+	i := j := 0.
+	[ i < m and: [ j < 50 ] ] whileTrue: [ 
+		ind := self randomElementOf: population.
+		individual = ind ifFalse: [
+			i := i + 1.
+			(best isNil or: [ ind fitness < best fitness ]) 
+				ifTrue: [ best := ind ] ].
+		j := j + 1
+	].
+	best ifNil: [ best := self tournament ].
+	^ best
+	"k timesRepeat: [ 
+		ind := self randomElementOf: population.
+		(best isNil or: [ ind fitness < best fitness ]) 
+			ifTrue: [ best := ind ] ].
+	^ best"
 	"| fitness best |
 	best := (population asSortedCollection: [ :ind1 :ind2 | ind1 fitness > ind2 fitness ]) first.
 	fitness := best fitness.

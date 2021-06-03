@@ -86,7 +86,7 @@ GPAbstractNode >> allShapes [
 		   RSComposite new
 			   model: child;
 			   addShape: (RSEllipse new
-					    extent: 20 @ 20;
+					    extent: 30 @ 30;
 					    color: (Color r: 0.5298142717497556 g: 0.8074291300097751 b: 0.9804496578690127);
 					    border: (RSBorder new
 							     color: (Color
@@ -99,8 +99,8 @@ GPAbstractNode >> allShapes [
 					    text: child id;
 					    color: Color black;
 					    bold;
-					    fontSize: 2);
-			   padding: 10;
+					    fontSize: 4);
+			   padding: 1;
 			   yourself ]) asOrderedCollection
 ]
 
@@ -361,7 +361,8 @@ GPAbstractNode >> printUsing: context [
 
 { #category : #accessing }
 GPAbstractNode >> replaceBy: anotherNode [
-	self assert: anotherNode class == self class.
+	"self assert: anotherNode class == self class."
+	self assert: (id == anotherNode id or: [ type == anotherNode type or: [ self class == anotherNode class ] ]).
 	self id: anotherNode id;
 		"type: anotherNode type;"
 		nodeValue: anotherNode nodeValue;
@@ -402,25 +403,25 @@ GPAbstractNode >> shapes [
 
 { #category : #accessing }
 GPAbstractNode >> shapes: canvas [
-	| group shapes shapeGroup |
+	| group shapeGroup shapes |
 	group := RSGroup new.
 	shapeGroup := RSGroup new.
 	shapes := self allShapes.
-	shapeGroup addAll: shapes.
-	RSEdgeBuilder line
-		color: (Color
+	group addAll: shapes.
+	RSLineBuilder line
+		color: (Color fromHexString: '001440')"(Color
 			r: 0.2316715542521994
 			g: 0.5141739980449658
-			b: 0.7409579667644184);
-		canvas: canvas;
-		shapes: shapeGroup;
+			b: 0.7409579667644184)";
+		canvas: group;
+		shapes: group;
+		withBorderAttachPoint;
 		connectToAll: #children.
-	"canvas edges pushBack."
 	RSTreeLayout new
-		verticalGap: 10;
-		on: shapeGroup.
-	group add: (RSComposite new shapes: shapeGroup).
-	^ group
+		verticalGap: 20;
+		on: shapes.
+	shapeGroup add: group asShape.
+	^ shapeGroup
 ]
 
 { #category : #accessing }

@@ -87,7 +87,4 @@ GPMultiObjectiveFitnessFunction >> printOn: stream [
 { #category : #asserting }
 GPMultiObjectiveFitnessFunction >> shouldTerminate [
 	^ self subclassResponsibility 
-	"^ dictFunction at: 'shouldTerminate' 
-		ifPresent: [ :block | block valueWithEnoughArguments: (Array with: self) ]
-		ifAbsent: [ Error signal: 'Does not have a condition termination' ]"
 ]

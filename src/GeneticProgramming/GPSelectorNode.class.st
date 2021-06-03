@@ -4,6 +4,14 @@ Class {
 	#category : #'GeneticProgramming-Core'
 }
 
+{ #category : #comparing }
+GPSelectorNode >> = other [
+	^ super = other 
+		and: [ self id == other id 
+			and: [ nodeValue = other nodeValue 
+				"and: [ depth == other depth ]" ] ]
+]
+
 { #category : #'as yet unclassified' }
 GPSelectorNode >> convertToLeafNode [
 	^ GPLeafNode new 

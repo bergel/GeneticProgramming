@@ -11,143 +11,228 @@ Class {
 
 { #category : #'as yet unclassified' }
 GPAssertConfigurationTest >> node1 [ 
-	"self asseer: arrayOfNames notEmpty"
+	"arrayOfNames notEmpty"
 	^  GPNode new 
-		id: #Assertion;
-		depth: 0;
-		evaluationBlock: [ :n :ctx | n ast ];
-		printBlock: [ :n :ctx | n ast formattedCode ];
-		type: RBMessageNode;
-		children: (OrderedCollection new 
-			add: (GPLeafNode new id: #Self; nodeValue: 'self'; type: RBVariableNode; depth: 1;
-				printBlock: [:n :ctx | n nodeValue asString ]);
-			add: (GPSelectorNode new id: 'Assert'; nodeValue: 'assert:'; depth: 1; 
-				printBlock: [:n :ctx | n nodeValue ]);
-			add: (GPNode new 
-				id: #Method;
-				type: RBMessageNode;
-				depth: 1;
-				printBlock: [:n :ctx | [ (n withAllChildren collect: #id) asArray asString]];
-				children: (OrderedCollection new
-					add: (GPLeafNode new id: #Variable; depth: 2; nodeValue: 'arrayOfNames'; type: RBVariableNode;
-						printBlock: [:n :ctx | n nodeValue asString ]);
-					add: (GPSelectorNode new id: #Message; nodeValue: #notEmpty; depth: 2; 
-						printBlock: [:n :ctx | n nodeValue ]);
-					yourself) );
-			yourself).
+			id: #Method;
+			type: RBMessageNode;
+			depth: 1;
+			printBlock: [:n :ctx | n ast formattedCode ];
+			children: (OrderedCollection new
+				add: (GPLeafNode new id: #Variable; depth: 2; nodeValue: 'arrayOfNames'; type: RBVariableNode; printBlock: [:n :ctx | n nodeValue asString ]);
+				add: (GPSelectorNode new id: #Message; nodeValue: #notEmpty; depth: 2; 
+					printBlock: [:n :ctx | n nodeValue ]);
+				yourself)
 ]
 
 { #category : #'as yet unclassified' }
 GPAssertConfigurationTest >> node2 [
-	"self assert: arrayOfLastNames empty"
+	"arrayOfLastNames isEmpty"
 	^ GPNode new 
-		id: #Assertion;
-		depth: 0;
-		evaluationBlock: [ :n :ctx | n ast ];
-		printBlock: [ :n :ctx | n ast formattedCode ];
+		id: #Method;
 		type: RBMessageNode;
-		children: (OrderedCollection new 
-			add: (GPLeafNode new id: #Self; nodeValue: 'self'; type: RBVariableNode; depth: 1;
+		depth: 1;
+		printBlock: [:n :ctx | n ast formattedCode ];
+		children: (OrderedCollection new
+			add: (GPLeafNode new id: #Variable; depth: 2; nodeValue: 'arrayOfLastNames'; type: RBVariableNode;
 				printBlock: [:n :ctx | n nodeValue asString ]);
-			add: (GPSelectorNode new id: 'Assert'; nodeValue: 'assert:'; depth: 1; 
+			add: (GPSelectorNode new id: #Message; nodeValue: #isEmpty; depth: 2; 
 				printBlock: [:n :ctx | n nodeValue ]);
-			add: (GPNode new 
-				id: #Method;
-				type: RBMessageNode;
-				depth: 1;
-				printBlock: [:n :ctx | [ (n withAllChildren collect: #id) asArray asString]];
-				children: (OrderedCollection new
-					add: (GPLeafNode new id: #Variable; depth: 2; nodeValue: 'arrayOfLastNames'; type: RBVariableNode;
-						printBlock: [:n :ctx | n nodeValue asString ]);
-					add: (GPSelectorNode new id: #Message; nodeValue: #isEmpty; depth: 2; 
-						printBlock: [:n :ctx | n nodeValue ]);
-					yourself) );
 			yourself)
 ]
 
 { #category : #'as yet unclassified' }
 GPAssertConfigurationTest >> node3 [
-	"self assert: (arrayOfNames notEmpty and: [ arrayOfNames allSatisfy: #isString ])"
+	"arrayOfNames notEmpty and: [ arrayOfNames allSatisfy: #isString ]"
 	^ GPNode new 
-		id: #Assertion;
-		depth: 0;
-		evaluationBlock: [ :n :ctx | n ast ];
-		printBlock: [ :n :ctx | n ast formattedCode ];
+		id: #Method;
 		type: RBMessageNode;
-		children: (OrderedCollection new 
-			add: (GPLeafNode new id: #Self; nodeValue: 'self'; type: RBVariableNode; depth: 1;
-				printBlock: [:n :ctx | n nodeValue asString ]);
-			add: (GPSelectorNode new id: 'Assert'; nodeValue: 'assert:'; depth: 1; 
-				printBlock: [:n :ctx | n nodeValue ]);
-			add: (GPNode new 
-				id: #Method;
+		depth: 1;
+		printBlock: [:n :ctx | n ast formattedCode ];
+		children: (OrderedCollection new
+			add: (GPNode new id: #Method; depth: 2; 
 				type: RBMessageNode;
-				depth: 1;
-				printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString];
-				children: (OrderedCollection new
-					add: (GPNode new id: #Method; depth: 2; 
+				printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ];
+				children: (OrderedCollection new 
+					add: (GPLeafNode new id: #Variable; depth: 3; nodeValue: 'arrayOfNames'; type: RBVariableNode;
+						printBlock: [:n :ctx | n nodeValue asString ]);
+					add: (GPSelectorNode new id: #Message; nodeValue: #notEmpty; depth: 3; 
+						printBlock: [:n :ctx | n nodeValue ]);
+					yourself);
+				nodeValue: #('arrayOfNames' #notEmpty) asOrderedCollection);
+			add: (GPSelectorNode new id: #And; depth: 2; nodeValue: #and:; 
+				printBlock: [:n :ctx | n nodeValue ]);
+			add: (GPNode new id: #Block; depth: 2;  type: RBBlockNode;
+				printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ];
+				children: (OrderedCollection new 
+					add: (GPNode new id: #Method; depth: 3; 
 						type: RBMessageNode;
 						printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ];
 						children: (OrderedCollection new 
-							add: (GPLeafNode new id: #Variable; depth: 3; nodeValue: 'arrayOfNames'; type: RBVariableNode;
+							add: (GPLeafNode new id: #Variable; depth: 4; nodeValue: 'arrayOfNames'; type: RBVariableNode;
 								printBlock: [:n :ctx | n nodeValue asString ]);
-							add: (GPSelectorNode new id: #Message; nodeValue: #notEmpty; depth: 3; 
+							add: (GPSelectorNode new id: #Satisfy; nodeValue: #allSatisfy:; depth: 4; 
 								printBlock: [:n :ctx | n nodeValue ]);
-							yourself);
-						nodeValue: #('arrayOfNames' #notEmpty) asOrderedCollection);
-					add: (GPSelectorNode new id: #And; depth: 2; nodeValue: #and:; 
-						printBlock: [:n :ctx | n nodeValue ]);
-					add: (GPNode new id: #Block; depth: 2;  type: RBBlockNode;
-						printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ];
-						children: (OrderedCollection new 
-							add: (GPNode new id: #Method; depth: 3; 
-								type: RBMessageNode;
-								printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ];
-								children: (OrderedCollection new 
-									add: (GPLeafNode new id: #Variable; depth: 4; nodeValue: 'arrayOfNames'; type: RBVariableNode;
-										printBlock: [:n :ctx | n nodeValue asString ]);
-									add: (GPSelectorNode new id: #Satisfy; nodeValue: #allSatisfy:; depth: 4; 
-										printBlock: [:n :ctx | n nodeValue ]);
-									add: (GPLeafNode new id: #Message; nodeValue: #isString; depth: 4;  type: RBLiteralNode;
-										printBlock: [:n :ctx | n nodeValue asString ]);
-									yourself));
-							yourself);
-						nodeValue: #('arrayOfNames' #allSatisfy: #isString) asOrderedCollection);
-					yourself));
+							add: (GPLeafNode new id: #Message; nodeValue: #isString; depth: 4;  type: RBLiteralNode;
+								printBlock: [:n :ctx | n nodeValue asString ]);
+							yourself));
+					yourself);
+				nodeValue: #('arrayOfNames' #allSatisfy: #isString) asOrderedCollection);
 			yourself)
 ]
 
 { #category : #'as yet unclassified' }
 GPAssertConfigurationTest >> node4 [
-	"self assert: arrayOfNames empty"
+	"arrayOfNames isEmpty"
 	^ GPNode new 
-		id: #Assertion;
-		depth: 0;
-		evaluationBlock: [ :n :ctx | n ast ];
-		printBlock: [ :n :ctx | n ast formattedCode ];
+		id: #Method;
 		type: RBMessageNode;
-		children: (OrderedCollection new 
-			add: (GPLeafNode new id: #Self; nodeValue: 'self'; type: RBVariableNode; depth: 1;
+		depth: 1;
+		printBlock: [:n :ctx | n ast formattedCode ];
+		children: (OrderedCollection new
+			add: (GPLeafNode new id: #Variable; depth: 2; nodeValue: 'arrayOfNames'; type: RBVariableNode;
 				printBlock: [:n :ctx | n nodeValue asString ]);
-			add: (GPSelectorNode new id: 'Assert'; nodeValue: 'assert:'; depth: 1; 
+			add: (GPSelectorNode new id: #Message; nodeValue: #isEmpty; depth: 2; 
 				printBlock: [:n :ctx | n nodeValue ]);
-			add: (GPNode new 
-				id: #Method;
+			yourself)
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertConfigurationTest >> node5 [
+"aNumber isInteger and: [ anumber positive ]"
+	^ GPNode new 
+		id: #Method;
+		type: RBMessageNode;
+		depth: 0;
+		printBlock: [:n :ctx | n ast formattedCode ];
+		children: (OrderedCollection new
+			add: (GPNode new id: #Method; depth: 1; 
 				type: RBMessageNode;
-				depth: 1;
-				printBlock: [:n :ctx | [ (n withAllChildren collect: #id) asArray asString]];
-				children: (OrderedCollection new
-					add: (GPLeafNode new id: #Variable; depth: 2; nodeValue: 'arrayOfNames'; type: RBVariableNode;
+				printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ];
+				children: (OrderedCollection new 
+					add: (GPLeafNode new id: #Variable; depth: 2; nodeValue: 'aNumber'; type: RBVariableNode;
 						printBlock: [:n :ctx | n nodeValue asString ]);
-					add: (GPSelectorNode new id: #Message; nodeValue: #isEmpty; depth: 2; 
+					add: (GPSelectorNode new id: #Message; nodeValue: #isInteger; depth: 3; 
 						printBlock: [:n :ctx | n nodeValue ]);
-					yourself) );
+					yourself);
+				nodeValue: #('aNumber' #isInteger) asOrderedCollection);
+			add: (GPSelectorNode new id: #And; depth: 2; nodeValue: #and:; 
+				printBlock: [:n :ctx | n nodeValue ]);
+			add: (GPNode new id: #Block; depth: 2;  type: RBBlockNode;
+				printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ];
+				children: (OrderedCollection new 
+					add: (GPNode new id: #Method; depth: 3; 
+						type: RBMessageNode;
+						printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ];
+						children: (OrderedCollection new 
+							add: (GPLeafNode new id: #Variable; depth: 4; nodeValue: 'aNumber'; type: RBVariableNode;
+								printBlock: [:n :ctx | n nodeValue asString ]);
+							add: (GPSelectorNode new id: #Message; nodeValue: #positive; depth: 4; 
+								printBlock: [:n :ctx | n nodeValue ]);
+							yourself));
+					yourself);
+				nodeValue: #('aNumber' #positive) asOrderedCollection);
+			yourself)
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertConfigurationTest >> node6 [
+	"aNumber > 0"
+	^ GPNode new 
+		id: #Method;
+		type: RBMessageNode;
+		depth: 0;
+		printBlock: [:n :ctx | n ast formattedCode ];
+		children: (OrderedCollection new
+			add: (GPLeafNode new id: #Variable; depth: 2; nodeValue: 'aNumber'; type: RBVariableNode;
+				printBlock: [:n :ctx | n nodeValue asString ]);
+			add: (GPSelectorNode new id: #Comparison; nodeValue: #>; depth: 3; 
+				printBlock: [:n :ctx | n nodeValue ]);
+			add: (GPLeafNode new id: #Integer; depth: 2; nodeValue: 0; type: RBLiteralNode;
+				printBlock: [:n :ctx | n nodeValue asString ]);
+			yourself);
+		nodeValue: #('aNumber' #> '0') asOrderedCollection
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertConfigurationTest >> node7 [
+	"aNumber == 0"
+	^ GPNode new 
+		id: #Method;
+		type: RBMessageNode;
+		depth: 0;
+		printBlock: [:n :ctx | n ast formattedCode ];
+		children: (OrderedCollection new
+			add: (GPLeafNode new id: #Variable; depth: 1; nodeValue: 'aNumber'; type: RBVariableNode;
+				printBlock: [:n :ctx | n nodeValue asString ]);
+			add: (GPSelectorNode new id: #Comparison; nodeValue: #==; depth: 1; 
+				printBlock: [:n :ctx | n nodeValue ]);
+			add: (GPLeafNode new id: #Integer; depth: 1; nodeValue: 1; type: RBLiteralNode;
+				printBlock: [:n :ctx | n nodeValue asString ]);
+			yourself);
+		nodeValue: #('aNumber' #> '0') asOrderedCollection
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertConfigurationTest >> node8 [
+	"aNumber isInteger and: [ anumber positive and: [ aNumber isNumber ] ]"
+	^ GPNode new 
+		id: #Method;
+		type: RBMessageNode;
+		depth: 0;
+		printBlock: [:n :ctx | n ast formattedCode ];
+		children: (OrderedCollection new
+			add: (GPNode new id: #Method; depth: 1; 
+				type: RBMessageNode;
+				printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ];
+				children: (OrderedCollection new 
+					add: (GPLeafNode new id: #Variable; depth: 2; nodeValue: 'aNumber'; type: RBVariableNode;
+						printBlock: [:n :ctx | n nodeValue asString ]);
+					add: (GPSelectorNode new id: #Message; nodeValue: #isInteger; depth: 3; 
+						printBlock: [:n :ctx | n nodeValue ]);
+					yourself);
+				nodeValue: #('aNumber' #isInteger) asOrderedCollection);
+			add: (GPSelectorNode new id: #And; depth: 2; nodeValue: #and:; 
+				printBlock: [:n :ctx | n nodeValue ]);
+			add: (GPNode new id: #Block; depth: 2;  type: RBBlockNode;
+				printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ];
+				children: (OrderedCollection new 
+					add: (GPNode new id: #Method; depth: 3; 
+						type: RBMessageNode;
+						printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ];
+						children: (OrderedCollection new 
+							add: (GPNode new id: #Method; depth: 3; type: RBMessageNode;
+								printBlock: [  ];
+								children: (OrderedCollection new 
+									add: (GPLeafNode new id: #Variable; depth: 4; nodeValue: 'aNumber'; type: RBVariableNode;
+										printBlock: [:n :ctx | n nodeValue asString ]);
+									add: (GPSelectorNode new id: #Message; nodeValue: #positive; depth: 4; 
+										printBlock: [:n :ctx | n nodeValue ]);
+									yourself));
+							add: (GPSelectorNode new id: #And; depth: 2; nodeValue: #and:; 
+								printBlock: [:n :ctx | n nodeValue ]);
+							add: (GPNode new id: #Block; depth: 2;  type: RBBlockNode;
+								printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ];
+								children: (OrderedCollection new 
+									add: (GPNode new id: #Method; depth: 3; 
+										type: RBMessageNode;
+										printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ];
+										children: (OrderedCollection new 
+											add: (GPLeafNode new id: #Variable; depth: 4; nodeValue: 'aNumber'; type: RBVariableNode;
+												printBlock: [:n :ctx | n nodeValue asString ]);
+											add: (GPSelectorNode new id: #Message; nodeValue: #isNumber; depth: 4; 
+												printBlock: [:n :ctx | n nodeValue ]);
+											yourself));
+									yourself);
+								nodeValue: #('aNumber' #isNumber) asOrderedCollection);
+						yourself));
+				yourself)); 
 			yourself)
 ]
 
 { #category : #initialization }
 GPAssertConfigurationTest >> setUp [
-	configuration := GPAssertConfiguration new seed: 1345
+	configuration := GPAssertConfiguration new seed: 1345.
+	configuration buildGrammar 
 ]
 
 { #category : #tests }
@@ -160,8 +245,8 @@ GPAssertConfigurationTest >> testCountErrorsGiven [
 	"configuration options: #(1 2 -2 4 $e $r $, 'asdf' nil #(Greeting Integer));"
 		targetSelector: #sum:;
 		targetClass: GPDigit.
-	self assert: (configuration countErrorsGiven: [ GPDigit new ]) equals: 30.
-	self assert: (configuration countErrorsGiven: [ GPDigit new value: 4 ]) equals: 18.
+	self assert: (configuration countErrorsGiven: [ GPDigit new ]) equals: 100.
+	self assert: (configuration countErrorsGiven: [ GPDigit new value: 4 ]) equals: 58.
 	"self assert: (configuration countErrorsGiven: [ DataFrame new ]) equals: 30.
 	self assert: (configuration countErrorsGiven: [ 
 		(DataFrame withRows: #((Hi 0) (World 1)))
@@ -170,44 +255,166 @@ GPAssertConfigurationTest >> testCountErrorsGiven [
 ]
 
 { #category : #tests }
-GPAssertConfigurationTest >> testCrossoverWith [
-	| ind1 ind2 offspring |
-	ind1 := self node1.
-	ind2 := self node2.
-	self assert: ind1 print equals: 'self assert: arrayOfNames notEmpty'.
-	self assert: ind2 print equals: 'self assert: arrayOfLastNames isEmpty'.
-	offspring := (configuration crossover: ind1 with: ind2).
-	self assertCollection: #('self assert: arrayOfNames isEmpty' 'self assert: arrayOfLastNames notEmpty') includesAny: (Array with: offspring print).
-	"self assert: (configuration crossover: ind1 with: ind2) print equals: 'self assert: arrayOfNames empty'"
+GPAssertConfigurationTest >> testCrossoverWithGivenAnd1 [
+	| individual1 individual2  offspring1 offspring2 |
+	configuration seed: 758.
+	individual1 := self node1.
+	individual2 := self node4.
+	offspring1 := individual1 deepCopy.
+	self assert: offspring1 print equals: 'arrayOfNames notEmpty'.
+	offspring1 := configuration crossover: offspring1 with: individual2 given: offspring1 withAllChildren allButFirst and: individual2 withAllChildren.
+	self assert: offspring1 print equals: 'arrayOfNames isEmpty'.
+	offspring2 := individual2 deepCopy.
+	self assert: offspring2 print equals: 'arrayOfNames isEmpty'.
+	offspring2 := configuration crossover: offspring2 with: individual1 given: offspring2 withAllChildren and: individual1 withAllChildren.
+	self assert: offspring2 print equals: 'arrayOfNames notEmpty' 
 ]
 
 { #category : #tests }
-GPAssertConfigurationTest >> testCrossoverWith1 [
+GPAssertConfigurationTest >> testCrossoverWithGivenAnd10 [
+	| individual1 individual2 set |
+	configuration seed: 8.
+	individual1 := self node6.
+	individual2 := self node8.
+	self assert: individual1 print equals: 'aNumber > 0'.
+	self assert: individual2 print equals: 'aNumber isInteger and: [ aNumber positive and: [ aNumber isNumber ] ]'.
+	set := ((1 to: 300) collect: [ :i | | offspring |
+		offspring := individual1 deepCopy.
+		offspring := configuration crossover: offspring with: individual2 given: offspring withAllChildren and: individual2 withAllChildren.
+		offspring print ]) asSet.
+	self assert: set size equals: 3.
+	self assertCollection: set hasSameElements: #('aNumber isInteger' 'aNumber positive' 'aNumber isNumber')
+]
+
+{ #category : #tests }
+GPAssertConfigurationTest >> testCrossoverWithGivenAnd2 [
+	| individual1 individual2  offspring1 offspring2 |
+	configuration seed: 758.
+	individual1 := self node1.
+	individual2 := self node2.
+	offspring1 := individual1 deepCopy.
+	self assert: offspring1 print equals: 'arrayOfNames notEmpty'.
+	offspring1 := configuration crossover: offspring1 with: individual2 given: offspring1 withAllChildren allButFirst and: individual2 withAllChildren.
+	self assert: offspring1 print equals: 'arrayOfNames isEmpty'.
+	offspring2 := individual2 deepCopy.
+	self assert: offspring2 print equals: 'arrayOfLastNames isEmpty'.
+	offspring2 := configuration crossover: offspring2 with: individual1 given: offspring2 withAllChildren and: individual1 withAllChildren.
+	self assert: offspring2 print equals: 'arrayOfLastNames notEmpty' 
+]
+
+{ #category : #tests }
+GPAssertConfigurationTest >> testCrossoverWithGivenAnd3 [
 	| individual1 individual2 offspring |
 	configuration seed: 8.
 	individual1 := self node3.
 	individual2 := self node4.
-	self assert: individual1 print equals: (RBParser parseExpression: 'self assert: (arrayOfNames notEmpty and: [ arrayOfNames allSatisfy: #isString ])') formattedCode.
-	self assert: individual2 print equals: 'self assert: arrayOfNames isEmpty'.
-	offspring := configuration crossover: individual1 with: individual2.
-	self assert: offspring print equals: (RBParser parseExpression: 'self assert: (arrayOfNames isEmpty and: [ arrayOfNames allSatisfy: #isString ])') formattedCode
+	offspring := individual1 deepCopy.
+	self assert: offspring print equals: (RBParser parseExpression: 'arrayOfNames notEmpty and: [ arrayOfNames allSatisfy: #isString ]') formattedCode.
+	offspring := configuration crossover: offspring with: individual2 given: offspring withAllChildren  and: individual2 withAllChildren.
+	self assert: offspring print equals: (RBParser parseExpression: 'arrayOfNames isEmpty and: [ arrayOfNames allSatisfy: #isString ]') formattedCode.
+	
+	offspring := individual2 deepCopy.
+	self assert: offspring print equals: (RBParser parseExpression: 'arrayOfNames isEmpty') formattedCode.
+	offspring := configuration crossover: offspring with: individual1 given: offspring withAllChildren allButFirst and: individual1 withAllChildren.
+	self assert: offspring print equals: (RBParser parseExpression: 'arrayOfNames isString') formattedCode
 ]
 
 { #category : #tests }
-GPAssertConfigurationTest >> testCrossoverWithGivenAnd [
-	| individual1 individual2 children1 children2 |
-	configuration seed: 758.
-	individual1 := self node1.
+GPAssertConfigurationTest >> testCrossoverWithGivenAnd4 [
+	| individual1 individual2 set |
+	configuration seed: 8.
+	individual1 := self node3.
 	individual2 := self node4.
-	children1 := individual1  withAllChildren allButFirst: 4.
-	children2 := individual2 withAllChildren allButFirst: 4.
-	self assert: 'self assert: arrayOfNames notEmpty' equals: individual1 print.
-	self assert: 'self assert: arrayOfNames isEmpty' equals: individual2 print.
-	self assert: children1 size equals: 2.
-	self assert: children2 size equals: 2.
-	self assertCollection: #('self assert: arrayOfNames notEmpty' 'self assert: arrayOfNames isEmpty') hasSameElements: ((1 to: 20) collect: [ :n | 
-		 (configuration crossover: individual1 with: individual2 given: children1 and: children2) print
-		]) asSet.
+	self assert: individual1 print equals: (RBParser parseExpression: 'arrayOfNames notEmpty and: [ arrayOfNames allSatisfy: #isString ]') formattedCode.
+	set := ((1 to: 300) collect: [ :n | | offspring |
+		offspring := individual1 deepCopy.
+		offspring := configuration crossover: offspring with: individual2 given: offspring withAllChildren allButFirst and: individual2 withAllChildren.
+		offspring print ]) asSet.
+	self assert: set size equals: 3.
+	self assertCollection: set hasSameElements: #('arrayOfNames isEmpty and: [ arrayOfNames allSatisfy: #isString ]' 'arrayOfNames notEmpty and: [ arrayOfNames allSatisfy: #isEmpty ]' 'arrayOfNames notEmpty and: [ arrayOfNames isEmpty ]')
+]
+
+{ #category : #tests }
+GPAssertConfigurationTest >> testCrossoverWithGivenAnd5 [
+	| individual1 individual2 set |
+	configuration seed: 8.
+	individual1 := self node3.
+	individual2 := self node4.
+	self assert: individual1 print equals: (RBParser parseExpression: 'arrayOfNames notEmpty and: [ arrayOfNames allSatisfy: #isString ]') formattedCode.
+	self assert: individual2 print equals: (RBParser parseExpression: 'arrayOfNames isEmpty') formattedCode.
+	set := ((1 to: 300) collect: [ :n | | offspring |
+		offspring := individual2 deepCopy.
+		offspring := configuration crossover: offspring with: individual1 given: offspring withAllChildren allButFirst and: individual1 withAllChildren.
+		offspring print ]) asSet.
+	self assert: set size equals: 2.
+	self assertCollection: set hasSameElements: #('arrayOfNames notEmpty' 'arrayOfNames isString')
+]
+
+{ #category : #tests }
+GPAssertConfigurationTest >> testCrossoverWithGivenAnd6 [
+	| individual1 individual2 set |
+	configuration seed: 8.
+	individual1 := self node5.
+	individual2 := self node6.
+	self assert: individual1 print equals: (RBParser parseExpression: 'aNumber isInteger and: [ aNumber positive ]') formattedCode.
+	self assert: individual2 print equals: (RBParser parseExpression: 'aNumber > 0') formattedCode.
+	set := ((1 to: 300) collect: [ :n | | offspring |
+		offspring := individual1 deepCopy.
+		offspring := configuration crossover: offspring with: individual2 given: offspring withAllChildren and: individual2 withAllChildren.
+		offspring print ]) asSet.
+	self assert: set size equals: 2.
+	self assertCollection: set hasSameElements: #('aNumber > 0 and: [ aNumber positive ]' 'aNumber isInteger and: [ aNumber > 0 ]')
+]
+
+{ #category : #tests }
+GPAssertConfigurationTest >> testCrossoverWithGivenAnd7 [
+	| individual1 individual2 col |
+	configuration seed: 8.
+	individual1 := self node5.
+	individual2 := self node6.
+	self assert: individual1 print equals: (RBParser parseExpression: 'aNumber isInteger and: [ aNumber positive ]') formattedCode.
+	self assert: individual2 print equals: (RBParser parseExpression: 'aNumber > 0') formattedCode.
+	col := (1 to: 300) collect: [ :i | | offspring |
+		offspring := individual2 deepCopy.
+		offspring := configuration crossover: offspring with: individual1 given: offspring withAllChildren and: individual1 withAllChildren.
+		offspring "printBlock: [ :n :ctx | n ast formattedCode ]" ].
+	self assert: (col allSatisfy: #isNil)
+]
+
+{ #category : #tests }
+GPAssertConfigurationTest >> testCrossoverWithGivenAnd8 [
+	| individual1 individual2 set |
+	configuration seed: 8.
+	individual1 := self node6.
+	individual2 := self node7.
+	self assert: individual1 print equals: 'aNumber > 0'.
+	self assert: individual2 print equals: 'aNumber == 1'.
+	set := ((1 to: 300) collect: [ :i | | offspring |
+		offspring := individual1 deepCopy.
+		offspring := configuration crossover: offspring with: individual2 given: offspring withAllChildren allButFirst and: individual2 withAllChildren.
+		offspring print ]) asSet.
+	self assert: set size equals: 2.
+	self assertCollection: set hasSameElements: #('aNumber > 1' 'aNumber == 0')
+]
+
+{ #category : #tests }
+GPAssertConfigurationTest >> testCrossoverWithGivenAnd9 [
+	| individual1 individual2 set |
+	configuration seed: 8.
+	individual1 := self node6.
+	individual2 := self node8.
+	self assert: individual1 print equals: 'aNumber > 0'.
+	self assert: individual2 print equals: 'aNumber isInteger and: [ aNumber positive and: [ aNumber isNumber ] ]'.
+	set := ((1 to: 300) collect: [ :i | | offspring |
+		offspring := individual2 deepCopy.
+		offspring := configuration crossover: offspring with: individual1 given: offspring withAllChildren and: individual1 withAllChildren.
+		offspring print ]) asSet.
+	self assert: set size equals: 4.
+	self assertCollection: set hasSameElements: (Array 
+		with: (RBParser parseExpression: 'aNumber > 0 and: [ aNumber positive and: [ aNumber isNumber ] ]') formattedCode
+		with: (RBParser parseExpression: 'aNumber isInteger and: [ aNumber > 0 and: [ aNumber isNumber ] ]') formattedCode
+		with: (RBParser parseExpression: 'aNumber isInteger and: [ aNumber positive and: [ aNumber > 0 ] ]') formattedCode
+		with: (RBParser parseExpression: 'aNumber isInteger and: [ aNumber > 0 ]') formattedCode)
 ]
 
 { #category : #tests }
@@ -216,10 +423,57 @@ GPAssertConfigurationTest >> testMutateHaving [
 	configuration random seed: 9.
 	individual1 := self node1.
 	individual2 := self node4.
-	self assert: individual1 print equals: 'self assert: arrayOfNames notEmpty'.
-	self assert: individual2 print equals: 'self assert: arrayOfNames isEmpty'.
-	configuration mutate: (individual1 withAllChildren allButFirst: 4) having: (individual2 withAllChildren allButFirst: 4).
-	self assert: individual1 print equals: 'self assert: arrayOfNames isEmpty'
+	self assert: individual1 print equals: 'arrayOfNames notEmpty'.
+	self assert: individual2 print equals: 'arrayOfNames isEmpty'.
+	configuration mutate: individual1 withAllChildren allButFirst having: individual2 withAllChildren.
+	self assert: individual1 print equals: 'arrayOfNames isEmpty'
+]
+
+{ #category : #tests }
+GPAssertConfigurationTest >> testMutateHaving2 [
+	| individual1 individual2 set |
+	configuration seed: 8.
+	individual1 := self node5.
+	individual2 := self node6.
+	self assert: individual1 print equals: (RBParser parseExpression: 'aNumber isInteger and: [ aNumber positive ]') formattedCode.
+	self assert: individual2 print equals: (RBParser parseExpression: 'aNumber > 0') formattedCode.
+	set := ((1 to: 300) collect: [ :i |
+		individual1 := self node5.
+		configuration mutate: individual1 withAllChildren allButFirst having: individual2 withAllChildren.
+		individual1 print ]) asSet.
+	self assert: set size equals: 2.
+	self assertCollection: set hasSameElements: #('aNumber > 0 and: [ aNumber positive ]' 'aNumber isInteger and: [ aNumber > 0 ]')
+]
+
+{ #category : #tests }
+GPAssertConfigurationTest >> testMutateHaving3 [
+	| individual1 individual2 set |
+	configuration seed: 8.
+	individual1 := self node5.
+	individual2 := self node6.
+	self assert: individual1 print equals: (RBParser parseExpression: 'aNumber isInteger and: [ aNumber positive ]') formattedCode.
+	self assert: individual2 print equals: (RBParser parseExpression: 'aNumber > 0') formattedCode.
+	set := ((1 to: 300) collect: [ :i |
+		individual2 := self node6.
+		configuration mutate: individual2 withAllChildren allButFirst having: individual1 withAllChildren.
+		individual2 print ]) asSet.
+	self assert: set size equals: 1.
+	self assert: set asArray first equals: 'aNumber > 0'
+]
+
+{ #category : #tests }
+GPAssertConfigurationTest >> testMutateLeafNodesOf [
+	| individual1 set |
+	configuration seed: 9.
+	individual1 := self node1.
+	self assert: individual1 print equals: 'arrayOfNames notEmpty'.
+	set := ((1 to: 300) collect: [ :n | 
+		individual1 := self node1.
+		configuration mutateLeafNodesOf: individual1.
+		individual1 children second print.
+	]) asSet.
+	self assert: set size equals: 18.
+	self assertCollection: set includesAll: #(#isString #isInteger #isFloat #isNumber #isFinite #isCharacter #isCollection #isArray #isSymbol #isColor #isBlock #isEmpty #notEmpty #isNil #notNil #positive #negative #isPoint)
 ]
 
 { #category : #tests }
@@ -227,10 +481,10 @@ GPAssertConfigurationTest >> testMutateWith [
 	| individual1 individual2 |
 	individual1 := self node1.
 	individual2 := self node4.
-	self assert: individual1 print equals: 'self assert: arrayOfNames notEmpty'.
-	self assert: individual2 print equals: 'self assert: arrayOfNames isEmpty'.
+	self assert: individual1 print equals: 'arrayOfNames notEmpty'.
+	self assert: individual2 print equals: 'arrayOfNames isEmpty'.
 	configuration mutate: individual1 with: individual2.
-	self assert: individual1 print equals: 'self assert: arrayOfNames isEmpty'
+	self assert: individual1 print equals: 'arrayOfNames isEmpty'
 ]
 
 { #category : #tests }
@@ -239,8 +493,8 @@ GPAssertConfigurationTest >> testMutateWith1 [
 	configuration seed: 8.
 	individual1 := self node3.
 	individual2 := self node4.
-	self assert: individual1 print equals: (RBParser parseExpression: 'self assert: (arrayOfNames notEmpty and: [ arrayOfNames allSatisfy: #isString ])') formattedCode.
-	self assert: individual2 print equals: 'self assert: arrayOfNames isEmpty'.
+	self assert: individual1 print equals: (RBParser parseExpression: 'arrayOfNames notEmpty and: [ arrayOfNames allSatisfy: #isString ]') formattedCode.
+	self assert: individual2 print equals: 'arrayOfNames isEmpty'.
 	configuration mutate: individual1 with: individual2.
-	self assert: individual1 print equals: (RBParser parseExpression: 'self assert: (arrayOfNames isEmpty and: [ arrayOfNames allSatisfy: #isString ])') formattedCode
+	self assert: individual1 print equals: (RBParser parseExpression: 'arrayOfNames isEmpty and: [ arrayOfNames allSatisfy: #isString ]') formattedCode
 ]

@@ -9,6 +9,22 @@ GPNode class >> children: someNodes [
 	^ self new children: someNodes
 ]
 
+{ #category : #comparing }
+GPNode >> = other [ 
+	^ super = other 
+		and: [ id == other id 
+			and: [ children size == other children size 
+				"and: [ depth = other depth "
+					and: [ | index |
+						index := 1.
+						children detect: [ :child | | found |
+							found := child ~= (other children at: index).
+							index := index + 1.
+							found ] 
+						ifFound: [ :c | false ] 
+						ifNone: [ true ] ] ] ] "]"
+]
+
 { #category : #operations }
 GPNode >> deepCopy [
 

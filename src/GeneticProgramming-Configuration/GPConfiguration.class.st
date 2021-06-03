@@ -176,6 +176,12 @@ GPConfiguration >> randomInt: anInt [
 	^ random randomNumber: anInt
 ]
 
+{ #category : #'instance creation' }
+GPConfiguration >> seed: aNumber [
+	self assert: (aNumber positive and: [ aNumber > 0 ]).
+	random seed: aNumber 
+]
+
 { #category : #'as yet unclassified' }
 GPConfiguration >> selectOption: options given: weights [
 	| sum rndIndex |
