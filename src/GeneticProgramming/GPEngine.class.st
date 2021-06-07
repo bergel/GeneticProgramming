@@ -38,7 +38,7 @@ GPEngine >> createNewGeneration [
 	population size - newPopulation size timesRepeat: [ 
 		| number parent newInd indiv |
 		number := configuration randomInt: 100.
-		number <= 33
+		number <= 90
 			ifTrue: [
 				i1 := self tournament.
 				i2 := self tournamentDiscarding: i1.

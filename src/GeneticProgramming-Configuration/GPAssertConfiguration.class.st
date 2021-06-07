@@ -3,7 +3,7 @@ Class {
 	#superclass : #GPConfiguration,
 	#instVars : [
 		'targetClass',
-		'testClass',
+		'testClasses',
 		'targetSelector',
 		'originalMethod',
 		'options',
@@ -23,15 +23,6 @@ Class {
 GPAssertConfiguration >> addOptionArgs: symbols [
 	grammar ifNil: [ self buildGrammar ].
 	grammar addOptions: symbols forCollectionOptionsBeginWith: #Args
-]
-
-{ #category : #adding }
-GPAssertConfiguration >> addOptionClasses: classNames [
-	| clsNames |
-	classNames ifEmpty: [ ^ self ].
-	grammar ifNil: [ self buildGrammar ].
-	clsNames := classNames intersection: classNames.
-	grammar addOptions: clsNames forLeafRule: #Class
 ]
 
 { #category : #adding }
@@ -64,6 +55,15 @@ GPAssertConfiguration >> addVariableRule: symbol withValues: collection [
 	self assert: (grammar ruleOptionOf: symbol) isNil.
 	self assert: (collection isCollection and: [ collection notEmpty ]).
 	grammar addLeafRule: symbol ofClass: RBVariableNode withValues: collection
+]
+
+{ #category : #adding }
+GPAssertConfiguration >> argumentTypes: classes [
+	| classNames |
+	self assert: (classes notEmpty and: [ classes allSatisfy: #isClass ]).
+	grammar ifNil: [ self buildGrammar ].
+	classNames := classes collect: #name.
+	grammar addOptions: classNames asSet asOrderedCollection forLeafRule: #Class
 ]
 
 { #category : #'as yet unclassified' }
@@ -129,15 +129,8 @@ GPAssertConfiguration >> crossover: individual between: children1 and: children2
 			indexes := random shuffleElementsOf: (individual indexesOf: nodeId on: childIds).
 			indexes notEmpty ] 
 		ifFound: [ :nodeId | 
-			"children1 at: (random randomlySelect: (individual indexesOf: nodeId on: ids)) put: (children2 at: (random randomlySelect: indexes)) deepCopy."
 			(children1 at: (random randomlySelect: (individual indexesOf: nodeId on: ids))) replaceBy: (children2 at: (random randomlySelect: indexes)) deepCopy.
-			^ individual ] 
-		"ifNone: [
-			children1 
-				detect: [ :child | | ind |
-					ind := self crossover: individual between: child children and: children2.
-					ind notNil ]
-				ifFound: [ ^ individual ] ]".
+			^ individual ].
 	^ nil
 ]
 
@@ -167,25 +160,6 @@ GPAssertConfiguration >> crossover: individual with: individual2 given: children
 		ifFalse: [ self replaceByNode: children1 of: individual by: children2 given: individual2 ].
 	indiv ifNotNil: [ indiv printBlock: [ :n :ctx | n ast formattedCode ] ].
 	^ indiv
-	"childIds := children2 collect: #id.
-	nodeOptions := self getGrammarNodeOptions. 
-	assocs := ids asSet asOrderedCollection 
-		collect: [ :nodeId | | inds |
-			inds := individual indexesOf: nodeId on: childIds.
-			inds addAll: (self getNodeIdOptions: nodeOptions given: nodeId and: childIds).
-			nodeId -> inds ]
-		thenReject: [ :assoc | 
-			assoc value isEmpty or: [ assoc key = #Variable ] ].
-	assocs ifNotEmpty: [ | assoc node r |
-		individual addParent: individual2.
-		assoc := random randomlySelect: assocs.
-		node := children1 at: (random randomlySelect: (individual indexesOf: assoc key on: ids)).
-		r := (children2 at: (random randomlySelect: assoc value)) deepCopy.
-		""Transcript show: 'crossover:', node print, ' replaced by: ', r print, String cr.""
-		node replaceBy: r.
-		^ individual 
-	].
-	^ nil"
 ]
 
 { #category : #'as yet unclassified' }
@@ -220,26 +194,25 @@ GPAssertConfiguration >> crossoverOfType: individual with: individual2 given: ch
 
 { #category : #operations }
 GPAssertConfiguration >> distanceFromSolutionOf: individual [
-	| t e uninstalled wTest fitnessFunction |
+	| testResults e uninstalled wTest fitnessFunction |
 	"weight for each unit test -> wTest = 100/nTests, nTests = total unit tests
 	tErrors = nTestErrors * wTest * (2/3),            2/3 is the percentage value of importance
 	rErrors = (nTests/nIterations) * nRandomErrors * wTest * (1/3),   nIterations -> number of iterations of count errors"
 	self assert: targetClass notNil.
-	self assert: testClass notNil.
-	"individual fitness ifNotNil: [ ^ individual fitness ]."
+	self assert: (testClasses notEmpty and: [ testClasses allSatisfy: #isClass ]).
 	uninstalled := false.
 	[ self injectIntoMethod: individual ] on: Exception do: [ 
 		uninstalled := true.
 		self uninstall.
 	].
 	e := self countErrors.
-	t := testClass buildSuite run.
-	wTest := 100/(t runCount).
+	testResults := testClasses collect: [ :testClass | testClass buildSuite run ].
+	wTest := 100/(testResults collect: #runCount) sum.
 	fitnessFunction := GPAssertionFitnessFunction new.
 	fitnessFunction 
 		objectiveAt: 'nRandomErrors' put: (uninstalled ifTrue: [ randomIterations ] ifFalse: [ e ]);
-		objectiveAt: 'nTestErrors' put: (uninstalled ifTrue: [ t runCount ] ifFalse: [ (t failureCount + t errorCount)]);
-		weightAt: 'nRandomErrors' put: (t runCount / randomIterations) * wTest * (1/3);
+		objectiveAt: 'nTestErrors' put: (uninstalled ifTrue: [ (testResults collect: #runCount) sum ] ifFalse: [ (testResults collect: [ :tR | tR failureCount + tR errorCount]) sum ]);
+		weightAt: 'nRandomErrors' put: ((testResults collect: #runCount) sum / randomIterations) * wTest * (1/3);
 		weightAt: 'nTestErrors' put: wTest * (2/3).
 	individual fitness: fitnessFunction.
 	self uninstall.
@@ -318,14 +291,14 @@ GPAssertConfiguration >> mutate: individual [
 
 { #category : #operations }
 GPAssertConfiguration >> mutate: children1 having: children2 [
-	| ids childIds nodeOptions |
+	| ids childIds |
 	ids := children1 collect: #id.
 	childIds := children2 collect: #id.
-	nodeOptions := self getGrammarNodeOptions. 
+	"nodeOptions := self getGrammarNodeOptions. "
 	assocs := ids asSet asOrderedCollection 
 		collect: [ :nodeId | | inds |
 			inds := GPAbstractNode indexesOf: nodeId on: childIds.
-			inds addAll: (self getNodeIdOptions: nodeOptions given: nodeId and: childIds).
+			"inds addAll: (self getNodeIdOptions: nodeOptions given: nodeId and: childIds)."
 			nodeId -> inds ]
 		thenReject: [ :assoc | 
 			assoc value isEmpty or: [ assoc key = #Variable ] ].
@@ -367,7 +340,7 @@ GPAssertConfiguration >> newFunction [
 	i := 0.
 	grammar := self updateGrammar.
 	[ found or: [ i > 100 ] ] whileFalse: [ 
-		depthModified ifFalse: [ depth := random randomNumber: 7 ].
+		depthModified ifFalse: [ depth := random randomNumber: 5 ].
 		self assert: depth notNil.
 		grammar 
 			methodName: (random randomlySelect: #(#full #grow));
@@ -375,7 +348,6 @@ GPAssertConfiguration >> newFunction [
 		node := grammar expandTree: #Method.
 		found := node isNotNil.
 		i := i + 1. ].
-	"self assert: node notNil."
 	node ifNotNil: [
 		node evaluationBlock: [ :n :ctx | n ast ];
 			printBlock: [ :n :ctx | n ast formattedCode ] ]
@@ -455,15 +427,15 @@ GPAssertConfiguration >> populationSize [
 
 { #category : #'as yet unclassified' }
 GPAssertConfiguration >> replaceByIdAny: children1 of: individual by: children2 given: individual2 [
-	| ids childIds nodeOptions replaced |
+	| ids childIds replaced |
 	replaced := false.
 	ids := children1 collect: #id.
 	childIds := children2 collect: #id.
-	nodeOptions := self getGrammarNodeOptions. 
+	"nodeOptions := self getGrammarNodeOptions." 
 	assocs := ids asSet asOrderedCollection 
 		collect: [ :nodeId | | inds |
 			inds := individual indexesOf: nodeId on: childIds.
-			inds addAll: (self getNodeIdOptions: nodeOptions given: nodeId and: childIds).
+			"inds addAll: (self getNodeIdOptions: nodeOptions given: nodeId and: childIds)."
 			nodeId -> inds ]
 		thenReject: [ :assoc | 
 			assoc value isEmpty or: [ assoc key = #Variable ] ].
@@ -526,13 +498,9 @@ GPAssertConfiguration >> targetSelectors: collection [
 ]
 
 { #category : #accessing }
-GPAssertConfiguration >> testClass [
-	^ testClass
-]
-
-{ #category : #accessing }
-GPAssertConfiguration >> testClass: aClass [
-	testClass := aClass 
+GPAssertConfiguration >> testClasses: classes [
+	self assert: (classes notEmpty and: [ classes allSatisfy: #isClass ]).
+	testClasses := classes 
 ]
 
 { #category : #actions }

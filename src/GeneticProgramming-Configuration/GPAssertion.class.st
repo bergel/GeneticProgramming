@@ -8,22 +8,25 @@ Class {
 		'contextBlocks',
 		'packageRegexs',
 		'optionsDict',
-		'directoryName',
 		'results',
 		'nameResultFile',
 		'exportVisualization',
 		'targetClass',
-		'testClass',
+		'testClasses',
 		'targetSelectors',
-		'random'
+		'random',
+		'depth',
+		'packageScope',
+		'folderToExport'
 	],
 	#category : #'GeneticProgramming-Configuration-GPAssert'
 }
 
 { #category : #adding }
-GPAssertion >> addAutomaticallyOptions [
-	self addOptionClasses: (Array with: "configuration" targetClass name).
-	self addOptionSelectors: (self collectTestingSelectors: (Array with: "configuration" targetClass)).
+GPAssertion >> addArgumentTypesAtDictionary [
+	(packageScope notNil and: [ packageScope notEmpty and: [ (optionsDict at: 'class' ifAbsent: [ nil ]) isNil ] ])
+		ifFalse: [ ^ self ]
+		ifTrue: [ self argumentTypes: ((self selectPackageClasses: packageScope) reject: [:cl | cl name endsWith: 'Test']) ]
 ]
 
 { #category : #adding }
@@ -39,19 +42,6 @@ GPAssertion >> addDataOfNameSelectors: dictionary given: node [
 	dict at: #Satisfy ifPresent: [ :val | | messageVal |
 		messageVal := dictionary at: #Message ifAbsent: [ 0 ].
 		dictionary at: #Message put: messageVal - val	size
-	]
-]
-
-{ #category : #adding }
-GPAssertion >> addOptionArgs: collection [
-	"configuration addOptionArgs: collection"
-]
-
-{ #category : #adding }
-GPAssertion >> addOptionClasses: classNames [
-	self assert: classNames isCollection.
-	classNames ifNotEmpty: [ 
-		optionsDict at: #class put: classNames
 	]
 ]
 
@@ -74,17 +64,25 @@ GPAssertion >> addVariableRule: symbol withValues: collection [
 	"configuration addVariableRule: symbol withValues: collection"
 ]
 
+{ #category : #adding }
+GPAssertion >> argumentTypes: classes [
+	self assert: (classes isCollection and: [ classes notEmpty and: [ classes allSatisfy: #isClass]]). 
+	optionsDict at: #class 
+		ifPresent: [ :set | set addAll: classes ] 
+		ifAbsentPut: [ Set new addAll: classes; yourself ]
+]
+
 { #category : #'as yet unclassified' }
 GPAssertion >> calculateCallsMetric: tSelector [
-	| t originalMethod aBehavior |
-	self assert: testClass isClass.
+	| originalMethod aBehavior |
+	self assert: (testClasses notEmpty and: [ testClasses allSatisfy: #isClass ]).
 	self assert: targetClass isClass.
 	aBehavior := targetClass instanceSide.
 	originalMethod := aBehavior compiledMethodAt: tSelector.
 	[ self injectInto: tSelector given: originalMethod ] on: Exception do: [ 
 		self uninstallOf: originalMethod.
 	].
-	t := testClass buildSuite run.
+	testClasses do: [ :testClass | testClass buildSuite run ].
 	metrics at: 'numCalls'
 		ifAbsentPut: [ Dictionary new ].
 	(metrics at: 'numCalls') at: tSelector put: (GPCounter instance occurrencesOf: tSelector).
@@ -116,10 +114,10 @@ GPAssertion >> calculateMetrics: tSelector given: protocol and: configuration [
 
 { #category : #'as yet unclassified' }
 GPAssertion >> calculateNumberOfFailures [ 
-	| t |
-	self assert: testClass isClass.
-	t := testClass buildSuite run.
-	^ t errorCount + t failureCount 
+	self assert: testClasses notEmpty.
+	^ testClasses inject: 0 into: [ :sum :testClass | | t |
+		t := testClass buildSuite run.
+		sum + t errorCount + t failureCount ]
 ]
 
 { #category : #'as yet unclassified' }
@@ -160,18 +158,18 @@ GPAssertion >> countErrors: targetSelector given: protocol and: block [
 ]
 
 { #category : #accessing }
-GPAssertion >> directoryName: string [
-	self assert: (string isString and: [ string notEmpty ]).
-	directoryName := string
+GPAssertion >> depth: aNumber [
+	self assert: (aNumber isInteger and: [ aNumber > 0 ]).
+	depth := aNumber
 ]
 
 { #category : #operations }
 GPAssertion >> ensureDirectory [ 
-	(directoryName notNil and: [directoryName notEmpty ])
+	(folderToExport notNil and: [folderToExport notEmpty ])
 		ifFalse: [ ^ self ]
 		ifTrue: [ | directory ref |
 			directory := FileSystem disk workingDirectory.
-			ref := directory / directoryName.
+			ref := directory / folderToExport.
 			ref ensureCreateDirectory
 		]
 ]
@@ -213,20 +211,20 @@ GPAssertion >> exportData: engine on: filename [
 
 { #category : #'as yet unclassified' }
 GPAssertion >> exportEvolutionData [
-	| dName |
+	| folderName |
 	self ensureDirectory.
-	dName := directoryName 
+	folderName := folderToExport 
 		ifNil: [ '' ] 
-		ifNotNil: [ directoryName 
-			ifEmpty: [ directoryName ] 
-			ifNotEmpty: [ directoryName, '/' ] ].
+		ifNotNil: [ folderToExport 
+			ifEmpty: [ folderToExport ] 
+			ifNotEmpty: [ folderToExport, '/' ] ].
 	individuals valuesDo: [ :eng | | filename |
 		filename := String streamContents: [ :stream | 
 			stream
-				nextPutAll: dName; 
+				nextPutAll: folderName; 
 				nextPutAll: targetClass name;
 				nextPut: $_;
-				nextPutAll: eng configuration targetSelector;
+				nextPutAll: (eng configuration targetSelector copyReplaceAll: ':' with: '');
 				nextPutAll: '_Data.csv' ].
 		self exportData: eng on: filename
 	]
@@ -241,8 +239,14 @@ GPAssertion >> exportVisualization: boolean [
 { #category : #accessing }
 GPAssertion >> filename [
 	self ensureDirectory.
-	^ ((directoryName ifNil: [ '' ] ifNotNil: [ directoryName ifEmpty: [ directoryName ] ifNotEmpty: [ directoryName, '/' ] ]) , 
+	^ ((folderToExport ifNil: [ '' ] ifNotNil: [ folderToExport ifEmpty: [ folderToExport ] ifNotEmpty: [ folderToExport, '/' ] ]) , 
 		targetClass name, '.csv') asFileReference 
+]
+
+{ #category : #accessing }
+GPAssertion >> folderToExport: string [
+	self assert: (string isString and: [ string notEmpty ]).
+	folderToExport := string
 ]
 
 { #category : #'as yet unclassified' }
@@ -278,11 +282,12 @@ GPAssertion >> getSelectorCandidates [
 			targetClass: targetClass;
 			targetSelectors: targetSelectors;
 			contextBlocks: contextBlocks;
-			testClass: testClass;
+			testClasses: testClasses;
 			targetSelector: tSelector;
 			numberOfFailures: numberOfFailures;
-			addOptionClasses: (optionsDict at: #class ifAbsent: [#()]);
+			argumentTypes: (optionsDict at: #class ifAbsent: [#()]);
 			addOptionSelectors: (optionsDict at: #selector ifAbsent: [#()]).
+		depth > 0 ifTrue: [ configuration depth: depth ].
 		self calculateMetrics: tSelector given: (dict at: tSelector ifAbsent: [ nil ]) and: configuration.
 		tSelector -> configuration
 		] thenSelect: [ :assoc | ((metrics at: 'numCalls') at: assoc key ifAbsent: [0]) > 0 ]
@@ -302,11 +307,12 @@ GPAssertion >> initialize [
 	contextBlocks := OrderedCollection new.
 	packageRegexs := OrderedCollection new.
 	optionsDict := Dictionary new.
-	directoryName := ''.
+	folderToExport := ''.
 	results := OrderedCollection new.
 	nameResultFile := 'result'.
 	exportVisualization := false.
-	random := GPRandom seed: 100
+	random := GPRandom seed: 100.
+	depth := -1
 ]
 
 { #category : #'as yet unclassified' }
@@ -366,15 +372,22 @@ GPAssertion >> options: collection [
 	 
 ]
 
+{ #category : #accessing }
+GPAssertion >> packageScope: string [
+	self assert: (string isString and: [ string notEmpty ]).
+	packageScope := string
+]
+
 { #category : #running }
 GPAssertion >> run [
 	| associations |
 	self assert: targetClass isClass.
-	self assert: testClass isClass.
+	self assert: (testClasses notEmpty and: [ testClasses allSatisfy: #isClass]).
 	self targetSelectors ifEmpty: [ 
 		individuals := Dictionary new.
 		^ self ].
 	GPCounter reset.
+	self addArgumentTypesAtDictionary.
 	associations := self getSelectorCandidates.
 	individuals := Dictionary 
 		newFromAssociations: (associations collect: [:assoc | 
@@ -413,14 +426,14 @@ GPAssertion >> runAllClassesExcept: collection [
 GPAssertion >> runOn: classes given: packageClasses [
 	classes do: [ :cl | 
 		self targetClass: cl.
-		self testClass: (self class environment at: cl name , 'Test').
+		self testClasses: (Array with: (self class environment at: cl name , 'Test')).
 		self options: self options.
-		self addOptionClasses: (packageClasses collect: #name).
+		self argumentTypes: packageClasses.
 		self addOptionSelectors: (self collectTestingSelectors: packageClasses).
-		(optionsDict at: #class ifAbsent: [ #() ]) 
+		"(optionsDict at: #class ifAbsent: [ #() ]) 
 			ifNotEmpty: [ self addOptionClasses: (optionsDict at: #class)].
 		(optionsDict at: #selector ifAbsent: [ #() ] ) 
-			ifNotEmpty: [ self addOptionSelectors: (optionsDict at: #selector) ].
+			ifNotEmpty: [ self addOptionSelectors: (optionsDict at: #selector) ]."
 		self run.
 		individuals ifNotEmpty: [ self writeOnCsv ] ]
 ]
@@ -444,9 +457,16 @@ GPAssertion >> selectCandidateClasses: classes [
 GPAssertion >> selectPackageClasses: regex [
 	| packages |
 	packages := RPackageOrganizer default packages select: [:p | regex match: p name asString ].
+	^ ((packages flatCollect: [ :package | | extensionNames |
+		extensionNames := OrderedCollection new
+			addAll: (package metaclassExtensionSelectors keys);
+			addAll: (package classExtensionSelectors keys);
+			yourself.
+		package classes reject: [ :cl | cl isTrait or: [(extensionNames includes: cl name) or: [ cl isMeta ] ] ] ]) asSet) asOrderedCollection sort: [ :cl1 :cl2 | cl1 name < cl2 name ]
+	"
 	^ ((packages 
 			inject: #() 
-			into: [:sum :el | sum, (el classes reject: #isTrait) asOrderedCollection ]) asSet) asOrderedCollection sort: [ :cl1 :cl2 | cl1 name < cl2 name ]
+			into: [:sum :el | sum, (el classes reject: #isTrait) asOrderedCollection ]) asSet) asOrderedCollection sort: [ :cl1 :cl2 | cl1 name < cl2 name ]"
 ]
 
 { #category : #'as yet unclassified' }
@@ -517,9 +537,9 @@ GPAssertion >> targetSelectors: collection [
 ]
 
 { #category : #accessing }
-GPAssertion >> testClass: aClass [
-	self assert: aClass isClass.
-	testClass := aClass
+GPAssertion >> testClasses: classes [
+	self assert: (classes notEmpty and: [ classes allSatisfy: #isClass]).
+	testClasses := classes 
 ]
 
 { #category : #'as yet unclassified' }

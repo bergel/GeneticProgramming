@@ -4,11 +4,11 @@ Extension { #name : #GPAssertion }
 GPAssertion >> exportEvolutionGraphic [ 
 	| dName |
 	self ensureDirectory.
-	dName := directoryName 
+	dName := folderToExport 
 		ifNil: [ '' ] 
-		ifNotNil: [ directoryName 
-			ifEmpty: [ directoryName ] 
-			ifNotEmpty: [ directoryName, '/' ] ].
+		ifNotNil: [ folderToExport 
+			ifEmpty: [ folderToExport ] 
+			ifNotEmpty: [ folderToExport, '/' ] ].
 	individuals valuesDo: [ :eng | | filename |
 		filename := String streamContents: [ :stream | 
 			stream

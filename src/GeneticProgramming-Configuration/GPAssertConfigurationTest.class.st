@@ -169,7 +169,7 @@ GPAssertConfigurationTest >> node7 [
 			add: (GPLeafNode new id: #Integer; depth: 1; nodeValue: 1; type: RBLiteralNode;
 				printBlock: [:n :ctx | n nodeValue asString ]);
 			yourself);
-		nodeValue: #('aNumber' #> '0') asOrderedCollection
+		nodeValue: #('aNumber' #== '1') asOrderedCollection
 ]
 
 { #category : #'as yet unclassified' }
@@ -497,4 +497,20 @@ GPAssertConfigurationTest >> testMutateWith1 [
 	self assert: individual2 print equals: 'arrayOfNames isEmpty'.
 	configuration mutate: individual1 with: individual2.
 	self assert: individual1 print equals: (RBParser parseExpression: 'arrayOfNames isEmpty and: [ arrayOfNames allSatisfy: #isString ]') formattedCode
+]
+
+{ #category : #tests }
+GPAssertConfigurationTest >> testReplaceByNodeOfIndividualByGiven [
+	| individual1 individual2 col |
+	configuration seed: 8.
+	individual1 := self node5.
+	individual2 := self node6.
+	self assert: individual1 print equals: (RBParser parseExpression: 'aNumber isInteger and: [ aNumber positive ]') formattedCode.
+	self assert: individual2 print equals: (RBParser parseExpression: 'aNumber > 0') formattedCode.
+	col := ((1 to: 300) collect: [ :i | | offspring |
+		offspring := individual2 deepCopy.
+		offspring := configuration replaceByNode: individual2 withAllChildren of: individual2 by: individual1 withAllChildren given: individual2.
+		offspring printBlock: [ :n :ctx | n ast formattedCode ].
+		offspring print ]) asSet.
+	self assertCollection: col hasSameElements: #('aNumber isInteger' 'aNumber positive')
 ]
