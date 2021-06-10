@@ -17,7 +17,8 @@ Class {
 		'random',
 		'depth',
 		'packageScope',
-		'folderToExport'
+		'folderToExport',
+		'seed'
 	],
 	#category : #'GeneticProgramming-Configuration-GPAssert'
 }
@@ -279,6 +280,7 @@ GPAssertion >> getSelectorCandidates [
 	]) asDictionary.
 	^ targetSelectors collect: [ :tSelector | | configuration |
 		configuration := GPAssertConfiguration new
+			seed: seed;
 			targetClass: targetClass;
 			targetSelectors: targetSelectors;
 			contextBlocks: contextBlocks;
@@ -441,7 +443,8 @@ GPAssertion >> runOn: classes given: packageClasses [
 { #category : #'instance creation' }
 GPAssertion >> seed: aNumber [
 	self assert: (aNumber isNumber and: [ aNumber > 0 ]).
-	random seed: aNumber
+	seed := aNumber.
+	random seed: seed
 ]
 
 { #category : #'as yet unclassified' }

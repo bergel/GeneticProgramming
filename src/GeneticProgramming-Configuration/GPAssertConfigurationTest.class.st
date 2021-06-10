@@ -25,6 +25,30 @@ GPAssertConfigurationTest >> node1 [
 ]
 
 { #category : #'as yet unclassified' }
+GPAssertConfigurationTest >> node10 [
+	"(arrayOfNames includes: aString) not"
+	^ GPNode new id: #NegativeInclusion; depth: 0; 
+		type: RBMessageNode;
+		printBlock: [:n :ctx | n ast formattedCode ];
+		children: (OrderedCollection new 
+			add: (GPNode new id: #Inclusion; depth: 1; type: RBMessageNode;
+				printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ];
+				children: (OrderedCollection new
+					add: (GPLeafNode new id: #InstanceVar; depth: 2; nodeValue: 'arrayOfNames'; type: RBVariableNode;
+						printBlock: [:n :ctx | n nodeValue asString ]);
+					add: (GPSelectorNode new id: #Includes; nodeValue: #includes:; depth: 2; 
+								printBlock: [:n :ctx | n nodeValue ]);
+					add: (GPLeafNode new id: #Variable; nodeValue: #aString; depth: 2;  type: RBVariableNode;
+								printBlock: [:n :ctx | n nodeValue asString ]);
+					yourself);
+				nodeValue: #('arrayOfNames' #includes: #aString) asOrderedCollection);
+			add: (GPSelectorNode new id: #Not; nodeValue: #not; depth: 1; 
+				printBlock: [:n :ctx | n nodeValue ]);
+			yourself)
+				
+]
+
+{ #category : #'as yet unclassified' }
 GPAssertConfigurationTest >> node2 [
 	"arrayOfLastNames isEmpty"
 	^ GPNode new 
@@ -229,6 +253,23 @@ GPAssertConfigurationTest >> node8 [
 			yourself)
 ]
 
+{ #category : #'as yet unclassified' }
+GPAssertConfigurationTest >> node9 [
+	"arrayOfLastNames includes: aString"
+	^ GPNode new id: #Inclusion; depth: 0; 
+		type: RBMessageNode;
+		printBlock: [:n :ctx | n ast formattedCode ];
+		children: (OrderedCollection new 
+			add: (GPLeafNode new id: #InstanceVar; depth: 1; nodeValue: 'arrayOfLastNames'; type: RBVariableNode;
+								printBlock: [:n :ctx | n nodeValue asString ]);
+			add: (GPSelectorNode new id: #Includes; nodeValue: #includes:; depth: 1; 
+								printBlock: [:n :ctx | n nodeValue ]);
+			add: (GPLeafNode new id: #Variable; nodeValue: #aString; depth: 1;  type: RBVariableNode;
+								printBlock: [:n :ctx | n nodeValue asString ]);
+			yourself);
+		nodeValue: #('arrayOfNames' #includes: #aString) asOrderedCollection
+]
+
 { #category : #initialization }
 GPAssertConfigurationTest >> setUp [
 	configuration := GPAssertConfiguration new seed: 1345.
@@ -255,6 +296,18 @@ GPAssertConfigurationTest >> testCountErrorsGiven [
 ]
 
 { #category : #tests }
+GPAssertConfigurationTest >> testCrossoverBetweenAnd [
+	| individual1 individual2 offspring |
+	configuration seed: 8.
+	individual1 := self node7.
+	individual2 := self node6.
+	self assert: individual1 print equals: (RBParser parseExpression: 'aNumber == 1') formattedCode.
+	self assert: individual2 print equals: (RBParser parseExpression: 'aNumber > 0') formattedCode.
+	offspring := configuration crossoverBetween: individual1 and: individual2.
+	self assert: offspring print equals: 'aNumber == 1 and: [ aNumber > 0 ]'.
+]
+
+{ #category : #tests }
 GPAssertConfigurationTest >> testCrossoverWithGivenAnd1 [
 	| individual1 individual2  offspring1 offspring2 |
 	configuration seed: 758.
@@ -262,7 +315,7 @@ GPAssertConfigurationTest >> testCrossoverWithGivenAnd1 [
 	individual2 := self node4.
 	offspring1 := individual1 deepCopy.
 	self assert: offspring1 print equals: 'arrayOfNames notEmpty'.
-	offspring1 := configuration crossover: offspring1 with: individual2 given: offspring1 withAllChildren allButFirst and: individual2 withAllChildren.
+	offspring1 := configuration crossover: offspring1 with: individual2 given: offspring1 withAllChildren and: individual2 withAllChildren.
 	self assert: offspring1 print equals: 'arrayOfNames isEmpty'.
 	offspring2 := individual2 deepCopy.
 	self assert: offspring2 print equals: 'arrayOfNames isEmpty'.
@@ -274,16 +327,32 @@ GPAssertConfigurationTest >> testCrossoverWithGivenAnd1 [
 GPAssertConfigurationTest >> testCrossoverWithGivenAnd10 [
 	| individual1 individual2 set |
 	configuration seed: 8.
-	individual1 := self node6.
-	individual2 := self node8.
-	self assert: individual1 print equals: 'aNumber > 0'.
-	self assert: individual2 print equals: 'aNumber isInteger and: [ aNumber positive and: [ aNumber isNumber ] ]'.
+	individual1 := self node9.
+	individual2 := self node10.
+	self assert: individual1 print equals: 'arrayOfLastNames includes: aString'.
+	self assert: individual2 print equals: '(arrayOfNames includes: aString) not'.
 	set := ((1 to: 300) collect: [ :i | | offspring |
 		offspring := individual1 deepCopy.
 		offspring := configuration crossover: offspring with: individual2 given: offspring withAllChildren and: individual2 withAllChildren.
-		offspring print ]) asSet.
+		offspring ifNil: [ offspring ] ifNotNil: [ offspring print ] ]) asSet.
 	self assert: set size equals: 3.
-	self assertCollection: set hasSameElements: #('aNumber isInteger' 'aNumber positive' 'aNumber isNumber')
+	self assertCollection: set hasSameElements: #('arrayOfNames includes: aString' '(arrayOfNames includes: aString) not' 'arrayOfLastNames includes: aString')
+]
+
+{ #category : #tests }
+GPAssertConfigurationTest >> testCrossoverWithGivenAnd11 [
+	| individual1 individual2 set |
+	configuration seed: 8.
+	individual1 := self node9.
+	individual2 := self node10.
+	self assert: individual1 print equals: 'arrayOfLastNames includes: aString'.
+	self assert: individual2 print equals: '(arrayOfNames includes: aString) not'.
+	set := ((1 to: 300) collect: [ :i | | offspring |
+		offspring := individual2 deepCopy.
+		offspring := configuration crossover: offspring with: individual1 given: offspring withAllChildren and: individual1 withAllChildren.
+		offspring ifNil: [ offspring ] ifNotNil: [ offspring print ] ]) asSet.
+	self assert: set size equals: 3.
+	self assertCollection: set hasSameElements: #('(arrayOfLastNames includes: aString) not' '(arrayOfNames includes: aString) not' 'arrayOfLastNames includes: aString')
 ]
 
 { #category : #tests }
@@ -312,10 +381,9 @@ GPAssertConfigurationTest >> testCrossoverWithGivenAnd3 [
 	self assert: offspring print equals: (RBParser parseExpression: 'arrayOfNames notEmpty and: [ arrayOfNames allSatisfy: #isString ]') formattedCode.
 	offspring := configuration crossover: offspring with: individual2 given: offspring withAllChildren  and: individual2 withAllChildren.
 	self assert: offspring print equals: (RBParser parseExpression: 'arrayOfNames isEmpty and: [ arrayOfNames allSatisfy: #isString ]') formattedCode.
-	
 	offspring := individual2 deepCopy.
 	self assert: offspring print equals: (RBParser parseExpression: 'arrayOfNames isEmpty') formattedCode.
-	offspring := configuration crossover: offspring with: individual1 given: offspring withAllChildren allButFirst and: individual1 withAllChildren.
+	offspring := configuration crossover: offspring with: individual1 given: offspring withAllChildren and: individual1 withAllChildren.
 	self assert: offspring print equals: (RBParser parseExpression: 'arrayOfNames isString') formattedCode
 ]
 

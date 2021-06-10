@@ -72,6 +72,7 @@ GPAssertConfiguration >> buildGrammar [
 	grammar := targetClass 
 		ifNil: [ builder buildAssertionGrammar ] 
 		ifNotNil: [ builder buildAssertionGrammar: self targetSelectors of: targetClass ].
+	grammar seed: random seed.
 	"grammar := builder buildAssertionGrammar: targetClass of: self targetSelectors."
 	grammar configuration: self
 	

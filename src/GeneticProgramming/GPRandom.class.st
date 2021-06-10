@@ -92,6 +92,11 @@ GPRandom >> randomlySelectGivenProbabilities: dictionary [
 		  "((self collectionOfProbabilities: dictionary) shuffleBy: random)"
 ]
 
+{ #category : #private }
+GPRandom >> seed [ 
+	^ random seed 
+]
+
 { #category : #'instance creation' }
 GPRandom >> seed: number [
 	random seed: number 
