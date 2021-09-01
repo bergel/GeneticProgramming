@@ -81,10 +81,10 @@ GPAssertionGrammarBuilder >> buildAssertionGrammar [
 		addRule: #Block ofClass: RBBlockNode withSequence: #( #Method );
 		addLeafRule: #Number
 		ofClass: RBLiteralNode
-		withValues: (OrderedCollection new
+		withValues: (Set new
 				 addAll: (-10 to: 10);
 				 addAll: (-10.6 to: 10.6 count: 15);
-				 yourself);
+				 yourself) asOrderedCollection;
 		addLeafRule: #Class
 		ofClass: RBVariableNode
 		withValues:

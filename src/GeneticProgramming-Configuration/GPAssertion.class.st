@@ -250,23 +250,58 @@ GPAssertion >> exportData: engine on: filename [
 
 { #category : #'as yet unclassified' }
 GPAssertion >> exportEvolutionData [
+
 	| folderName |
 	self ensureDirectory.
-	folderName := folderToExport 
-		ifNil: [ '' ] 
-		ifNotNil: [ folderToExport 
-			ifEmpty: [ folderToExport ] 
-			ifNotEmpty: [ folderToExport, '/' ] ].
-	individuals valuesDo: [ :eng | | filename |
-		filename := String streamContents: [ :stream | 
-			stream
-				nextPutAll: folderName; 
-				nextPutAll: targetClass name;
-				nextPut: $_;
-				nextPutAll: (eng configuration targetSelector copyReplaceAll: ':' with: '');
-				nextPutAll: '_Data.csv' ].
-		self exportData: eng on: filename
-	]
+	folderName := folderToExport ifNil: [ '' ] ifNotNil: [ 
+		              folderToExport
+			              ifEmpty: [ folderToExport ]
+			              ifNotEmpty: [ folderToExport , '/' ] ].
+	individuals valuesDo: [ :eng | 
+		| filename |
+		filename := "String streamContents: [ :stream | 
+			            stream
+				            nextPutAll: folderName;
+				            nextPutAll: targetClass name;
+				            nextPut: $_;
+				            nextPutAll:
+					            (eng configuration targetSelector
+						             copyReplaceAll: ':'
+						             with: '');
+						      nextPutAll: '_Data.csv' ]."
+						(self filenameFor: eng), '_Data.csv'.
+		self exportData: eng on: filename ]
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertion >> exportEvolutionInfo: engine [
+
+	| collection filename configuration |
+	configuration := engine configuration.
+	collection := configuration dictSelectedOptions associations 
+		              flatCollect: [ :assoc | 
+			              assoc value associations collect: [ :ass | 
+				              OrderedCollection new
+					              add: assoc key;
+					              add: ass key;
+					              add: ass value;
+					              add: engine logs last bestFitnessValue asNumber;
+					              addAll:
+						              (#( #initialization #mutation #crossover ) 
+							               collect: [ :str | 
+								               configuration dictErrors
+									               at: str
+									               ifAbsent: [ 0 ] ]);
+					              add: engine logs size;
+					              yourself ] ].
+	filename := (self filenameFor: engine), '_GP.csv'.
+	filename asFileReference ensureDelete.
+	filename asFileReference writeStreamDo: [ :writeStream | 
+		(NeoCSVWriter on: writeStream)
+			writeHeader:
+				#( #Rule #Option #Frequency #Fitness #InvalidInitialization
+				   #InvalidMutation #InvalidCrossover #Generations );
+			nextPutAll: collection ]
 ]
 
 { #category : #accessing }
@@ -277,9 +312,32 @@ GPAssertion >> exportVisualization: boolean [
 
 { #category : #accessing }
 GPAssertion >> filename [
+
 	self ensureDirectory.
-	^ ((folderToExport ifNil: [ '' ] ifNotNil: [ folderToExport ifEmpty: [ folderToExport ] ifNotEmpty: [ folderToExport, '/' ] ]) , 
-		targetClass name, '.csv') asFileReference 
+	^ ((folderToExport ifNil: [ '' ] ifNotNil: [ 
+		    folderToExport
+			    ifEmpty: [ folderToExport ]
+			    ifNotEmpty: [ folderToExport , '/' ] ]) , 'GPSummaryEvolution.csv') asFileReference
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertion >> filenameFor: engine [
+
+	| folderName |
+	self ensureDirectory.
+	folderName := folderToExport ifNil: [ '' ] ifNotNil: [ 
+		              folderToExport
+			              ifEmpty: [ folderToExport ]
+			              ifNotEmpty: [ folderToExport , '/' ] ].
+	^ String streamContents: [ :stream | 
+			            stream
+				            nextPutAll: folderName;
+				            nextPutAll: targetClass name;
+				            nextPut: $_;
+				            nextPutAll:
+					            (engine configuration targetSelector
+						             copyReplaceAll: ':'
+						             with: '') ]
 ]
 
 { #category : #accessing }
@@ -299,6 +357,7 @@ GPAssertion >> getBestIndividual: configuration [
 	engine execute.
 	endTime := Time millisecondClockValue.
 	engine executionTime: endTime - startTime.
+	self exportEvolutionInfo: engine.
 	^ engine "pickBestIndividual "
 ]
 
@@ -380,8 +439,9 @@ GPAssertion >> injectInto: tSelector given: originalMethod [
 ]
 
 { #category : #accessing }
-GPAssertion >> nameResultFile [ 
-	^ (nameResultFile, '.csv') asFileReference 
+GPAssertion >> nameResultFile [
+
+	^ ('/tmp/', nameResultFile, '.csv') asFileReference
 ]
 
 { #category : #accessing }
@@ -621,15 +681,17 @@ GPAssertion >> writeOnCsv [
 			        [ 
 			        best := e pickBestIndividual.
 			        OrderedCollection new
+						  add: 'GP';
+						  add: 'G';
 				        add: e configuration targetClass;
 				        add: s;
 				        add: e configuration numberOfFailures;
 				        add: ((metrics at: 'numErrors') at: s);
 				        add: ((metrics at: 'numCalls') at: s);
-				        add: best print;
-				        add: e logs first bestFitnessValue asString;
-				        add: best fitness asString;
-						  add: e executionTime asString;
+				        add: best asString;
+				        add: e logs first bestFitnessValue asNumber asString;
+				        add: best fitness asNumber asString;
+				        add: e executionTime asString;
 				        yourself ]
 				        on: Exception
 				        do: [ :err | nil ] ]
@@ -639,19 +701,22 @@ GPAssertion >> writeOnCsv [
 		self filename writeStreamDo: [ :stream | 
 			(NeoCSVWriter on: stream)
 				nextPut:
-					#( Class Method TestErrors Errors Calls Result FstFitness
-					   LstFitness Milliseconds );
+					#( Algorithm Grammar Class Method TestErrors Errors Calls Result
+					   FstFitness LstFitness Milliseconds );
 				nextPutAll: data;
 				flush ] ]
 ]
 
 { #category : #writing }
 GPAssertion >> writeResults [
+
 	results ifNotEmpty: [ 
-		self nameResultFile writeStreamDo: [ :stream |
+		self nameResultFile writeStreamDo: [ :stream | 
 			(NeoCSVWriter on: stream)
-				nextPut: #(Class nMethods nTestErrors nCalledMeths nSatisfactoryAsserts nEvolvedAsserts nSatisfactoryEvols Message Message1 Satisfy Comparison And);
+				nextPut:
+					#( Class nMethods nTestErrors nCalledMeths nSatisfactoryAsserts
+					   nEvolvedAsserts nSatisfactoryEvols Message Message1 Satisfy
+					   Comparison And );
 				nextPutAll: results;
-				flush ] 
-	]
+				flush ] ]
 ]

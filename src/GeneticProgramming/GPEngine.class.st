@@ -22,7 +22,7 @@ GPEngine >> configuration: aGPConfiguration [
 
 { #category : #hooks }
 GPEngine >> createInitialPopulation [
-	
+
 	| i |
 	i := 0.
 	[ 
@@ -30,7 +30,9 @@ GPEngine >> createInitialPopulation [
 		population size <= self populationSize ] ] whileTrue: [ 
 		| indiv |
 		indiv := self createNewIndividual.
-		indiv ifNotNil: [ population add: indiv ].
+		indiv ifNotNil: [ 
+			configuration saveSelectedNodeOptions: indiv.
+			population add: indiv ].
 		i := i + 1 ]
 ]
 

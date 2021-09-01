@@ -208,7 +208,11 @@ GPAssertConfiguration >> crossoverBetween: individual1 with: individual2 [
 		  ifFalse: [ 
 			  (Array with: offspring1 with: offspring2)
 				  detect: #notNil
-				  ifNone: [ nil ] ]
+				  ifNone: [ dictErrors
+			at: #crossover
+			ifPresent: [ :n | dictErrors at: #crossover put: n + 1 ]
+			ifAbsentPut: [ 1 ].
+					nil ] ]
 ]
 
 { #category : #'as yet unclassified' }
@@ -335,7 +339,8 @@ GPAssertConfiguration >> index: number [
 ]
 
 { #category : #initialization }
-GPAssertConfiguration >> initialize [ 
+GPAssertConfiguration >> initialize [
+
 	super initialize.
 	builder := GPAssertionGrammarBuilder new.
 	options := OrderedCollection new.
@@ -382,24 +387,33 @@ GPAssertConfiguration >> mutate: individual [
 
 { #category : #operations }
 GPAssertConfiguration >> mutate: children1 having: children2 [
+
 	| ids childIds |
 	ids := children1 collect: #id.
 	childIds := children2 collect: #id.
 	"nodeOptions := self getGrammarNodeOptions. "
-	assocs := ids asSet asOrderedCollection 
-		collect: [ :nodeId | | inds |
-			inds := GPAbstractNode indexesOf: nodeId on: childIds.
-			"inds addAll: (self getNodeIdOptions: nodeOptions given: nodeId and: childIds)."
-			nodeId -> inds ]
-		thenReject: [ :assoc | 
-			assoc value isEmpty or: [ assoc key = #Variable ] ].
-	assocs ifNotEmpty: [ | assoc node r |
+	assocs := ids asSet asOrderedCollection
+		          collect: [ :nodeId | 
+			          | inds |
+			          inds := GPAbstractNode indexesOf: nodeId on: childIds.
+			          "inds addAll: (self getNodeIdOptions: nodeOptions given: nodeId and: childIds)."
+			          nodeId -> inds ]
+		          thenReject: [ :assoc | 
+		          assoc value isEmpty or: [ assoc key = #Variable ] ].
+	assocs ifNotEmpty: [ 
+		| assoc node r |
 		assoc := random randomlySelect: assocs.
-		node := children1 at: (random randomlySelect: (GPAbstractNode indexesOf: assoc key on: ids)).
+		node := children1 at:
+			        (random randomlySelect:
+				         (GPAbstractNode indexesOf: assoc key on: ids)).
 		r := (children2 at: (random randomlySelect: assoc value)) deepCopy.
 		"Transcript show: 'mutation:', node print, ' replaced by: ', r print, String cr. "
-		node replaceBy: r.
-	].
+		node replaceBy: r ]
+		ifEmpty: [ dictErrors
+			at: #mutation
+			ifPresent: [ :n | dictErrors at: #mutation put: n + 1 ]
+			ifAbsentPut: [ 1 ]
+			 ]
 ]
 
 { #category : #operations }

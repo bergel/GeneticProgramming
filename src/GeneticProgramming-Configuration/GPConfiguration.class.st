@@ -7,7 +7,9 @@ Class {
 		'ruleWeights',
 		'optionWeights',
 		'depth',
-		'depthModified'
+		'depthModified',
+		'dictSelectedOptions',
+		'dictErrors'
 	],
 	#category : #'GeneticProgramming-Configuration-Core'
 }
@@ -68,6 +70,18 @@ GPConfiguration >> depth: anInteger [
 	depthModified := true
 ]
 
+{ #category : #accessing }
+GPConfiguration >> dictErrors [
+
+	^ dictErrors 
+]
+
+{ #category : #accessing }
+GPConfiguration >> dictSelectedOptions [
+
+	^ dictSelectedOptions
+]
+
 { #category : #operations }
 GPConfiguration >> distanceFromSolutionOf: individual [
 	"This method has to return a number that describes how close the individual is to the solution.
@@ -90,10 +104,13 @@ GPConfiguration >> forRule: symbol putWeights: numbers [
 
 { #category : #initialization }
 GPConfiguration >> initialize [
+
 	super initialize.
 	random := GPRandom seed: 1.
 	ruleWeights := Dictionary new.
 	optionWeights := Dictionary new.
+	dictSelectedOptions := Dictionary new.
+	dictErrors := Dictionary new.
 	method := #grow.
 	depthModified := false
 ]
@@ -194,6 +211,32 @@ GPConfiguration >> randomElementOf: aCollection [
 GPConfiguration >> randomInt: anInt [
 
 	^ random randomNumber: anInt
+]
+
+{ #category : #'as yet unclassified' }
+GPConfiguration >> saveSelectedNodeOptions: node [
+
+	| ruleId dict |
+	node isCollectionNode ifTrue: [ 
+		node nodeChildren do: [ :n | self saveSelectedNodeOptions: n ].
+		^ self ].
+	ruleId := node id.
+	dictSelectedOptions at: ruleId ifAbsentPut: [ Dictionary new ].
+	dict := dictSelectedOptions at: ruleId.
+	node isComplexNode
+		ifTrue: [ 
+			| id |
+			id := node nodeChildren collect: #id.
+			dict
+				at: id
+				ifPresent: [ :i | dict at: id put: i + 1 ]
+				ifAbsentPut: [ 1 ].
+			node nodeChildren do: [ :n | self saveSelectedNodeOptions: n ] ]
+		ifFalse: [ 
+			dict
+				at: node nodeValue
+				ifPresent: [ :i | dict at: node nodeValue put: i + 1 ]
+				ifAbsentPut: [ 1 ] ]
 ]
 
 { #category : #'instance creation' }
