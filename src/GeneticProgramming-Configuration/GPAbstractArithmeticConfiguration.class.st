@@ -35,16 +35,20 @@ GPAbstractArithmeticConfiguration >> distanceFromSolutionOf: individual [
 { #category : #'instance creation' }
 GPAbstractArithmeticConfiguration >> multNode [
 
-"
+	"
 	c = 1 ifTrue: [ ^ self newTerminalAdd ].
 	c = 2 ifTrue: [ ^ self newTerminalMult ].
 	c = 3 ifTrue: [ ^ self newTerminalSub ].
 "
+
 	| res |
 	res := GPNode new.
-	res printBlock: [ :node :context | '(', (node children first printUsing: context), ' * ', (node children second printUsing: context), ')' ].
+	res printBlock: [ :node :context | 
+		'(' , (node nodeChildren first printUsing: context) , ' * '
+		, (node nodeChildren second printUsing: context) , ')' ].
 	res evaluationBlock: [ :node :context | 
-		(node children first evaluateUsing: context) * (node children second evaluateUsing: context) ].
+		(node nodeChildren first evaluateUsing: context)
+		* (node nodeChildren second evaluateUsing: context) ].
 	^ res
 ]
 
@@ -101,16 +105,20 @@ GPAbstractArithmeticConfiguration >> number: t [
 { #category : #'instance creation' }
 GPAbstractArithmeticConfiguration >> subNode [
 
-"
+	"
 	c = 1 ifTrue: [ ^ self newTerminalAdd ].
 	c = 2 ifTrue: [ ^ self newTerminalMult ].
 	c = 3 ifTrue: [ ^ self newTerminalSub ].
 "
+
 	| res |
 	res := GPNode new.
-	res printBlock: [ :node :context | '(', (node children first printUsing: context), ' - ', (node children second printUsing: context), ')' ].
+	res printBlock: [ :node :context | 
+		'(' , (node nodeChildren first printUsing: context) , ' - '
+		, (node nodeChildren second printUsing: context) , ')' ].
 	res evaluationBlock: [ :node :context | 
-		(node children first evaluateUsing: context) - (node children second evaluateUsing: context) ].
+		(node nodeChildren first evaluateUsing: context)
+		- (node nodeChildren second evaluateUsing: context) ].
 	^ res
 ]
 

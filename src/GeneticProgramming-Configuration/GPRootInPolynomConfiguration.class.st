@@ -58,18 +58,26 @@ GPRootInPolynomConfiguration >> example [
 
 { #category : #'instance creation' }
 GPRootInPolynomConfiguration >> newFunction [
+
 	"This method has to return a new function"
+
 	| node |
 	node := GPNode new.
-	node children: { self newTerminal . self newTerminal . self newTerminal }.
+	node nodeChildren: { 
+			self newTerminal.
+			self newTerminal.
+			self newTerminal }.
 	node evaluationBlock: [ :children :context | 
-		((children first evaluateUsing: context) * (children first evaluateUsing: context) * (context at: #a))
-		+ ((children second evaluateUsing: context) * (children second evaluateUsing: context) * (context at: #b))
-		+ (context at: #c)].
+		(children first evaluateUsing: context)
+		* (children first evaluateUsing: context) * (context at: #a)
+		+ ((children second evaluateUsing: context)
+			 * (children second evaluateUsing: context) * (context at: #b))
+		+ (context at: #c) ].
 	node printBlock: [ :children :context | 
-		'root1: ', children first print, '  root2: ', children second print ].
+		'root1: ' , children first print , '  root2: '
+		, children second print ].
 	^ node
-	
+
 	"| node |
 	node := GPNode new.
 	node children: { self newTerminal . self newTerminal . self newTerminal }.

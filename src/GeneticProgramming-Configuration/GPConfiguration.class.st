@@ -112,12 +112,15 @@ GPConfiguration >> method: anObject [
 
 { #category : #operations }
 GPConfiguration >> mutate: individual [
+
 	| nodeToMutate source |
-	nodeToMutate := self randomElementOf: (individual withAllChildren select: [ :n | n children isEmpty ]).
+	nodeToMutate := self randomElementOf:
+		                (individual withAllChildren select: [ :n | 
+			                 n nodeChildren isEmpty ]).
 	source := self newTerminal.
 	nodeToMutate evaluationBlock: source evaluationBlock.
 	nodeToMutate printBlock: source printBlock.
-	nodeToMutate nodeValue: source nodeValue.
+	nodeToMutate nodeValue: source nodeValue
 ]
 
 { #category : #hooks }
@@ -141,6 +144,23 @@ GPConfiguration >> numberOfGenerations [
 GPConfiguration >> optionWeightsOf: symbol [
 
 	^ optionWeights at: symbol ifAbsent: [ #(1) ]
+]
+
+{ #category : #'as yet unclassified' }
+GPConfiguration >> pickBestConsideringParents: individual [
+
+	| col |
+	col := (random shuffleElementsOf: individual parents) sort: [ :i1 :i2 | 
+		       i1 fitness < i2 fitness ].
+	^ col isEmpty 
+		ifTrue: [ individual ] 
+		ifFalse: [ col first fitness < individual fitness
+		  ifTrue: [ 
+			  | indiv |
+			  indiv := col first deepCopy.
+			  indiv addParent: col first.
+			  indiv ]
+		  ifFalse: [ individual ] ]
 ]
 
 { #category : #'as yet unclassified' }

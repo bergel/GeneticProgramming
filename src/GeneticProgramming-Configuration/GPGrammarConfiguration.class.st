@@ -14,24 +14,31 @@ GPGrammarConfiguration >> createNewIndividual [
 
 { #category : #'as yet unclassified' }
 GPGrammarConfiguration >> crossover: individual1 with: individual2 [
+
 	| copy ids childIds childNodes indexes shuffledIds |
 	copy := individual1 deepCopy.
-	ids := copy children collect: #id.
+	ids := copy nodeChildren collect: #id.
 	childNodes := individual2 withAllChildren allButFirst.
 	childIds := childNodes collect: #id.
 	shuffledIds := random shuffleElementsOf: ids copy.
-	shuffledIds 
-		detect: [ :nodeId |
-			indexes := random shuffleElementsOf: (individual1 indexesOf: nodeId on: childIds).
-			indexes notEmpty ] 
-		ifFound: [ :nodeId | copy children at: (ids indexOf: nodeId) put: (childNodes at: indexes first) deepCopy.
-			^ copy ] 
-		ifNone: [ | c | 
-			copy children 
-				detect: [ :child |
+	shuffledIds
+		detect: [ :nodeId | 
+			indexes := random shuffleElementsOf:
+				           (individual1 indexesOf: nodeId on: childIds).
+			indexes notEmpty ]
+		ifFound: [ :nodeId | 
+			copy nodeChildren
+				at: (ids indexOf: nodeId)
+				put: (childNodes at: indexes first) deepCopy.
+			^ copy ]
+		ifNone: [ 
+			| c |
+			copy nodeChildren
+				detect: [ :child | 
 					c := self crossover: child with: individual2.
 					c notNil ]
-				ifFound: [ :child | copy children at: (ids indexOf: child id) put: c.
+				ifFound: [ :child | 
+					copy nodeChildren at: (ids indexOf: child id) put: c.
 					^ copy ] ].
 	^ nil
 ]

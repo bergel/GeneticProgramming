@@ -67,14 +67,17 @@ GPContextFreeGrammar >> addOrReplaceSelectorRule: symbol withValues: collection 
 
 { #category : #adding }
 GPContextFreeGrammar >> addRule: symbol ofClass: aClass withSequence: collection [
+
 	| optionRule |
 	self addRuleOptionIfNecessary: symbol.
 	optionRule := options at: symbol.
-	optionRule 
-		addNode: (GPNode new id: symbol; type: aClass; 
-			children: collection asOrderedCollection;
-			evaluationBlock: (self evaluationBlockOfNode: collection);
-			printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ])
+	optionRule addNode: (GPNode new
+			 id: symbol;
+			 type: aClass;
+			 nodeChildren: collection asOrderedCollection;
+			 evaluationBlock: (self evaluationBlockOfNode: collection);
+			 printBlock: [ :n :ctx | 
+				 (n withAllChildren collect: #id) asArray asString ])
 ]
 
 { #category : #adding }
@@ -85,27 +88,47 @@ GPContextFreeGrammar >> addRule: symbol redirectingTo: anotherSymbol [
 
 { #category : #adding }
 GPContextFreeGrammar >> addRule: symbol withCollectionOptions: collection ofSize: anInteger [
+
 	"collection is an array with the rule names of the grammar"
+
 	| optionRule index |
 	self addRuleOptionIfNecessary: symbol.
 	optionRule := options at: symbol.
 	index := optionRule nodes size.
-	optionRule 
-		addNode: (GPCollectionNode new id: symbol;
-			evaluationBlock: [:n :ctx | 
-				[:nodeDepth :booleans | | allOptions |
-					allOptions := self collectValueForRule: symbol at: index + 1 considering: nodeDepth.
-					allOptions := (allOptions collect: [ :opt | ctx expandTree: opt from: nodeDepth + 1 with: booleans ] 
-						thenReject: [ :t | t isNil ]) collect: #id.
-					allOptions 
-						ifEmpty: [ nil ] 
-						ifNotEmpty: [ allOptions size < anInteger 
-							ifTrue: [ allOptions := (self shuffle: (self fillArrayOfSize: allOptions size to: anInteger )) collect: [:i | allOptions at: i ] ].
-					n deepCopy 
-						depth: nodeDepth; 
-						children: ((1 to: anInteger) collect: [ :i | ctx expandTree: (allOptions at: i) from: nodeDepth + 1 with: booleans ]) ] ] ];
-			printBlock: [:n :ctx | (n withAllChildren collect: #id) asArray asString ]) 
-		withValueOptions: collection asOrderedCollection.
+	optionRule
+		addNode: (GPCollectionNode new
+				 id: symbol;
+				 evaluationBlock: [ :n :ctx | 
+					 [ :nodeDepth :booleans | 
+					 | allOptions |
+					 allOptions := self
+						               collectValueForRule: symbol
+						               at: index + 1
+						               considering: nodeDepth.
+					 allOptions := (allOptions
+						                collect: [ :opt | 
+							                ctx
+								                expandTree: opt
+								                from: nodeDepth + 1
+								                with: booleans ]
+						                thenReject: [ :t | t isNil ]) collect: #id.
+					 allOptions ifEmpty: [ nil ] ifNotEmpty: [ 
+							 allOptions size < anInteger ifTrue: [ 
+									 allOptions := (self shuffle:
+											                (self
+												                 fillArrayOfSize: allOptions size
+												                 to: anInteger)) collect: [ :i | 
+											               allOptions at: i ] ].
+							 n deepCopy
+								 depth: nodeDepth;
+								 nodeChildren: ((1 to: anInteger) collect: [ :i | 
+											  ctx
+												  expandTree: (allOptions at: i)
+												  from: nodeDepth + 1
+												  with: booleans ]) ] ] ];
+				 printBlock: [ :n :ctx | 
+				 (n withAllChildren collect: #id) asArray asString ])
+		withValueOptions: collection asOrderedCollection
 ]
 
 { #category : #adding }
@@ -178,20 +201,26 @@ GPContextFreeGrammar >> depth: integer [
 
 { #category : #'as yet unclassified' }
 GPContextFreeGrammar >> evaluationBlockOfNode: collection [
+
 	^ [ :n :ctx | 
-			[:nodeDepth :booleans | | children child | 
-				children := OrderedCollection new.
-				collection 
-					detect: [ :id | 
-						child := ctx expandTree: id from: nodeDepth + 1 with: booleans.
-						children add: child.
-						child isNil ]
-					ifFound: [ nil ]
-					ifNone: [ 
-						(n isNotNil and: [ctx methodDepthBlock valueWithPossibleArgs: (Array with: booleans)]) 
-						ifTrue: [ n deepCopy depth: nodeDepth; children: children ] 
-						ifFalse: [ nil ] ] ]
-	 ]
+	  [ :nodeDepth :booleans | 
+	  | children child |
+	  children := OrderedCollection new.
+	  collection
+		  detect: [ :id | 
+			  child := ctx expandTree: id from: nodeDepth + 1 with: booleans.
+			  children add: child.
+			  child isNil ]
+		  ifFound: [ nil ]
+		  ifNone: [ 
+			  (n isNotNil and: [ 
+				   ctx methodDepthBlock valueWithPossibleArgs:
+					   (Array with: booleans) ])
+				  ifTrue: [ 
+					  n deepCopy
+						  depth: nodeDepth;
+						  nodeChildren: children ]
+				  ifFalse: [ nil ] ] ] ]
 ]
 
 { #category : #controlling }
@@ -360,4 +389,39 @@ GPContextFreeGrammar >> shuffleOrSortOptions: collection of: symbol regarding: i
 	"^ configuration 
 		ifNil: [ GPRandom instance shuffleElementsOf: collection ] 
 		ifNotNil: [ configuration shuffle: collection forRule: symbol ]"
+]
+
+{ #category : #'as yet unclassified' }
+GPContextFreeGrammar >> updateNodeChild: stack of: node [
+
+	self
+		updateNodeChild: stack
+		of: node
+		given: (self expandTree: stack top)
+]
+
+{ #category : #'as yet unclassified' }
+GPContextFreeGrammar >> updateNodeChild: stack of: node given: nodeChild [
+
+	| index symbol array |
+	index := 0.
+	symbol := stack pop.
+	array := (Array with: symbol)
+	         , (self ruleOptionOf: symbol) nodeOptions.
+	(node nodeChildren collect: #id)
+		detect: [ :s | 
+			index := index + 1.
+			array includes: s ]
+		ifFound: [ :s | 
+			(array includes: nodeChild id)
+				ifTrue: [ 
+					nodeChild depth: node depth + 1.
+					(node nodeChildren at: index) replaceBy: nodeChild ]
+				ifFalse: [ 
+					| child |
+					child := self expandTree: s.
+					child ifNotNil: [ 
+						child depth: node depth + 1.
+						(node nodeChildren at: index) replaceBy: child.
+						self updateNodeChild: stack of: child given: nodeChild ] ] ]
 ]

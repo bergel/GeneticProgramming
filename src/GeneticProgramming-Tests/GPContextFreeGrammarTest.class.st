@@ -26,11 +26,12 @@ GPContextFreeGrammarTest >> testAddLeafRuleOfClassWithValues [
 	node := node key.
 	self assert: node class equals: GPLeafNode.
 	self assert: node type equals: RBLiteralNode.
-	self assert: node children isEmpty.
+	self assert: node nodeChildren isEmpty.
 	self assert: node nodeValue isNil.
 	self assert: options size equals: 6.
-	self assertCollection: options hasSameElements: #(1 2 3 4 5 6).
-	newNode := (node evaluateUsing: grammar) valueWithPossibleArgs: (Array with: 0 with: Stack new).
+	self assertCollection: options hasSameElements: #( 1 2 3 4 5 6 ).
+	newNode := (node evaluateUsing: grammar) valueWithPossibleArgs:
+		           (Array with: 0 with: Stack new).
 	self deny: newNode nodeValue equals: node nodeValue.
 	self assert: newNode print equals: '1'
 ]
@@ -53,7 +54,9 @@ GPContextFreeGrammarTest >> testAddRuleOfClassWithSequence [
 
 	| ruleOption node options newNode |
 	grammar
-		addRule: #Assignment ofClass: RBAssignmentNode withSequence: #( #Variable #Literal );
+		addRule: #Assignment
+		ofClass: RBAssignmentNode
+		withSequence: #( #Variable #Literal );
 		addLeafRule: #Variable
 		ofClass: RBVariableNode
 		withValues: #( #a #b #c );
@@ -69,17 +72,28 @@ GPContextFreeGrammarTest >> testAddRuleOfClassWithSequence [
 	node := node key.
 	self assert: node class equals: GPNode.
 	self assert: node type equals: RBAssignmentNode.
-	self assert: node children isNotEmpty.
-	self assert: node children size equals: 2.
-	self assertCollection: node children hasSameElements: #(#Variable #Literal).
+	self assert: node nodeChildren isNotEmpty.
+	self assert: node nodeChildren size equals: 2.
+	self
+		assertCollection: node nodeChildren
+		hasSameElements: #( #Variable #Literal ).
 	self assert: options isEmpty.
-	newNode := (node evaluateUsing: grammar) valueWithPossibleArgs: (Array with: 0 with: Stack new).
+	newNode := (node evaluateUsing: grammar) valueWithPossibleArgs:
+		           (Array with: 0 with: Stack new).
 	self assert: newNode numberOfNodes equals: 3.
 	self deny: newNode nodeValue equals: node nodeValue.
-	self assertCollection: (newNode children collect: #class) hasSameElements: (Array with: GPLeafNode with: GPLeafNode).
-	self assertCollection: (newNode children collect: #id) hasSameElements: #(#Variable #Literal).
-	self assertCollection: (newNode children collect: #nodeValue) hasSameElements: #(#a 1).
-	self assertCollection: newNode print hasSameElements: '#(#Assignment #Variable #Literal)'.
+	self
+		assertCollection: (newNode nodeChildren collect: #class)
+		hasSameElements: (Array with: GPLeafNode with: GPLeafNode).
+	self
+		assertCollection: (newNode nodeChildren collect: #id)
+		hasSameElements: #( #Variable #Literal ).
+	self
+		assertCollection: (newNode nodeChildren collect: #nodeValue)
+		hasSameElements: #( #a 1 ).
+	self
+		assertCollection: newNode print
+		hasSameElements: '#(#Assignment #Variable #Literal)'
 ]
 
 { #category : #tests }
@@ -175,8 +189,9 @@ GPContextFreeGrammarTest >> testAddRuleWithCollectionOptionsOfSize [
 	self assert: ruleOption nodes size equals: 1.
 	node := ruleOption getNodeAt: 1.
 	self assert: node class equals: GPCollectionNode.
-	self assert: node children isEmpty.
-	newNode := (node evaluateUsing: grammar) valueWithPossibleArgs: (Array with: 0 with: Stack new).
+	self assert: node nodeChildren isEmpty.
+	newNode := (node evaluateUsing: grammar) valueWithPossibleArgs:
+		           (Array with: 0 with: Stack new).
 	self deny: newNode nodeValue equals: node nodeValue.
 	self assert: newNode numberOfNodes equals: 4.
 	self deny: newNode numberOfNodes equals: node numberOfNodes
@@ -197,21 +212,23 @@ GPContextFreeGrammarTest >> testAddRuleWithSequence [
 
 { #category : #tests }
 GPContextFreeGrammarTest >> testAddSelectorRuleWithValues [
+
 	| ruleOption node newNode options |
-	grammar addSelectorRule: #Add withValues: #(#+ #-).
+	grammar addSelectorRule: #Add withValues: #( #+ #- ).
 	ruleOption := grammar ruleOptionOf: #Add.
 	self assert: ruleOption nodes size equals: 1.
 	node := ruleOption getNodeWithOptionsAt: 1.
 	options := node value.
 	node := node key.
 	self assert: node class equals: GPSelectorNode.
-	self assert: node children isEmpty.
+	self assert: node nodeChildren isEmpty.
 	self assert: node nodeValue isNil.
 	self assert: options size equals: 2.
-	self assertCollection: options hasSameElements: #(#+ #-).
-	newNode := (node evaluateUsing: grammar) valueWithPossibleArgs: (Array with: 0 with: Stack new).
+	self assertCollection: options hasSameElements: #( #+ #- ).
+	newNode := (node evaluateUsing: grammar) valueWithPossibleArgs:
+		           (Array with: 0 with: Stack new).
 	self deny: newNode nodeValue equals: node nodeValue.
-	self assert: newNode print equals: #+.
+	self assert: newNode print equals: #+
 ]
 
 { #category : #tests }
@@ -483,14 +500,16 @@ GPContextFreeGrammarTest >> testExpandTree [
 	self assert: tree id equals: #Assignment.
 	self assert: tree numberOfNodes equals: 7.
 	self assert: tree depth equals: 0.
-	children := tree children.
+	children := tree nodeChildren.
 	self assert: children size equals: 2.
 	self assert: children first depth equals: 1.
-	self assert: children second depth equals: 2. 
+	self assert: children second depth equals: 2.
 	self assert: children second id equals: #Message.
-	children := children second children.
+	children := children second nodeChildren.
 	self assert: children size equals: 3.
-	self assertCollection: (children allButFirst collect: #depth) asSet hasSameElements: #(3). 
+	self
+		assertCollection: (children allButFirst collect: #depth) asSet
+		hasSameElements: #( 3 )
 ]
 
 { #category : #tests }
@@ -563,11 +582,12 @@ GPContextFreeGrammarTest >> testExpandTreeFromWithETFGrammar [
 	node := node key.
 	self assert: node class equals: GPNode.
 	self assert: node type equals: RBMessageNode.
-	self assert: node children isNotEmpty.
-	self assert: node children size equals: 3.
-	self assertCollection: node children hasSameElements: #(#E #Add #T).
+	self assert: node nodeChildren isNotEmpty.
+	self assert: node nodeChildren size equals: 3.
+	self assertCollection: node nodeChildren hasSameElements: #( #E #Add #T ).
 	self assert: options isEmpty.
-	newNode := (node evaluateUsing: grammar) valueWithPossibleArgs: (Array with: 0 with: Stack new).
+	newNode := (node evaluateUsing: grammar) valueWithPossibleArgs:
+		           (Array with: 0 with: Stack new).
 	self assert: newNode numberOfNodes equals: 7.
 	self deny: newNode nodeValue equals: node nodeValue.
 	self assert: newNode ast formattedCode equals: '8 + (1 / 10)'

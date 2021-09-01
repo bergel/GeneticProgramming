@@ -51,7 +51,7 @@ GPReplacementVisitor >> visitAssignmentNode: assignmentNode [
 
 	| children |
 	nodes ifEmpty: [ ^ self ].
-	children := nodes pop children.
+	children := nodes pop nodeChildren.
 	assignmentNode variable: (children first generateAST: self).
 	assignmentNode value: (children second generateAST: self).
 	lastValue := assignmentNode
@@ -59,17 +59,20 @@ GPReplacementVisitor >> visitAssignmentNode: assignmentNode [
 
 { #category : #visiting }
 GPReplacementVisitor >> visitBlockNode: blockNode [
+
 	| children child |
 	nodes ifEmpty: [ ^ self ].
-	children := nodes pop children.
-	children size > 1 
-		ifTrue: [ child := children first.
-			child isCollectionNode ifFalse: [ child := GPCollectionNode transform: child ].
+	children := nodes pop nodeChildren.
+	children size > 1
+		ifTrue: [ 
+			child := children first.
+			child isCollectionNode ifFalse: [ 
+				child := GPCollectionNode transform: child ].
 			blockNode arguments: (child generateAST: self).
 			child := children second ]
-		ifFalse: [ child := children first. ].
-	blockNode body: (child generateAST: self) asSequenceNode.	
-	lastValue := blockNode.
+		ifFalse: [ child := children first ].
+	blockNode body: (child generateAST: self) asSequenceNode.
+	lastValue := blockNode
 	"self visitArgumentNodes: blockNode arguments.
 	self visitNode: blockNode body"
 ]
@@ -87,16 +90,19 @@ GPReplacementVisitor >> visitMessageNode: messageNode [
 
 	| children symbol child |
 	nodes ifEmpty: [ ^ self ].
-	children := nodes pop children.
+	children := nodes pop nodeChildren.
 	messageNode receiver: (children first generateAST: self).
 	symbol := children second generateAST: self.
 	messageNode selector: symbol.
-	[child := children third.
+	[ 
+	child := children third.
 	child isCollectionNode ifFalse: [ 
 		child isSelectorNode ifTrue: [ child := child convertToLeafNode ].
 		child := GPCollectionNode transform: child ].
-	messageNode arguments: (child
-			 children collect: [ :ch | ch generateAST: self ]) ] on: SubscriptOutOfBounds do: [ messageNode arguments: OrderedCollection new ].
+	messageNode arguments:
+		(child nodeChildren collect: [ :ch | ch generateAST: self ]) ]
+		on: SubscriptOutOfBounds
+		do: [ messageNode arguments: OrderedCollection new ].
 	lastValue := messageNode
 ]
 
@@ -120,13 +126,14 @@ GPReplacementVisitor >> visitNode: node [
 
 { #category : #visiting }
 GPReplacementVisitor >> visitSequenceNode: sequenceNode [
+
 	| children |
 	nodes ifEmpty: [ ^ self ].
-	children := nodes pop children.
-	sequenceNode 
+	children := nodes pop nodeChildren.
+	sequenceNode
 		temporaries: OrderedCollection new;
 		statements: (children collect: [ :ch | ch generateAST: self ]).
-	lastValue := sequenceNode 
+	lastValue := sequenceNode
 	"| children |
 	nodes isEmpty ifTrue: [ ^ self ].
 	children := nodes pop children.

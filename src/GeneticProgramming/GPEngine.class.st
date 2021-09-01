@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'configuration',
 		'population',
-		'logs'
+		'logs',
+		'executionTime'
 	],
 	#category : #'GeneticProgramming-Core'
 }
@@ -21,8 +22,16 @@ GPEngine >> configuration: aGPConfiguration [
 
 { #category : #hooks }
 GPEngine >> createInitialPopulation [
-	population := (1 to: self populationSize)
-		collect: [ :i | self createNewIndividual ]
+	
+	| i |
+	i := 0.
+	[ 
+	i < (self populationSize * 2) and: [ 
+		population size <= self populationSize ] ] whileTrue: [ 
+		| indiv |
+		indiv := self createNewIndividual.
+		indiv ifNotNil: [ population add: indiv ].
+		i := i + 1 ]
 ]
 
 { #category : #evolution }
@@ -39,19 +48,21 @@ GPEngine >> createNewGeneration [
 		| number parent newInd indiv |
 		number := configuration randomInt: 100.
 		number <= 90
-			ifTrue: [
+			ifTrue: [ 
 				i1 := self tournament.
 				i2 := self tournamentDiscarding: i1.
 				newInd := configuration crossover: i1 with: i2.
-				newInd ifNil: [ newInd := configuration pickBestIndividual: i1 and: i2 ] ]
+				newInd ifNil: [ 
+					newInd := configuration pickBestIndividual: i1 and: i2 ] ]
 			ifFalse: [ 
 				parent := self tournament.
 				newInd := parent deepCopy.
-				newInd addParent: parent.
+				newInd addParent: parent
 				"self distanceFromSolutionOf: newInd" ].
 		number := configuration randomInt: 100.
-		number <= 50 ifTrue: [ configuration mutate: newInd.
-			"self distanceFromSolutionOf: newInd "].
+		number <= 5 ifTrue: [ 
+			configuration mutate: newInd
+			"self distanceFromSolutionOf: newInd " ].
 		self distanceFromSolutionOf: newInd.
 		indiv := configuration pickBestConsideringParents: newInd.
 		newPopulation add: indiv ].
@@ -123,6 +134,16 @@ GPEngine >> execute [
 ]
 
 { #category : #accessing }
+GPEngine >> executionTime [
+	^ executionTime 
+]
+
+{ #category : #accessing }
+GPEngine >> executionTime: number [
+	executionTime := number
+]
+
+{ #category : #accessing }
 GPEngine >> fitnessOfAverageIndividual [
 	^ self distanceFromSolutionOf: self pickAverageIndividual
 ]
@@ -139,8 +160,11 @@ GPEngine >> fitnessOfWorstIndividual [
 
 { #category : #initialization }
 GPEngine >> initialize [
+
 	super initialize.
-	logs := OrderedCollection new
+	logs := OrderedCollection new.
+	population := OrderedCollection new.
+	executionTime := 0
 ]
 
 { #category : #accessing }
@@ -193,7 +217,9 @@ GPEngine >> pickAverageIndividual [
 
 { #category : #'as yet unclassified' }
 GPEngine >> pickBestIndividual [
+
 	"^ self rankedIndividuals first key"
+
 	^ self sortedIndividuals first key
 ]
 
@@ -246,14 +272,16 @@ GPEngine >> sortedIndividuals [
 
 { #category : #evolution }
 GPEngine >> tournament [
+
 	"Return the best individual from a tournament"
+
 	| k best ind |
 	best := nil.
-	k := 2.
+	k := 4.
 	k timesRepeat: [ 
-		ind := self randomElementOf: population. "population at: (configuration random randomNumber: population size)".
-		(best isNil or: [ ind fitness < best fitness ]) 
-			ifTrue: [ best := ind ] ].
+		ind := self randomElementOf: population. "population at: (configuration random randomNumber: population size)"
+		(best isNil or: [ ind fitness < best fitness ]) ifTrue: [ 
+			best := ind ] ].
 	^ best
 	"| fitness best |
 	best := (population asSortedCollection: [ :ind1 :ind2 | ind1 fitness > ind2 fitness ]) first.

@@ -6,23 +6,26 @@ Class {
 
 { #category : #accessing }
 GPCollectionNode class >> transform: node [
-	^ self new children: (Array with: node)
+
+	^ self new nodeChildren: (Array with: node)
 ]
 
 { #category : #comparing }
-GPCollectionNode >> = other [ 
-	^ super = other 
-		and: [ id == other id 
-			and: [ children size == other children size 
-				"and: [ depth == other depth "
-					and: [ | index |
-						index := 1.
-						children detect: [ :child | | found |
-							found := child ~= (other children at: index).
-							index := index + 1.
-							found ] 
-						ifFound: [ :c | false ] 
-						ifNone: [ true ] ] ] ] "]"
+GPCollectionNode >> = other [
+
+	^ super = other and: [ "]"
+		  id == other id and: [ 
+			  nodeChildren size == other nodeChildren size and: [ "and: [ depth == other depth "
+				  | index |
+				  index := 1.
+				  nodeChildren
+					  detect: [ :child | 
+						  | found |
+						  found := child ~= (other nodeChildren at: index).
+						  index := index + 1.
+						  found ]
+					  ifFound: [ :c | false ]
+					  ifNone: [ true ] ] ] ]
 ]
 
 { #category : #accessing }
@@ -37,14 +40,14 @@ GPCollectionNode >> deepCopy [
 	c := super deepCopy. ";
 		     evaluationBlock: evaluationBlock;
 		     printBlock: printBlock"
-	self children do: [ :child | c addChild: child deepCopy ].
+	self nodeChildren do: [ :child | c addChild: child deepCopy ].
 	^ c
 ]
 
 { #category : #translating }
 GPCollectionNode >> generateAST: visitor [
 
-	^ children collect: [ :child | child generateAST: visitor ]
+	^ nodeChildren collect: [ :child | child generateAST: visitor ]
 ]
 
 { #category : #testing }
@@ -55,16 +58,19 @@ GPCollectionNode >> isCollectionNode [
 
 { #category : #accessing }
 GPCollectionNode >> nodeValue [
-	nodeValue := self children collect: [:ch | ch nodeValue ].
-	^ nodeValue 
+
+	nodeValue := self nodeChildren collect: [ :ch | ch nodeValue ].
+	^ nodeValue
 ]
 
 { #category : #printing }
 GPCollectionNode >> printOn: aStream [
 
-	aStream nextPutAll: '#('.
-	children do: [ :child | 
+	[ aStream nextPutAll: self ast formattedCode ] 
+		on: Exception 
+		do: [ aStream nextPutAll: '#('.
+	nodeChildren do: [ :child | 
 		child printOn: aStream.
 		aStream nextPut: Character space ].
-	aStream nextPut: $)
+	aStream nextPut: $) ]
 ]

@@ -3,7 +3,6 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'id',
-		'children',
 		'type',
 		'evaluationBlock',
 		'printBlock',
@@ -13,7 +12,8 @@ Class {
 		'parents',
 		'position',
 		'generation',
-		'childrenByGeneration'
+		'nodeChildren',
+		'children'
 	],
 	#category : #'GeneticProgramming-Core'
 }
@@ -29,13 +29,14 @@ GPAbstractNode class >> indexesOf: object on: objects [
 
 { #category : #accessing }
 GPAbstractNode >> addChild: aNode [
-	children add: aNode
+	nodeChildren add: aNode
 ]
 
 { #category : #accessing }
 GPAbstractNode >> addChildByGeneration: aNode [
+
 	self assert: aNode notNil.
-	childrenByGeneration add: aNode
+	children add: aNode
 ]
 
 { #category : #adding }
@@ -55,7 +56,7 @@ GPAbstractNode >> allLeaves [
 { #category : #accessing }
 GPAbstractNode >> allLeaves: collection [
 	"Private usage"
-	children do: [ :c |
+	nodeChildren do: [ :c |
 		c isLeaf 
 			ifTrue: [ collection add: c ]
 			ifFalse: [ c allLeaves: collection ] ]
@@ -69,7 +70,7 @@ GPAbstractNode >> allParents [
 	^ col
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 GPAbstractNode >> allParents: node on: collection using: set [
 	node parents 
 		reject: [ :obj | (set includes: obj generation -> obj position) ]
@@ -116,30 +117,23 @@ GPAbstractNode >> atIndex: anIndex [
 
 { #category : #operations }
 GPAbstractNode >> atIndex: index put: anotherNode [
+
 	| i |
 	index < 1 ifTrue: [ ^ self ].
 	i := index.
 	i := i - 1.
-	self children doWithIndex: [ :child :ii |
-		i = 1 ifTrue: [ self children at: ii put: anotherNode. ^ self ].
+	self nodeChildren doWithIndex: [ :child :ii | 
+		i = 1 ifTrue: [ 
+			self nodeChildren at: ii put: anotherNode.
+			^ self ].
 		child atIndex: i put: anotherNode.
-		i := i - 1. ].
-	
+		i := i - 1 ]
 ]
 
 { #category : #accessing }
 GPAbstractNode >> children [
+
 	^ children
-]
-
-{ #category : #accessing }
-GPAbstractNode >> children: someNodes [
-	children := someNodes
-]
-
-{ #category : #accessing }
-GPAbstractNode >> childrenByGeneration [
-	^ childrenByGeneration
 ]
 
 { #category : #copying }
@@ -182,7 +176,7 @@ GPAbstractNode >> evaluateUsing: context [
 	^ evaluationBlock value: self value: context
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 GPAbstractNode >> evaluateWith: orderedDictionary [
 	| block |
 	block := (RBBlockNode 
@@ -205,7 +199,7 @@ GPAbstractNode >> evaluationBlock: aOneArgBlock [
 
 { #category : #accessing }
 GPAbstractNode >> first [
-	^ children first
+	^ nodeChildren first
 ]
 
 { #category : #accessing }
@@ -259,9 +253,9 @@ GPAbstractNode >> indexesOf: object on: objects [
 GPAbstractNode >> initialize [
 
 	super initialize.
-	children := OrderedCollection new.
+	nodeChildren := OrderedCollection new.
 	parents := OrderedCollection new.
-	childrenByGeneration := OrderedCollection new.
+	children := OrderedCollection new.
 	depth := 0.
 	position := 0
 ]
@@ -280,7 +274,7 @@ GPAbstractNode >> isComplexNode [
 
 { #category : #testing }
 GPAbstractNode >> isLeaf [
-	^ children isEmpty
+	^ nodeChildren isEmpty
 ]
 
 { #category : #testing }
@@ -295,10 +289,22 @@ GPAbstractNode >> isSelectorNode [
 ]
 
 { #category : #accessing }
+GPAbstractNode >> nodeChildren [
+
+	^ nodeChildren
+]
+
+{ #category : #accessing }
+GPAbstractNode >> nodeChildren: someNodes [
+
+	nodeChildren := someNodes
+]
+
+{ #category : #accessing }
 GPAbstractNode >> nodeValue [
 
-	children ifNotEmpty: [ 
-		nodeValue := [children collect: [ :child | child nodeValue ]] on: MessageNotUnderstood do: [ nil ]
+	nodeChildren ifNotEmpty: [ 
+		nodeValue := [nodeChildren collect: [ :child | child nodeValue ]] on: MessageNotUnderstood do: [ nil ]
 	].
 	^ nodeValue
 ]
@@ -361,19 +367,22 @@ GPAbstractNode >> printUsing: context [
 
 { #category : #accessing }
 GPAbstractNode >> replaceBy: anotherNode [
+
 	"self assert: anotherNode class == self class."
-	self assert: (id == anotherNode id or: [ type == anotherNode type or: [ self class == anotherNode class ] ]).
-	self id: anotherNode id;
-		"type: anotherNode type;"
-		nodeValue: anotherNode nodeValue;
+
+	self assert: (id == anotherNode id or: [ 
+			 type == anotherNode type or: [ self class == anotherNode class ] ]).
+	self
+		id: anotherNode id;
+		"type: anotherNode type;"nodeValue: anotherNode nodeValue;
 		printBlock: anotherNode printBlock;
 		evaluationBlock: anotherNode evaluationBlock;
-		children: anotherNode children 
+		nodeChildren: anotherNode nodeChildren
 ]
 
 { #category : #accessing }
 GPAbstractNode >> second [
-	^ children second
+	^ nodeChildren second
 ]
 
 { #category : #accessing }
@@ -403,20 +412,21 @@ GPAbstractNode >> shapes [
 
 { #category : #accessing }
 GPAbstractNode >> shapes: canvas [
+
 	| group shapeGroup shapes |
 	group := RSGroup new.
 	shapeGroup := RSGroup new.
 	shapes := self allShapes.
 	group addAll: shapes.
 	RSLineBuilder line
-		color: (Color fromHexString: '001440')"(Color
-			r: 0.2316715542521994
-			g: 0.5141739980449658
-			b: 0.7409579667644184)";
+		color: (Color fromHexString: '001440');
 		canvas: group;
 		shapes: group;
 		withBorderAttachPoint;
-		connectToAll: #children.
+		connectToAll: #nodeChildren. "(Color
+			r: 0.2316715542521994
+			g: 0.5141739980449658
+			b: 0.7409579667644184)"
 	RSTreeLayout new
 		verticalGap: 20;
 		on: shapes.
@@ -446,7 +456,7 @@ GPAbstractNode >> withAllChildren [
 { #category : #accessing }
 GPAbstractNode >> withAllChildren: collection [
 	"Private usage"
-	children do: [ :c |
+	nodeChildren do: [ :c |
 		collection add: c.
 		c withAllChildren: collection ]
 ]

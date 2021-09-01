@@ -31,22 +31,32 @@ GPRuleOptionTest >> testAddNodeWithOptions [
 
 { #category : #tests }
 GPRuleOptionTest >> testAllOptions [
+
 	| options |
-	ruleOption ruleName: #E;
-		addNode: (GPNode new id: #E; type: RBMessageNode; children: #(#E #Add #T) asOrderedCollection);
+	ruleOption
+		ruleName: #E;
+		addNode: (GPNode new
+				 id: #E;
+				 type: RBMessageNode;
+				 nodeChildren: #( #E #Add #T ) asOrderedCollection);
 		addNodeOption: #T;
 		addNodeOption: #F;
-		addNode: (GPNode new id: #E; type: RBAssignmentNode; children: #(#Var #F) asOrderedCollection).
+		addNode: (GPNode new
+				 id: #E;
+				 type: RBAssignmentNode;
+				 nodeChildren: #( #Var #F ) asOrderedCollection).
 	options := ruleOption allOptions.
 	self assert: options size equals: 4.
-	self assertCollection: (options collect: #key) hasSameElements: #('node' 'nodeOption' 'nodeOption' 'node').
+	self
+		assertCollection: (options collect: #key)
+		hasSameElements: #( 'node' 'nodeOption' 'nodeOption' 'node' ).
 	options := options collect: #value.
 	self assert: options first key class equals: GPNode.
 	self assert: options first key type equals: RBMessageNode.
 	self assert: options second equals: #T.
 	self assert: options third equals: #F.
 	self assert: options fourth key class equals: GPNode.
-	self assert: options fourth key type equals: RBAssignmentNode.
+	self assert: options fourth key type equals: RBAssignmentNode
 ]
 
 { #category : #tests }

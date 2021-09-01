@@ -47,7 +47,8 @@ GPAssertionFitnessFunction >> initialize [
 
 { #category : #asserting }
 GPAssertionFitnessFunction >> shouldTerminate [
-	^ self asNumber == 0
+
+	^ self asNumber = 0
 ]
 
 { #category : #'as yet unclassified' }

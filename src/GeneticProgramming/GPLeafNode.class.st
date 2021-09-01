@@ -20,5 +20,9 @@ GPLeafNode >> isLeafNode [
 { #category : #initialization }
 GPLeafNode >> printOn: aStream [
 
-	aStream nextPutAll: (id ifNil: [ nodeValue asString ] ifNotNil: [ id ])
+	[ aStream nextPutAll: self ast formattedCode ]
+		on: Exception
+		do: [
+	aStream nextPutAll:
+		(id ifNil: [ nodeValue asString ] ifNotNil: [ id ]) ]
 ]

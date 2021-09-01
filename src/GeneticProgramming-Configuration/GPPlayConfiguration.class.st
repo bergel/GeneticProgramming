@@ -15,28 +15,33 @@ GPPlayConfiguration >> createNewIndividual [
 
 { #category : #'as yet unclassified' }
 GPPlayConfiguration >> crossover: individual1 with: individual2 [
-	 | copy ids childNodes childIds shuffleIds indexes |
+
+	| copy ids childNodes childIds shuffleIds indexes |
 	copy := individual1 deepCopy.
-	ids := copy children collect: #id.
+	ids := copy nodeChildren collect: #id.
 	childNodes := individual2 withAllChildren allButFirst.
 	childIds := childNodes collect: #id.
 	shuffleIds := random shuffleElementsOf: ids copy.
-	shuffleIds 
+	shuffleIds
 		detect: [ :nodeId | 
-			indexes := random shuffleElementsOf: (individual1 indexesOf: nodeId on: childIds).
+			indexes := random shuffleElementsOf:
+				           (individual1 indexesOf: nodeId on: childIds).
 			indexes notEmpty ]
-		ifFound: [ :nodeId | copy children at: (ids indexOf: nodeId) put: (childNodes at: indexes first) deepCopy.
+		ifFound: [ :nodeId | 
+			copy nodeChildren
+				at: (ids indexOf: nodeId)
+				put: (childNodes at: indexes first) deepCopy.
 			^ copy ]
-		ifNone: [ | c |
-			copy children 
+		ifNone: [ 
+			| c |
+			copy nodeChildren
 				detect: [ :child | 
 					c := self crossover: child with: individual2.
-					c notNil ] 
+					c notNil ]
 				ifFound: [ :child | 
-					copy children at: (ids indexOf: child id) put: c.
-					^ copy ]  ].
+					copy nodeChildren at: (ids indexOf: child id) put: c.
+					^ copy ] ].
 	^ nil
-		
 ]
 
 { #category : #operations }
@@ -99,11 +104,13 @@ GPPlayConfiguration >> initializeGrammar [
 
 { #category : #operations }
 GPPlayConfiguration >> mutate: individual [
+
 	| source children nodeToMutate indivIds sourceIds sceChildren |
-	children := random shuffleElementsOf: (individual withAllChildren allButFirst "select: #isLeaf").
+	children := random shuffleElementsOf:
+		            individual withAllChildren allButFirst. "select: #isLeaf"
 	source := self newTerminal.
 	indivIds := children collect: #id.
-	sceChildren := source withAllChildren "select: #isLeaf".
+	sceChildren := source withAllChildren. "select: #isLeaf"
 	sourceIds := sceChildren collect: #id.
 	(indivIds includesAny: sourceIds) ifFalse: [ ^ self ].
 	nodeToMutate := children at: (indivIds indexOfAnyOf: sourceIds).
@@ -111,7 +118,7 @@ GPPlayConfiguration >> mutate: individual [
 	nodeToMutate evaluationBlock: source evaluationBlock.
 	nodeToMutate printBlock: source printBlock.
 	nodeToMutate type: source type.
-	nodeToMutate children: source children.
+	nodeToMutate nodeChildren: source nodeChildren.
 	nodeToMutate nodeValue: source nodeValue
 ]
 

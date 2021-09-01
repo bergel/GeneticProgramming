@@ -67,6 +67,20 @@ GPAssertConfiguration >> argumentTypes: classes [
 ]
 
 { #category : #'as yet unclassified' }
+GPAssertConfiguration >> betterChildBetween: newC1 and: newC2 given: array [
+
+	| node |
+	node := (newC1 notNil and: [ newC2 notNil ])
+		        ifTrue: [ self getBestBetween: newC1 and: newC2 ]
+		        ifFalse: [ 
+		        (Array with: newC1 with: newC2)
+			        detect: #notNil
+			        ifNone: [ ^ nil ] ].
+	array do: [ :parent | node addParent: parent ].
+	^ node
+]
+
+{ #category : #'as yet unclassified' }
 GPAssertConfiguration >> buildGrammar [
 	"self assert: targetClass notNil."
 	grammar := targetClass 
@@ -96,21 +110,25 @@ GPAssertConfiguration >> countErrors [
 
 { #category : #'as yet unclassified' }
 GPAssertConfiguration >> countErrorsGiven: block [
+
 	| res rm |
 	self assert: block isBlock.
 	rm := GPRandom seed: 10.
-	res := (1 to: randomIterations) inject: 0 into: [ :sum :num | | args |
-		args := (1 to: targetSelector numArgs) collect: [ :a | 
-		        rm randomlySelect: self options ].
-		sum + ([ block value perform: targetSelector withArguments: args.
-			0 ]
-			on: Exception
-			do: [ :e | "Transcript show: individual print, String cr, args asString, String cr, e class name, '->', e messageText, String cr."
-				e class == AssertionFailure 
-				ifTrue: [ 0 ] 
-				ifFalse: [ 1 "e class == MessageNotUnderstood 
+	res := (1 to: randomIterations) inject: 0 into: [ :sum :num | 
+		       | args |
+		       args := (1 to: targetSelector numArgs) collect: [ :a | 
+			               rm randomlySelect: options ].
+		       sum + ([ 
+		        block value perform: targetSelector withArguments: args.
+		        0 ]
+			        on: Exception
+			        do: [ :e | "Transcript show: individual print, String cr, args asString, String cr, e class name, '->', e messageText, String cr."
+				        e class == AssertionFailure
+					        ifTrue: [ 0 ]
+					        ifFalse: [ 
+						        1 "e class == MessageNotUnderstood 
 					ifTrue: [ 0 ] 
-					ifFalse: [ 1 ]" ] ] ) ] .
+					ifFalse: [ 1 ]" ] ]) ].
 	^ res
 ]
 
@@ -137,20 +155,15 @@ GPAssertConfiguration >> crossover: individual between: children1 and: children2
 
 { #category : #'as yet unclassified' }
 GPAssertConfiguration >> crossover: individual1 with: individual2 [
-	| offspring1 offspring2 |
-	offspring1 := individual1 deepCopy.
-	offspring1 := self crossover: offspring1 with: individual2 given: offspring1 withAllChildren and: individual2 withAllChildren.
-	offspring1 ifNotNil: [ offspring1 addParent: individual1 ].
-	offspring2 := individual2 deepCopy.
-	offspring2 := self crossover: offspring2 with: individual1 given: offspring2 withAllChildren and: individual1 withAllChildren.
-	offspring2 ifNotNil: [ offspring2 addParent: individual2 ].
-	^ (offspring1 notNil and: [offspring2 notNil])
-		ifTrue: [ (self distanceFromSolutionOf: offspring1) < (self distanceFromSolutionOf: offspring2)
-			ifTrue: [ offspring1 ] 
-			ifFalse: [ offspring1 fitness = offspring2 fitness 
-				ifTrue: [ random randomlySelect: (Array with: offspring1 with: offspring2) ]
-				ifFalse: [ offspring2 ] ] ]
-		ifFalse: [ (Array with: offspring1 with: offspring2) detect: #notNil ifNone: [ nil ] ]
+
+	| number |
+	number := random randomNumber: 100.
+
+	^ number < 50
+		  ifTrue: [ self crossoverBetween: individual1 with: individual2 ]
+		  ifFalse: [ self crossoverJoining: individual1 with: individual2 ]
+
+	"^ self crossoverBetween: individual1 with: individual2"
 ]
 
 { #category : #'as yet unclassified' }
@@ -161,6 +174,63 @@ GPAssertConfiguration >> crossover: individual with: individual2 given: children
 		ifFalse: [ self replaceByNode: children1 of: individual by: children2 given: individual2 ].
 	indiv ifNotNil: [ indiv printBlock: [ :n :ctx | n ast formattedCode ] ].
 	^ indiv
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertConfiguration >> crossoverBetween: individual1 with: individual2 [
+
+	| offspring1 offspring2 |
+	offspring1 := individual1 deepCopy.
+	offspring1 := self
+		              crossover: offspring1
+		              with: individual2
+		              given: offspring1 withAllChildren
+		              and: individual2 withAllChildren.
+	offspring1 ifNotNil: [ offspring1 addParent: individual1 ].
+	offspring2 := individual2 deepCopy.
+	offspring2 := self
+		              crossover: offspring2
+		              with: individual1
+		              given: offspring2 withAllChildren
+		              and: individual1 withAllChildren.
+	offspring2 ifNotNil: [ offspring2 addParent: individual2 ].
+	^ (offspring1 notNil and: [ offspring2 notNil ])
+		  ifTrue: [ 
+			  (self distanceFromSolutionOf: offspring1)
+			  < (self distanceFromSolutionOf: offspring2)
+				  ifTrue: [ offspring1 ]
+				  ifFalse: [ 
+					  offspring1 fitness = offspring2 fitness
+						  ifTrue: [ 
+						  random randomlySelect:
+							  (Array with: offspring1 with: offspring2) ]
+						  ifFalse: [ offspring2 ] ] ]
+		  ifFalse: [ 
+			  (Array with: offspring1 with: offspring2)
+				  detect: #notNil
+				  ifNone: [ nil ] ]
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertConfiguration >> crossoverJoining: individual1 with: individual2 [
+
+	| o1 o2 node1 node2 |
+	o1 := self randomSubTree: individual1 given: #Method.
+	o2 := self randomSubTree: individual2 given: #Method.
+	node1 := self newTreeOf: o1 deepCopy and: o2 deepCopy.
+	node1 ifNotNil: [ 
+		node1
+			addParent: individual1;
+			addParent: individual2 ].
+	node2 := self newTreeOf: o2 deepCopy and: o1 deepCopy.
+	node2 ifNotNil: [ 
+		node2
+			addParent: individual1;
+			addParent: individual2 ].
+	^ self
+		  betterChildBetween: node1
+		  and: node2
+		  given: (Array with: individual1 with: individual2)
 ]
 
 { #category : #'as yet unclassified' }
@@ -221,6 +291,20 @@ GPAssertConfiguration >> distanceFromSolutionOf: individual [
 ]
 
 { #category : #'as yet unclassified' }
+GPAssertConfiguration >> getBestBetween: object1 and: object2 [
+
+	object1 fitness ifNil: [ self distanceFromSolutionOf: object1 ].
+	object2 fitness ifNil: [ self distanceFromSolutionOf: object2 ].
+	^ object1 fitness < object2 fitness
+		  ifTrue: [ object1 ]
+		  ifFalse: [ 
+			  object2 fitness < object1 fitness
+				  ifTrue: [ object2 ]
+				  ifFalse: [ 
+				  random randomlySelect: (Array with: object1 with: object2) ] ]
+]
+
+{ #category : #'as yet unclassified' }
 GPAssertConfiguration >> getGrammarNodeOptions [
 	^ (grammar options associations 
 			collect: [ :assoc | assoc key -> (assoc value nodeOptions) ]
@@ -263,19 +347,25 @@ GPAssertConfiguration >> initialize [
 
 { #category : #'as yet unclassified' }
 GPAssertConfiguration >> injectIntoMethod: individual [
+
 	| aBehavior rbMethodNode ast |
 	self assert: targetSelector notNil.
 	self assert: targetClass notNil.
 	aBehavior := targetClass instanceSide.
-	originalMethod := "targetClass methodNamed: targetSelector." aBehavior compiledMethodAt: targetSelector.
-	rbMethodNode := RBParser
-		parseMethod: originalMethod sourceCode.
-	ast := RBParser parseExpression: 'self assert: ', individual print.
+	originalMethod := aBehavior compiledMethodAt: targetSelector. "targetClass methodNamed: targetSelector."
+	rbMethodNode := RBParser parseMethod: originalMethod sourceCode.
+	"ast := RBParser parseExpression: 'self assert: ' , individual print."
+	ast := RBMessageNode new
+		       receiver: (RBVariableNode named: 'self');
+		       selector: #assert:;
+		       arguments: (OrderedCollection new
+				        add: individual ast;
+				        yourself).
 	rbMethodNode body addNodeFirst: ast.
 	"copy := originalMethod copy.
 	copy ast body addNodeFirst: individual ast."
-	targetClass compile: rbMethodNode printString notifying: nil.
-	"aBehavior methodDict at: targetSelector put: copy." 
+	targetClass compile: rbMethodNode printString notifying: nil
+	"aBehavior methodDict at: targetSelector put: copy."
 ]
 
 { #category : #operations }
@@ -356,9 +446,71 @@ GPAssertConfiguration >> newFunction [
 	^ node
 ]
 
+{ #category : #'instance creation' }
+GPAssertConfiguration >> newNodeOfRule: symbol1 and: symbol2 [
+
+	^ GPNode new
+		  id: #Method;
+		  type: RBMessageNode;
+		  depth: 1;
+		  printBlock: [ :n :ctx | n ast formattedCode ];
+		  nodeChildren: (OrderedCollection new
+				   add: (GPNode new
+						    id: #Method;
+						    depth: 2;
+						    type: RBMessageNode;
+						    printBlock: [ :n :ctx | 
+							    (n withAllChildren collect: #id) asArray asString ];
+						    nodeChildren: OrderedCollection new);
+				   add: (GPSelectorNode new
+						    id: #And;
+						    depth: 2;
+						    nodeValue: #and:;
+						    printBlock: [ :n :ctx | n nodeValue ]);
+				   add: (GPNode new
+						    id: #Block;
+						    depth: 2;
+						    type: RBBlockNode;
+						    printBlock: [ :n :ctx | 
+							    (n withAllChildren collect: #id) asArray asString ];
+						    nodeChildren: (OrderedCollection new
+								     add: (GPNode new
+										      id: #Method;
+										      depth: 3;
+										      type: RBMessageNode;
+										      printBlock: [ :n :ctx | 
+											      (n withAllChildren collect: #id) asArray asString ];
+										      nodeChildren: OrderedCollection new);
+								     yourself));
+				   yourself)
+]
+
 { #category : #hooks }
 GPAssertConfiguration >> newTerminal [
 	^ self newFunction 
+]
+
+{ #category : #'instance creation' }
+GPAssertConfiguration >> newTreeOf: node1 and: node2 [
+
+	| node |
+	node := self newNodeOfRule: #Method and: #And.
+	grammar
+		updateNodeChild: (Stack new
+				 add: #Method;
+				 yourself)
+		of: node given: node1;
+		updateNodeChild: (Stack new
+				 add: #And;
+				 yourself)
+		of: node;
+		updateNodeChild: (Stack new
+				 add: #Block;
+				 add: #Method;
+				 yourself)
+		of: node given: node2.
+	node ifNotNil: [ self distanceFromSolutionOf: node ].
+	^ node
 ]
 
 { #category : #accessing }
@@ -373,8 +525,9 @@ GPAssertConfiguration >> numberOfFailures: number [
 ]
 
 { #category : #hooks }
-GPAssertConfiguration >> numberOfGenerations [ 
-	^ 25
+GPAssertConfiguration >> numberOfGenerations [
+
+	^ 50
 ]
 
 { #category : #accessing }
@@ -422,8 +575,26 @@ GPAssertConfiguration >> pickBestIndividual: individual1 and: individual2 [
 ]
 
 { #category : #accessing }
-GPAssertConfiguration >> populationSize [ 
-	^ 60
+GPAssertConfiguration >> populationSize [
+
+	^ 500
+]
+
+{ #category : #accessing }
+GPAssertConfiguration >> randomIterations: number [
+
+	self assert: (number isInteger and: [ number > 0 ]).
+	randomIterations := number
+]
+
+{ #category : #'as yet unclassified' }
+GPAssertConfiguration >> randomSubTree: tree given: symbol [
+
+	| array |
+	array := (Array with: symbol)
+	         , (grammar ruleOptionOf: symbol) nodeOptions.
+	^ random randomlySelect:
+		  (tree withAllChildren select: [ :node | array includes: node id ])
 ]
 
 { #category : #'as yet unclassified' }
@@ -453,18 +624,25 @@ GPAssertConfiguration >> replaceByIdAny: children1 of: individual by: children2 
 
 { #category : #'as yet unclassified' }
 GPAssertConfiguration >> replaceByNode: children1 of: individual by: children2 given: individual2 [
+
 	| selectedChildren1 selectedChildren2 |
-	selectedChildren1 := children1 select: [:child | 
-		child isComplexNode and: [ child children size > 1 and: [child children first id = #Variable ] ] ].
-	selectedChildren2 := children2 select: [:child | 
-		child isComplexNode and: [ child children size > 1 and: [child children first id = #Variable ] ] ].
+	selectedChildren1 := children1 select: [ :child | 
+		                     child isComplexNode and: [ 
+			                     child nodeChildren size > 1 and: [ 
+				                     child nodeChildren first id = #Variable ] ] ].
+	selectedChildren2 := children2 select: [ :child | 
+		                     child isComplexNode and: [ 
+			                     child nodeChildren size > 1 and: [ 
+				                     child nodeChildren first id = #Variable ] ] ].
 	^ (selectedChildren1 notEmpty and: [ selectedChildren2 notEmpty ])
-		ifFalse: [ nil ] 
-		ifTrue: [ | node |
-			node := random randomlySelect: selectedChildren1.
-			node addParent: individual2.
-			node replaceBy: (random randomlySelect: selectedChildren2) deepCopy.
-			individual ]
+		  ifFalse: [ nil ]
+		  ifTrue: [ 
+			  | node |
+			  node := random randomlySelect: selectedChildren1.
+			  node addParent: individual2.
+			  node replaceBy:
+				  (random randomlySelect: selectedChildren2) deepCopy.
+			  individual ]
 ]
 
 { #category : #accessing }
