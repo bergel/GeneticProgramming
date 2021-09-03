@@ -79,11 +79,9 @@ GPAssertionGrammarBuilder >> buildAssertionGrammar [
 		addSelectorRule: #Comparison withValues: #( #= #== #> #< #<= #>= );
 		addSelectorRule: #And withValues: #( #and: );
 		addRule: #Block ofClass: RBBlockNode withSequence: #( #Method );
-		addLeafRule: #Number
-		ofClass: RBLiteralNode
-		withValues: (Set new
-				 addAll: (-10 to: 10);
-				 addAll: (-10.6 to: 10.6 count: 15);
+		addLeafRule: #Number ofClass: RBLiteralNode withValues: (Set new
+				 addAll: (-1 to: 1);
+				 addAll: (-2.3 to: 1.6 count: 4);
 				 yourself) asOrderedCollection;
 		addLeafRule: #Class
 		ofClass: RBVariableNode
